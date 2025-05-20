@@ -60,3 +60,35 @@ body {
   flex-grow: 1;
   padding: 30px;
 }
+
+.form-container {
+      display: none;
+      margin: 20px 0;
+      padding: 15px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background-color: #f9f9f9;
+      width: 400px;
+    }
+    .form-container input, .form-container select {
+      width: 100%;
+      padding: 8px;
+      margin: 6px 0;
+    }
+    .btn-toggle {
+      margin: 10px 0;
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    table {
+      margin-top: 30px;
+      border-collapse: collapse;
+    }
+    table th, table td {
+      padding: 10px;
+      border: 1px solid #ccc;
+    }
