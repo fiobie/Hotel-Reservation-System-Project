@@ -27,7 +27,7 @@
     <div style="color: #aaa; font-size: 0.9em; margin: 10px 0 5px;">MANAGEMENT</div>
     <div class="nav-link toggle-btn" onclick="toggleMenu('management')">⚙️ Manage</div>
     <div class="submenu" id="management">
-      <a class="nav-link" href="room.php">🚪 Room</a>
+      <a class="nav-link" href="#">🚪 Room</a>
       <a class="nav-link" href="#">🧾 Menu & Services</a>
       <a class="nav-link" href="#">🏷️ Discounts</a>
       <a class="nav-link" href="#">⭐ Special Offers</a>
@@ -47,8 +47,40 @@
 </div>
 
 <div class="main-content">
-  <h2>Welcome to Admin Panel</h2>
-  <p>This is your content area.</p>
+  <h2>Room</h2>
+  <p>This is for the rooms.</p>
+
+  <?php
+  include 'connections.php';
+
+  $sql = "SELECT RoomNumber, RoomType, RoomPerHour, RoomStatus, Capacity FROM room";
+  $result = $conn->query($sql);
+
+  if ($result->num_rows > 0) {
+      echo "<table border='1' cellpadding='10' cellspacing='0'>
+              <tr>
+                  <th>Room Number</th>
+                  <th>Room Type</th>
+                  <th>Rate per Hour</th>
+                  <th>Status</th>
+                  <th>Capacity</th>
+              </tr>";
+      while($row = $result->fetch_assoc()) {
+          echo "<tr>
+                  <td>" . htmlspecialchars($row["RoomNumber"]) . "</td>
+                  <td>" . htmlspecialchars($row["RoomType"]) . "</td>
+                  <td>" . htmlspecialchars($row["RoomPerHour"]) . "</td>
+                  <td>" . htmlspecialchars($row["RoomStatus"]) . "</td>
+                  <td>" . htmlspecialchars($row["Capacity"]) . "</td>
+                </tr>";
+      }
+      echo "</table>";
+  } else {
+      echo "No rooms found.";
+  }
+
+  $conn->close();
+  ?>
 </div>
 
 <script>
