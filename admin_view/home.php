@@ -3,70 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Villa Valore Hotel</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      display: flex;
-    }
-
-    .sidebar {
-      width: 260px;
-      background-color: #008000;
-      color: white;
-      min-height: 100vh;
-      padding: 20px;
-    }
-
-    .sidebar h4 {
-      margin-bottom: 30px;
-      font-size: 1.5em;
-    }
-
-    .nav-section {
-      margin-bottom: 20px;
-    }
-
-    .nav-link {
-      display: block;
-      color: white;
-      text-decoration: none;
-      padding: 8px 10px;
-      margin: 4px 0;
-      border-radius: 4px;
-    }
-
-    .nav-link:hover {
-      background-color: #34495e;
-    }
-
-    .submenu {
-      display: none;
-      padding-left: 15px;
-    }
-
-    .submenu a {
-      font-size: 0.95em;
-    }
-
-    .toggle-btn {
-      cursor: pointer;
-    }
-
-    .toggle-btn::after {
-      content: " ▼";
-      font-size: 0.8em;
-    }
-
-    .toggle-btn.expanded::after {
-      content: " ▲";
-    }
-
-    .main-content {
-      flex-grow: 1;
-      padding: 30px;
-    }
-  </style>
+  <link rel="stylesheet" href="admin_view/style.css">
 </head>
 <body>
 
