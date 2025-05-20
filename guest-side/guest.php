@@ -13,9 +13,9 @@
 
     <body>
         <header>
-            <nav class="navbar">
-                <a href="#" class="nave_logo">
-                    <h2 class="logo-text">Coffee</h2>
+            <nav class="navbar section-content">
+                <a href="#" class="nav_logo">
+                    <h2 class="logo-text">❤️Coffee</h2>
                 </a>
                 <ul class="nav-menu">
                     <li class="nav-item">
@@ -24,7 +24,7 @@
                     <li class="nav-item">
                         <a href="#" class="nav-link">About</a>
                     </li><li class="nav-item">
-                        <a href="#" class="nav-link">Menu</a>
+                        <a href="#" class="nav-link">Rooms</a>
                     </li><li class="nav-item">
                         <a href="#" class="nav-link">Testimonials</a>
                     </li>
