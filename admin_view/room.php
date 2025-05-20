@@ -93,7 +93,7 @@ if (isset($_POST['addRoom'])) {
       <a class="nav-link" href="#">🧾 Menu & Services</a>
       <a class="nav-link" href="#">🏷️ Discounts</a>
       <a class="nav-link" href="#">⭐ Special Offers</a>
-      <a class="nav-link" href="#">📦 Inventory</a>
+      <a class="nav-link" href="inventory.php">📦 Inventory</a>
     </div>
   </div>
 
