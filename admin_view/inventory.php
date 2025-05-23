@@ -1,9 +1,63 @@
+<?php
+include 'connections.php';
+
+$sql = "SELECT ItemID, ItemName, DateReceived, DateExpiry, Quantity, Price, Total, CurrentStocks, RqStocks, Status FROM inventory";
+$result = $conn->query($sql);
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Villa Valore Hotel</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #999;
+      padding: 8px 12px;
+      text-align: center;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    .add-btn {
+      margin: 20px 0 10px;
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+    }
+    .add-btn:hover {
+      background-color: #45a049;
+    }
+    .modal-content input,
+.modal-content select {
+  display: block;
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 8px;
+}
+.modal-content button {
+  padding: 10px 15px;
+  margin-right: 10px;
+  border: none;
+  background-color: #4CAF50;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.modal-content button:hover {
+  background-color: #45a049;
+}
+
+  </style>
 </head>
 <body>
 
@@ -28,14 +82,14 @@
     <div class="nav-link toggle-btn" onclick="toggleMenu('management')">⚙️ Manage</div>
     <div class="submenu" id="management">
       <a class="nav-link" href="room.php">🚪 Room</a>
-      <a class="nav-link" href="#">🧾 Menu & Services</a>
-      <a class="nav-link" href="#">🏷️ Discounts</a>
-      <a class="nav-link" href="#">⭐ Special Offers</a>
+      <a class="nav-link" href="#">🧾 Menu & Service</a>
+      <a class="nav-link" href="#">👤 Account</a>
       <a class="nav-link" href="inventory.php">📦 Inventory</a>
     </div>
   </div>
 
   <div class="nav-section">
+    <a class="nav-link" href="#">💳 Payments</a>
     <a class="nav-link" href="#">📈 Statistics</a>
     <a class="nav-link" href="#">📬 Inbox</a>
   </div>
@@ -49,14 +103,91 @@
 <div class="main-content">
   <h2>Inventory</h2>
   <p>This is where the hotel inventory is listed.</p>
+
+  <!-- Modal Add Item Form -->
+<div id="addItemModal" style="display:none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4);">
+  <div class="modal-content" style="background-color: #fefefe; margin: 10% auto; padding: 20px; border: 1px solid #888; width: 50%; border-radius: 10px;">
+    <h3>Add New Inventory Item</h3>
+    <form method="POST" action="">
+      <input type="hidden" name="add_item" value="1">
+
+      <label>Item Name</label>
+      <input type="text" name="ItemName" required>
+
+      <label>Date Received</label>
+      <input type="datetime-local" name="DateReceived" required>
+
+      <label>Date Expiry</label>
+      <input type="datetime-local" name="DateExpiry" required>
+
+      <label>Quantity</label>
+      <input type="number" name="Quantity" required>
+
+      <label>Price</label>
+      <input type="number" name="Price" required>
+
+      <label>Current Stocks</label>
+      <input type="number" name="CurrentStocks" required>
+
+      <label>Request Stocks</label>
+      <input type="number" name="RqStocks" required>
+
+      <label>Status</label>
+      <select name="Status" required>
+        <option value="Approved">Approved</option>
+        <option value="Pending">Pending</option>
+      </select>
+
+      <br><br>
+      <button type="submit" name="submitItem">Save</button>
+      <button type="button" onclick="document.getElementById('addItemModal').style.display='none'">Cancel</button>
+    </form>
+  </div>
+</div>
+<button class="add-btn" onclick="document.getElementById('addItemModal').style.display='block'">+ Add Item</button>
+  <br>
+  <br>
+
+
+  <table>
+    <tr>
+      <th>Item ID</th>
+      <th>Item Name</th>
+      <th>Date Received</th>
+      <th>Date Expiry</th>
+      <th>Quantity</th>
+      <th>Price</th>
+      <th>Total</th>
+      <th>Current Stocks</th>
+      <th>Request Stocks</th>
+      <th>Status</th>
+    </tr>
+
+    <?php if ($result->num_rows > 0): ?>
+      <?php while($row = $result->fetch_assoc()): ?>
+        <tr>
+          <td><?= $row["ItemID"] ?></td>
+          <td><?= $row["ItemName"] ?></td>
+          <td><?= $row["DateReceived"] ?></td>
+          <td><?= $row["DateExpiry"] ?></td>
+          <td><?= $row["Quantity"] ?></td>
+          <td><?= $row["Price"] ?></td>
+          <td><?= $row["Total"] ?></td>
+          <td><?= $row["CurrentStocks"] ?></td>
+          <td><?= $row["RqStocks"] ?></td>
+          <td><?= $row["Status"] ?></td>
+        </tr>
+      <?php endwhile; ?>
+    <?php else: ?>
+      <tr><td colspan="10">No records found</td></tr>
+    <?php endif; ?>
+  </table>
 </div>
 
 <script>
   function toggleMenu(id) {
     const submenu = document.getElementById(id);
-    const toggle = submenu.previousElementSibling;
     submenu.style.display = submenu.style.display === 'block' ? 'none' : 'block';
-    toggle.classList.toggle('expanded');
   }
 </script>
 

@@ -28,14 +28,14 @@
     <div class="nav-link toggle-btn" onclick="toggleMenu('management')">⚙️ Manage</div>
     <div class="submenu" id="management">
       <a class="nav-link" href="room.php">🚪 Room</a>
-      <a class="nav-link" href="#">🧾 Menu & Services</a>
-      <a class="nav-link" href="#">🏷️ Discounts</a>
-      <a class="nav-link" href="#">⭐ Special Offers</a>
+      <a class="nav-link" href="#">🧾 Menu & Service</a>
+      <a class="nav-link" href="#">👤 Account</a>
       <a class="nav-link" href="#">📦 Inventory</a>
     </div>
   </div>
 
   <div class="nav-section">
+    <a class="nav-link" href="#">💳 Payments</a>
     <a class="nav-link" href="#">📈 Statistics</a>
     <a class="nav-link" href="#">📬 Inbox</a>
   </div>
