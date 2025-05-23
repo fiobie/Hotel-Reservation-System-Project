@@ -89,8 +89,8 @@
 
       <div class="nav-section">
         <a class="nav-link" href="home.php">📊 Dashboard</a>
-        <a class="nav-link" href="#">👤 Customers</a>
-        <a class="nav-link" href="#">📚 Booking</a>
+        <a class="nav-link" href="student.php">👤 Guest</a>
+        <a class="nav-link" href="booking.php">📚 Booking</a>
       </div>
 
       <div class="nav-section">
@@ -111,7 +111,7 @@
       </div>
 
       <div class="nav-section">
-        <a class="nav-link" href="#">🔐 Profile Account</a>
+        <a class="nav-link" href="profile.php">🔐 Profile Account</a>
         <a class="nav-link" href="logout.php">🚪 Logout</a>
       </div>
     </div>

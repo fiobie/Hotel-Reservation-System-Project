@@ -109,14 +109,15 @@ if (isset($_POST['login'])) {
     <h1>Villa Valore Hotel</h1>
     <h2>Login</h2>
     <form method="POST" action="login.php">
-        <input type="email" name="email" placeholder="Email address" required>
-        <input type="password" name="password" placeholder="Password" required>
-        <button type="submit" name="login">Login</button>
+    <input type="email" name="email" placeholder="Email address" required>
+    <input type="password" name="password" placeholder="Password" required>
+    <button type="submit" name="login">Login</button>
+    <a href="forgot_password.php" style="display:block; margin-top:15px; font-size:14px; color:#2e7d32; text-decoration:none;">Forgot Password?</a>
 
-        <?php if (isset($error)): ?>
-            <div class="error"><?= $error ?></div>
-        <?php endif; ?>
-    </form>
+    <?php if (isset($error)): ?>
+        <div class="error"><?= $error ?></div>
+    <?php endif; ?>
+</form>
 </div>
 
 </body>
