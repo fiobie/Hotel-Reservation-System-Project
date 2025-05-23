@@ -1,7 +1,7 @@
 <?php
 include 'connections.php';
 
-$sql = "SELECT ItemID, ItemName, DateReceived, DateExpiry, Quantity, Price, Total, CurrentStocks, RqStocks, Status FROM inventory";
+$sql = "SELECT ID, FirstName, LastName, Email, Password, PhoneNumber, Position, Status FROM account";
 $result = $conn->query($sql);
 ?>
 
@@ -94,83 +94,82 @@ $result = $conn->query($sql);
 </div>
 
 <div class="main-content">
-  <h2>Inventory</h2>
-  <p>This is where the hotel inventory is listed.</p>
+  <h2>Account</h2>
+  <p>This is where the hotel account information is listed.</p>
 
   <!-- Modal Add Item Form -->
 <div id="addItemModal" style="display:none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4);">
   <div class="modal-content" style="background-color: #fefefe; margin: 10% auto; padding: 20px; border: 1px solid #888; width: 50%; border-radius: 10px;">
-    <h3>Add New Inventory Item</h3>
+    <h3>Add New Account</h3>
     <form method="POST" action="">
       <input type="hidden" name="add_item" value="1">
 
-      <label>Item Name</label>
-      <input type="text" name="ItemName" required>
+      <label>Account ID</label>
+      <input type="text" name="accountID" required>
 
-      <label>Date Received</label>
-      <input type="datetime-local" name="DateReceived" required>
+      <label>First Name</label>
+      <input type="text" name="FirstName" required>
 
-      <label>Date Expiry</label>
-      <input type="datetime-local" name="DateExpiry" required>
+      <label>Last Name</label>
+      <input type="text" name="LastName" required>
 
-      <label>Quantity</label>
-      <input type="number" name="Quantity" required>
+      <label>Email</label>
+      <input type="email" name="Email" required>
 
-      <label>Price</label>
-      <input type="number" name="Price" required>
+      <label>Password</label>
+      <input type="password" name="Password" required>
 
-      <label>Current Stocks</label>
-      <input type="number" name="CurrentStocks" required>
+      <label>Phone Number</label>
+      <input type="text" name="PhoneNumber" required>
 
-      <label>Request Stocks</label>
-      <input type="number" name="RqStocks" required>
+      <label>Position</label>
+        <select name="Position" required>
+            <option value="Manager">Manager</option>
+            <option value="Staff">Staff</option>
+            <option value="Admin">Admin</option>
+        </select>
 
-      <label>Status</label>
-      <select name="Status" required>
-        <option value=""></option>
-        <option value="Approved">Approved</option>
-        <option value="Pending">Pending</option>
-      </select>
-
+     <label>Status</label>
+        <select name="Status" required>
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+        </select>
       <br><br>
       <button type="submit" name="submitItem">Save</button>
       <button type="button" onclick="document.getElementById('addItemModal').style.display='none'">Cancel</button>
     </form>
   </div>
 </div>
-<button class="add-btn" onclick="document.getElementById('addItemModal').style.display='block'">+ Add Item</button>
+<button class="add-btn" onclick="document.getElementById('addItemModal').style.display='block'">+ Add New Account</button>
   <br>
+  
   <table>
     <tr>
-      <th>Item ID</th>
-      <th>Item Name</th>
-      <th>Date Received</th>
-      <th>Date Expiry</th>
-      <th>Quantity</th>
-      <th>Price</th>
-      <th>Total</th>
-      <th>Current Stocks</th>
-      <th>Request Stocks</th>
+      <th>Account ID</th>
+      <th>First Name</th>
+      <th>Last Name</th>
+      <th>Email</th>
+      <th>Password</th>
+      <th>Phone Number</th>
+      <th>Position</th>
       <th>Status</th>
     </tr>
 
     <?php if ($result->num_rows > 0): ?>
       <?php while($row = $result->fetch_assoc()): ?>
         <tr>
-          <td><?= $row["ItemID"] ?></td>
-          <td><?= $row["ItemName"] ?></td>
-          <td><?= $row["DateReceived"] ?></td>
-          <td><?= $row["DateExpiry"] ?></td>
-          <td><?= $row["Quantity"] ?></td>
-          <td><?= $row["Price"] ?></td>
-          <td><?= $row["Total"] ?></td>
-          <td><?= $row["CurrentStocks"] ?></td>
-          <td><?= $row["RqStocks"] ?></td>
+          <td><?= $row["ID"] ?></td>
+          <td><?= $row["FirstName"] ?></td>
+          <td><?= $row["LastName"] ?></td>
+          <td><?= $row["Email"] ?></td>
+          <td><?= $row["Password"] ?></td>
+          <td><?= $row["PhoneNumber"] ?></td>
+          <td><?= $row["Position"] ?></td>
           <td><?= $row["Status"] ?></td>
         </tr>
       <?php endwhile; ?>
     <?php else: ?>
-      <tr><td colspan="10">No records found</td></tr>
+      <tr><td colspan="5">No records found</td></tr>
     <?php endif; ?>
   </table>
 </div>

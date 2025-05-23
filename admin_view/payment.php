@@ -1,7 +1,7 @@
 <?php
 include 'connections.php';
 
-$sql = "SELECT ItemID, ItemName, DateReceived, DateExpiry, Quantity, Price, Total, CurrentStocks, RqStocks, Status FROM inventory";
+$sql = "SELECT PaymentID, Amount, PaymentStatus, PaymentDate, PaymentMethod, Discount, TotalBill, ReferenceCode FROM payment";
 $result = $conn->query($sql);
 ?>
 
@@ -94,43 +94,48 @@ $result = $conn->query($sql);
 </div>
 
 <div class="main-content">
-  <h2>Inventory</h2>
-  <p>This is where the hotel inventory is listed.</p>
+  <h2>Payments</h2>
+  <p>This is where the hotel payment information is listed.</p>
 
   <!-- Modal Add Item Form -->
 <div id="addItemModal" style="display:none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4);">
   <div class="modal-content" style="background-color: #fefefe; margin: 10% auto; padding: 20px; border: 1px solid #888; width: 50%; border-radius: 10px;">
-    <h3>Add New Inventory Item</h3>
+    <h3>Payment</h3>
     <form method="POST" action="">
       <input type="hidden" name="add_item" value="1">
 
-      <label>Item Name</label>
-      <input type="text" name="ItemName" required>
+      <label>Payment ID</label>
+      <input type="text" name="aymentID" required>
 
-      <label>Date Received</label>
-      <input type="datetime-local" name="DateReceived" required>
-
-      <label>Date Expiry</label>
-      <input type="datetime-local" name="DateExpiry" required>
-
-      <label>Quantity</label>
-      <input type="number" name="Quantity" required>
-
-      <label>Price</label>
-      <input type="number" name="Price" required>
-
-      <label>Current Stocks</label>
-      <input type="number" name="CurrentStocks" required>
-
-      <label>Request Stocks</label>
-      <input type="number" name="RqStocks" required>
+      <label>Amount</label>
+      <input type="text" name="Amount" required>
 
       <label>Status</label>
-      <select name="Status" required>
-        <option value=""></option>
-        <option value="Approved">Approved</option>
-        <option value="Pending">Pending</option>
-      </select>
+        <select name="PaymentStatus" required>
+            <option value="Paid">Paid</option>
+            <option value="Unpaid">Unpaid</option>
+            <option value="Failed">Failed</option>
+            <option value="Refunded">Refunded</option>
+        </select>
+
+      <label>Date</label>
+      <input type="email" name="PaymentDate" required>
+
+      <label>Payment Method</label>
+      <select name="PaymentMethod" required>
+            <option value="Cash">Cash</option>
+            <option value="Card">Card</option>
+            <option value="Online">Online</option>
+        </select>
+
+      <label>Discount</label>
+      <input type="text" name="Discount" required>
+
+      <label>Total Bill</label>
+      <input type="text" name="TotalBill" required>
+
+      <label>Reference Code</label>
+      <input type="text" name="ReferenceCode" required>
 
       <br><br>
       <button type="submit" name="submitItem">Save</button>
@@ -138,39 +143,36 @@ $result = $conn->query($sql);
     </form>
   </div>
 </div>
-<button class="add-btn" onclick="document.getElementById('addItemModal').style.display='block'">+ Add Item</button>
+<button class="add-btn" onclick="document.getElementById('addItemModal').style.display='block'">+ Add New Invoice</button>
   <br>
+  
   <table>
     <tr>
-      <th>Item ID</th>
-      <th>Item Name</th>
-      <th>Date Received</th>
-      <th>Date Expiry</th>
-      <th>Quantity</th>
-      <th>Price</th>
-      <th>Total</th>
-      <th>Current Stocks</th>
-      <th>Request Stocks</th>
+      <th>Payment ID</th>
+      <th>Amount</th>
       <th>Status</th>
+      <th>Date</th>
+      <th>Payment Method</th>
+      <th>Discount</th>
+      <th>Total Bill</th>
+      <th>Reference Code</th>
     </tr>
 
     <?php if ($result->num_rows > 0): ?>
       <?php while($row = $result->fetch_assoc()): ?>
         <tr>
-          <td><?= $row["ItemID"] ?></td>
-          <td><?= $row["ItemName"] ?></td>
-          <td><?= $row["DateReceived"] ?></td>
-          <td><?= $row["DateExpiry"] ?></td>
-          <td><?= $row["Quantity"] ?></td>
-          <td><?= $row["Price"] ?></td>
-          <td><?= $row["Total"] ?></td>
-          <td><?= $row["CurrentStocks"] ?></td>
-          <td><?= $row["RqStocks"] ?></td>
-          <td><?= $row["Status"] ?></td>
+          <td><?= $row["PaymentID"] ?></td>
+          <td><?= $row["Amount"] ?></td>
+          <td><?= $row["PaymentStatus"] ?></td>
+          <td><?= $row["PaymentDate"] ?></td>
+          <td><?= $row["PaymentMethod"] ?></td>
+          <td><?= $row["Discount"] ?></td>
+          <td><?= $row["TotalBill"] ?></td>
+          <td><?= $row["ReferenceCode"] ?></td>
         </tr>
       <?php endwhile; ?>
     <?php else: ?>
-      <tr><td colspan="10">No records found</td></tr>
+      <tr><td colspan="5">No records found</td></tr>
     <?php endif; ?>
   </table>
 </div>
