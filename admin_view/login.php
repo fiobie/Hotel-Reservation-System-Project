@@ -107,11 +107,11 @@ if (isset($_POST['login'])) {
 <img src="cvsu-logo.png" alt="CvSU Logo" class="logo">
 
     <h1>VILLA VALORE HOTEL</h1>
-    <h2>Log In</h2>
+    <h2>LOG IN </h2>
     <form method="POST" action="login.php">
     <input type="email" name="email" placeholder="Email address" required>
     <input type="password" name="password" placeholder="Password" required>
-    <button type="submit" name="login">Log In</button>
+    <button type="submit" name="login">LOG IN</button>
     <a href="forgot_password.php" style="display:block; margin-top:15px; font-size:14px; color:#2e7d32; text-decoration:none;">FORGOT PASSWORD</a>
 
     <?php if (isset($error)): ?>
