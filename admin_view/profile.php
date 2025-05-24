@@ -1,11 +1,6 @@
 <?php
 include 'connections.php';
 
-// Check DB connection
-if (!$conn) {
-    die("Connection failed: " . mysqli_connect_error());
-}
-
 // Fetch guest (account) info
 $guest_sql = "SELECT * FROM account LIMIT 1";
 $guest_result = $conn->query($guest_sql);
