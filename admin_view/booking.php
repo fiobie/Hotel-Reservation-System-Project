@@ -60,6 +60,15 @@
     .add-btn:hover {
       background-color: #45a049;
     }
+
+    .table-container {
+      overflow-x: auto;
+    }
+
+    table.dataTable {
+      white-space: nowrap;
+      width: 100% !important;
+    }
   </style>
 </head>
 <body>
@@ -97,14 +106,14 @@ if (isset($_POST['addBooking'])) {
 
   <div class="nav-section">
     <a class="nav-link" href="home.php"><i class="fas fa-th-large"></i> Dashboard</a>
-    <a class="nav-link" href="student.php"><i class="fas fa-user"></i> Guest</a>
+    <a class="nav-link" href="guest.php"><i class="fas fa-user"></i> Guest</a>
     <a class="nav-link" href="booking.php"><i class="fas fa-book"></i> Booking</a>
   </div>
 
   <div class="nav-section">
-    <div style="color: #aaa; font-size: 0.9em; margin: 10px 0 5px;">MANAGEMENT</div>
+    <div style="color: #ffffff; font-size: 0.9em; margin: 10px 0 5px;">MANAGEMENT</div>
     <div class="nav-link toggle-btn" onclick="toggleMenu('management')"><i class="fas fa-cog"></i> Manage</div>
-    <div class="submenu" id="management" style="display: none;">
+    <div class="submenu" id="management">
       <a class="nav-link" href="room.php"><i class="fas fa-door-open"></i> Room</a>
       <a class="nav-link" href="menu_service.php"><i class="fas fa-utensils"></i> Menu & Service</a>
       <a class="nav-link" href="account.php"><i class="fas fa-user"></i> Account</a>
@@ -122,7 +131,7 @@ if (isset($_POST['addBooking'])) {
     <a class="nav-link" href="profile.php"><i class="fas fa-user-lock"></i> Profile Account</a>
     <a class="nav-link" href="logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
   </div>
-</div>
+</div> 
 
 <div class="main-content">
   <h2>Booking</h2>
@@ -130,54 +139,57 @@ if (isset($_POST['addBooking'])) {
 
   <button class="add-btn" onclick="document.getElementById('addBookingModal').style.display='block'">+ Add New Booking</button>
 
-  <?php
-  $sql = "SELECT BookingID, RoomNumber, RoomType, BookingStatus, RoomStatus, Notes, CheckInDate, CheckOutDate, BookingDate, Price FROM booking";
-  $result = $conn->query($sql);
+   <div class="table-scroll">
+    <table id="bookingTable">
+    <?php
+    $sql = "SELECT BookingID, RoomNumber, RoomType, BookingStatus, RoomStatus, Notes, CheckInDate, CheckOutDate, BookingDate, Price FROM booking";
+    $result = $conn->query($sql);
 
-  if ($result->num_rows > 0) {
-      echo "<table id='bookingTable' class='display nowrap' style='width:100%'>
-              <thead> 
-                <tr>
-                    <th>Booking ID</th>
-                    <th>Room Number</th>
-                    <th>Room Type</th>
-                    <th>Booking Status</th>
-                    <th>Room Status</th>
-                    <th>Notes</th>
-                    <th>Check-In Date</th>
-                    <th>Check-Out Date</th>
-                    <th>Booking Date</th>
-                    <th>Price</th>
-                    <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>";
-      while($row = $result->fetch_assoc()) {
-          echo "<tr>
-                  <td>" . htmlspecialchars($row["BookingID"]) . "</td>
-                  <td>" . htmlspecialchars($row["RoomNumber"]) . "</td>
-                  <td>" . htmlspecialchars($row["RoomType"]) . "</td>
-                  <td>" . htmlspecialchars($row["BookingStatus"]) . "</td>
-                  <td>" . htmlspecialchars($row["RoomStatus"]) . "</td>
-                  <td>" . htmlspecialchars($row["Notes"]) . "</td>
-                  <td>" . htmlspecialchars($row["CheckInDate"]) . "</td>
-                  <td>" . htmlspecialchars($row["CheckOutDate"]) . "</td>
-                  <td>" . htmlspecialchars($row["BookingDate"]) . "</td>
-                  <td>" . htmlspecialchars($row["Price"]) . "</td>
-                  <td>
-                    <button class='edit-btn'>Edit</button>
-                    <button class='view-btn'>View</button>
-                    <button class='delete-btn'>Delete</button>
-                  </td>
-                </tr>";
-      }
-      echo "</tbody></table>";
-  } else {
-      echo "No bookings found.";
-  }
+    if ($result->num_rows > 0) {
+        echo "<table id='bookingTable' style='width:100%'>
+                <thead> 
+                  <tr>
+                      <th>Booking ID</th>
+                      <th>Room Number</th>
+                      <th>Room Type</th>
+                      <th>Booking Status</th>
+                      <th>Room Status</th>
+                      <th>Notes</th>
+                      <th>Check-In Date</th>
+                      <th>Check-Out Date</th>
+                      <th>Booking Date</th>
+                      <th>Price</th>
+                      <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>";
+        while($row = $result->fetch_assoc()) {
+            echo "<tr>
+                    <td>" . htmlspecialchars($row["BookingID"]) . "</td>
+                    <td>" . htmlspecialchars($row["RoomNumber"]) . "</td>
+                    <td>" . htmlspecialchars($row["RoomType"]) . "</td>
+                    <td>" . htmlspecialchars($row["BookingStatus"]) . "</td>
+                    <td>" . htmlspecialchars($row["RoomStatus"]) . "</td>
+                    <td>" . htmlspecialchars($row["Notes"]) . "</td>
+                    <td>" . htmlspecialchars($row["CheckInDate"]) . "</td>
+                    <td>" . htmlspecialchars($row["CheckOutDate"]) . "</td>
+                    <td>" . htmlspecialchars($row["BookingDate"]) . "</td>
+                    <td>" . htmlspecialchars($row["Price"]) . "</td>
+                    <td>
+                      <button class='edit-btn'>Edit</button>
+                      <button class='view-btn'>View</button>
+                      <button class='delete-btn'>Delete</button>
+                    </td>
+                  </tr>";
+        }
+        echo "</tbody></table>";
+    } else {
+        echo "No bookings found.";
+    }
 
-  $conn->close();
-  ?>
+    $conn->close();
+    ?>
+  </div>
 </div>
 
 <!-- Modal Add Booking Form -->
@@ -227,7 +239,7 @@ if (isset($_POST['addBooking'])) {
       <button type="button" onclick="document.getElementById('addBookingModal').style.display='none'">Cancel</button>
     </form>
   </div>
-</div>
+</div> 
 
 <!-- jQuery + DataTables + Buttons JS -->
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
@@ -248,9 +260,9 @@ if (isset($_POST['addBooking'])) {
     toggle.classList.toggle('expanded');
   }
 
-  // Activate DataTables
   $(document).ready(function() {
     $('#bookingTable').DataTable({
+      scrollX: true,
       dom: 'Bfrtip',
       buttons: [
         'copy', 'csv', 'excel', 'pdf', 'print', 'colvis'
