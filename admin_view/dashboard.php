@@ -29,44 +29,44 @@ function getStats() {
     ];
 
     // Get new bookings (bookings made in the last 24 hours)
-    $query = "SELECT COUNT(*) as count FROM reservations WHERE created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)";
+    $query = "SELECT COUNT(*) as count FROM booking WHERE BookingDate >= DATE_SUB(NOW(), INTERVAL 24 HOUR)";
     $result = $conn->query($query);
     if ($result && $row = $result->fetch_assoc()) {
         $stats['new_bookings'] = $row['count'];
     }
 
     // Get available rooms
-    $query = "SELECT COUNT(*) as count FROM rooms WHERE status = 'available'";
+    $query = "SELECT COUNT(*) as count FROM room WHERE RoomStatus = 'Available'";
     $result = $conn->query($query);
     if ($result && $row = $result->fetch_assoc()) {
         $stats['available_rooms'] = $row['count'];
     }
 
     // Get today's check-ins
-    $query = "SELECT COUNT(*) as count FROM reservations WHERE check_in_date = CURDATE() AND status = 'confirmed'";
+    $query = "SELECT COUNT(*) as count FROM booking WHERE DATE(CheckInDate) = CURDATE() AND BookingStatus = 'Confirmed'";
     $result = $conn->query($query);
     if ($result && $row = $result->fetch_assoc()) {
         $stats['check_ins'] = $row['count'];
     }
 
     // Get today's check-outs
-    $query = "SELECT COUNT(*) as count FROM reservations WHERE check_out_date = CURDATE()";
+    $query = "SELECT COUNT(*) as count FROM booking WHERE DATE(CheckOutDate) = CURDATE()";
     $result = $conn->query($query);
     if ($result && $row = $result->fetch_assoc()) {
         $stats['check_outs'] = $row['count'];
     }
 
     // Get total reservations
-    $query = "SELECT COUNT(*) as count FROM reservations WHERE status != 'cancelled'";
+    $query = "SELECT COUNT(*) as count FROM booking WHERE BookingStatus != 'Cancelled'";
     $result = $conn->query($query);
     if ($result && $row = $result->fetch_assoc()) {
         $stats['total_reservations'] = $row['count'];
     }
 
     // Calculate average stay
-    $query = "SELECT AVG(DATEDIFF(check_out_date, check_in_date)) as avg_stay 
-              FROM reservations 
-              WHERE status != 'cancelled' AND check_out_date > check_in_date";
+    $query = "SELECT AVG(TIMESTAMPDIFF(DAY, CheckInDate, CheckOutDate)) as avg_stay 
+              FROM booking 
+              WHERE BookingStatus != 'Cancelled' AND CheckOutDate > CheckInDate";
     $result = $conn->query($query);
     if ($result && $row = $result->fetch_assoc()) {
         $stats['average_stay'] = round($row['avg_stay'], 1);
@@ -74,8 +74,8 @@ function getStats() {
 
     // Calculate occupancy rate
     $query = "SELECT 
-                (SELECT COUNT(*) FROM rooms WHERE status = 'occupied') as occupied,
-                (SELECT COUNT(*) FROM rooms) as total";
+                (SELECT COUNT(*) FROM room WHERE RoomStatus = 'Occupied') as occupied,
+                (SELECT COUNT(*) FROM room) as total";
     $result = $conn->query($query);
     if ($result && $row = $result->fetch_assoc()) {
         $stats['occupancy_rate'] = $row['total'] > 0 
@@ -85,10 +85,10 @@ function getStats() {
 
     // Get housekeeping stats
     $query = "SELECT 
-                SUM(CASE WHEN cleaning_status = 'pending' THEN 1 ELSE 0 END) as to_clean,
-                SUM(CASE WHEN cleaning_status = 'cleaned' THEN 1 ELSE 0 END) as cleaned,
-                SUM(CASE WHEN maintenance_status = 'required' THEN 1 ELSE 0 END) as maintenance
-              FROM rooms";
+                SUM(CASE WHEN RoomStatus = 'Cleaning' THEN 1 ELSE 0 END) as to_clean,
+                SUM(CASE WHEN RoomStatus = 'Available' THEN 1 ELSE 0 END) as cleaned,
+                SUM(CASE WHEN RoomStatus = 'Maintenance' THEN 1 ELSE 0 END) as maintenance
+              FROM room";
     $result = $conn->query($query);
     if ($result && $row = $result->fetch_assoc()) {
         $stats['rooms_to_clean'] = $row['to_clean'];
@@ -105,13 +105,13 @@ function getBookingSchedule($year, $month) {
     $bookings = [];
     
     $query = "SELECT 
-                DAY(check_in_date) as day,
+                DAY(CheckInDate) as day,
                 COUNT(*) as booking_count
-              FROM reservations
-              WHERE YEAR(check_in_date) = ? 
-              AND MONTH(check_in_date) = ?
-              AND status != 'cancelled'
-              GROUP BY DAY(check_in_date)";
+              FROM booking
+              WHERE YEAR(CheckInDate) = ? 
+              AND MONTH(CheckInDate) = ?
+              AND BookingStatus != 'Cancelled'
+              GROUP BY DAY(CheckInDate)";
               
     $stmt = $conn->prepare($query);
     $stmt->bind_param("ii", $year, $month);
@@ -131,16 +131,17 @@ function getRecentBookings($limit = 5) {
     $bookings = [];
     
     $query = "SELECT 
-                r.id,
-                r.guest_name,
-                r.check_in_date,
-                r.check_out_date,
-                r.room_id,
-                r.status,
-                rm.room_number
-              FROM reservations r
-              JOIN rooms rm ON r.room_id = rm.id
-              ORDER BY r.created_at DESC
+                b.BookingID as id,
+                CONCAT(s.FirstName, ' ', s.LastName) as guest_name,
+                b.CheckInDate as check_in_date,
+                b.CheckOutDate as check_out_date,
+                b.RoomNumber as room_id,
+                b.BookingStatus as status,
+                r.RoomNumber as room_number
+              FROM booking b
+              LEFT JOIN account s ON b.StudentID = s.ID
+              JOIN room r ON b.RoomNumber = r.RoomNumber
+              ORDER BY b.BookingDate DESC
               LIMIT ?";
               
     $stmt = $conn->prepare($query);
