@@ -1,9 +1,8 @@
-    <!DOCTYPE html>
+<!DOCTYPE html>
     <html lang="en">
     <head>
       <meta charset="UTF-8">
       <title>Villa Valore Hotel</title>
-      <link rel="stylesheet" href="style.css">
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
       <!-- DataTables CSS -->
@@ -11,6 +10,53 @@
       <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css">
 
     <style>
+        body {
+          margin: 0;
+          font-family: Arial, sans-serif;
+        }
+        .sidebar {
+          width: 200px;
+          background-color: #008000;
+          color: white;
+          height: 100vh;
+          padding: 20px;
+          position: fixed;
+          top: 0;
+          left: 0;
+          overflow-y: auto;
+        }
+        .sidebar h4 {
+          margin-bottom: 30px;
+          font-size: 1.5em;
+        }
+        .nav-section {
+          margin-bottom: 20px;
+        }
+        .nav-link {
+          display: block;
+          color: white;
+          text-decoration: none;
+          padding: 8px 10px;
+          margin: 4px 0;
+          border-radius: 4px;
+        }
+        .nav-link:hover {
+          background-color: #34495e;
+        }
+        .submenu {
+          display: none;
+          padding-left: 15px;
+        }
+        .submenu a {
+          font-size: 0.95em;
+        }
+        .toggle-btn {
+          cursor: pointer;
+        }
+        .main-content {
+          margin-left: 240px; /* Adjusted for sidebar width */
+          padding: 20px;
+        }
         #addRoomModal {
           display: none;
           position: fixed;
@@ -58,11 +104,16 @@
         .add-btn:hover {
         background-color: #45a049;
         }
+          .table-scroll {
+      width: 100%;
+      overflow-x: auto;
+    }
+
       </style>
     </head>
     <body>
 
-    <?php
+<?php
     include 'connections.php';
 
     if (isset($_POST['addInvoice'])) {
@@ -126,6 +177,7 @@
 
       <button class="add-btn" onclick="document.getElementById('addPaymentModal').style.display='block'">+ Add Invoice</button>
 
+      <div class="table-scroll">
       <?php
       $sql = "SELECT PaymentID, Amount, PaymentStatus, PaymentDate, PaymentMethod, Discount, TotalBill, ReferenceCode FROM payment";
       $result = $conn->query($sql);
@@ -170,7 +222,8 @@
 
       $conn->close();
       ?>
-    </div>
+      </div>
+      </div>
 
     <!-- Modal Add Room Form -->
     <div id="addRoomModal">

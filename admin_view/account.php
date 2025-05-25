@@ -13,6 +13,67 @@ $result = $conn->query($sql);
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
+    .sidebar {
+      width: 200px;
+      background-color: #008000;
+      color: white;
+      height: 100vh;
+      padding: 20px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      overflow-y: auto;
+    }
+
+    .sidebar h4 {
+      margin-bottom: 30px;
+      font-size: 1.5em;
+    }
+
+    .nav-section {
+      margin-bottom: 20px;
+    }
+
+    .nav-link {
+      display: block;
+      color: white;
+      text-decoration: none;
+      padding: 8px 10px;
+      margin: 4px 0;
+      border-radius: 4px;
+    }
+
+    .nav-link:hover {
+      background-color: #34495e;
+    }
+
+    .submenu {
+      display: none;
+      padding-left: 15px;
+    }
+
+    .submenu a {
+      font-size: 0.95em;
+    }
+
+    .toggle-btn {
+      cursor: pointer;
+    }
+
+    .toggle-btn::after {
+      content: " ▼";
+      font-size: 0.8em;
+    }
+
+    .toggle-btn.expanded::after {
+      content: " ▲";
+    }
+
+    .main-content {
+      margin-left: 220px;
+      padding: 30px;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;

@@ -1,4 +1,4 @@
-    <!DOCTYPE html>
+<!DOCTYPE html>
     <html lang="en">
     <head>
       <meta charset="UTF-8">
@@ -11,6 +11,72 @@
       <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css">
 
     <style>
+       body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    .sidebar {
+      width: 200px;
+      background-color: #008000;
+      color: white;
+      height: 100vh;
+      padding: 20px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      overflow-y: auto;
+    }
+
+    .sidebar h4 {
+      margin-bottom: 30px;
+      font-size: 1.5em;
+    }
+
+    .nav-section {
+      margin-bottom: 20px;
+    }
+
+    .nav-link {
+      display: block;
+      color: white;
+      text-decoration: none;
+      padding: 8px 10px;
+      margin: 4px 0;
+      border-radius: 4px;
+    }
+
+    .nav-link:hover {
+      background-color: #34495e;
+    }
+
+    .submenu {
+      display: none;
+      padding-left: 15px;
+    }
+
+    .submenu a {
+      font-size: 0.95em;
+    }
+
+    .toggle-btn {
+      cursor: pointer;
+    }
+
+    .toggle-btn::after {
+      content: " ▼";
+      font-size: 0.8em;
+    }
+
+    .toggle-btn.expanded::after {
+      content: " ▲";
+    }
+
+    .main-content {
+      margin-left: 220px;
+      padding: 30px;
+    }
+
         #addRoomModal {
           display: none;
           position: fixed;
@@ -65,11 +131,11 @@
     <?php
     include 'connections.php';
 
-    if (isset($_POST['addmenu_service'])) {
-      $RoomNumber = $_POST['ItemID'];
-      $RoomType = $_POST['ItemName'];
-      $RoomPerHour = $_POST['DateReceived'];
-      $RoomStatus = $_POST['DateExpiry'];
+    if (isset($_POST['addinventory'])) {
+      $ItemID = $_POST['ItemID'];
+      $ItemName = $_POST['ItemName'];
+      $DateReceived = $_POST['DateReceived'];
+      $DateExpiry = $_POST['DateExpiry'];
       $Quantity = $_POST['Quantity'];
       $Price = $_POST['Price'];
       $Total = $_POST['Total'];
@@ -77,13 +143,13 @@
       $RqStocks = $_POST['RqStocks'];
       $Status = $_POST['Status'];
 
-      $stmt = $conn->prepare("INSERT INTO menu_service (menu_serviceID, Name, Type, Description, SellingPrice) VALUES (?, ?, ?, ?, ?)");
-      $stmt->bind_param("ssisi", $menu_serviceID, $Name, $Type, $Description, $SellingPrice);
+      $stmt = $conn->prepare("INSERT INTO inventory (ItemID, ItemName, DateReceived, DateExpiry, Quantity, Price, Total, CurrentStocks, RqStocks, Status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+      $stmt->bind_param("isssssssss", $ItemID, $ItemName, $DateReceived, $DateExpiry, $Quantity, $Price, $Total, $CurrentStocks, $RqStocks, $Status);
 
       if ($stmt->execute()) {
-        echo "<script>alert('Menu Service added successfully!'); window.location.href=window.location.href;</script>";
+        echo "<script>alert('Inventory item added successfully!'); window.location.href=window.location.href;</script>";
       } else {
-        echo "<script>alert('Error adding Menu Service: " . $stmt->error . "');</script>";
+        echo "<script>alert('Error adding Inventory item: " . $stmt->error . "');</script>";
       }
 
       $stmt->close();
@@ -123,35 +189,45 @@
 </div>
 
     <div class="main-content">
-      <h2>Menu & Service</h2>
-      <p>This is for the menu and services offered by the hotel.</p>
+      <h2>Inventory</h2>
+      <p>This is for the inventory items offered by the hotel.</p>
 
       <button class="add-btn" onclick="document.getElementById('addRoomModal').style.display='block'">+ Add Menu Service</button>
 
       <?php
-      $sql = "SELECT menu_serviceID, Name, Type, Description, SellingPrice FROM menu_service";
+      $sql = "SELECT ItemID, ItemName, DateReceived, DateExpiry, Quantity, Price, Total, CurrentStocks, RqStocks, Status FROM inventory";
       $result = $conn->query($sql);
 
       if ($result->num_rows > 0) {
-          echo "<table id='menuServiceTable' class='display nowrap' style='width:100%'>
+          echo "<table id='inventoryTable' class='display nowrap' style='width:100%'>
                   <thead> 
                     <tr>
-                        <th>Menu Service ID</th>
+                        <th>Item ID</th>
                         <th>Name</th>
-                        <th>Type</th>
-                        <th>Description</th>
-                        <th>Selling Price</th>
+                        <th>Date Received</th>
+                        <th>Date Expiry</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                        <th>Total</th>
+                        <th>Current Stocks</th>
+                        <th>Requested Stocks</th>
+                        <th>Status</th>
                         <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>";
           while($row = $result->fetch_assoc()) {
               echo "<tr>
-                      <td>" . htmlspecialchars($row["menu_serviceID"]) . "</td>
-                      <td>" . htmlspecialchars($row["Name"]) . "</td>
-                      <td>" . htmlspecialchars($row["Type"]) . "</td>
-                      <td>" . htmlspecialchars($row["Description"]) . "</td>
-                      <td>" . htmlspecialchars($row["SellingPrice"]) . "</td>
+                      <td>" . htmlspecialchars($row["ItemID"]) . "</td>
+                      <td>" . htmlspecialchars($row["ItemName"]) . "</td>
+                      <td>" . htmlspecialchars($row["DateReceived"]) . "</td>
+                      <td>" . htmlspecialchars($row["DateExpiry"]) . "</td>
+                      <td>" . htmlspecialchars($row["Quantity"]) . "</td>
+                      <td>" . htmlspecialchars($row["Price"]) . "</td>
+                      <td>" . htmlspecialchars($row["Total"]) . "</td>
+                      <td>" . htmlspecialchars($row["CurrentStocks"]) . "</td>
+                      <td>" . htmlspecialchars($row["RqStocks"]) . "</td>
+                      <td>" . htmlspecialchars($row["Status"]) . "</td>
                       <td>
                         <button class='edit-btn'>Edit</button>
                         <button class='view-btn'>View</button>
@@ -161,32 +237,48 @@
           }
           echo "</tbody></table>";
       } else {
-          echo "No menu services found.";
+          echo "No inventory items found.";
       }
 
       $conn->close();
       ?>
     </div>
+    
 
     <!-- Modal Add Room Form -->
     <div id="addRoomModal">
       <div class="modal-content">
-        <h3>Add New Menu Service</h3>
+        <h3>Add New Inventory Item</h3>
         <form method="POST" action="">
-          <label>Menu & Service ID</label>
-          <input type="text" name="menu_serviceID" required>
+          <label>Item ID</label>
+          <input type="text" name="ItemID" required>
 
           <label>Name</label>
-          <input type="text" name="Name" required>
+          <input type="text" name="ItemName" required>
 
-          <label>Type</label>
-          <input type="text" name="Type" required>
+          <label>Date Received</label>
+          <input type="date" name="DateReceived" required>
 
-          <label>Description</label>
-          <textarea name="Description" required></textarea>
+          <label>Date Expiry</label>
+          <input type="date" name="DateExpiry" required>
 
-          <label>Selling Price</label>
-          <input type="number" name="SellingPrice" required>
+          <label>Quantity</label>
+          <input type="number" name="Quantity" required>
+
+          <label>Price</label>
+          <input type="number" name="Price" required>
+
+          <label>Total</label>
+          <input type="number" name="Total" required>
+
+          <label>Current Stocks</label>
+          <input type="number" name="CurrentStocks" required>
+
+          <label>Requested Stocks</label>
+          <input type="number" name="RqStocks" required>
+
+          <label>Status</label>
+          <input type="text" name="Status" required>
 
           <button type="submit" name="addRoom">Save</button>
           <button type="button" onclick="document.getElementById('addRoomModal').style.display='none'">Cancel</button>
@@ -215,7 +307,7 @@
 
       // Activate DataTables
       $(document).ready(function() {
-        $('#menuServiceTable').DataTable({
+        $('#inventoryTable').DataTable({
           dom: 'Bfrtip',
           buttons: [
             'copy', 'csv', 'excel', 'pdf', 'print', 'colvis'

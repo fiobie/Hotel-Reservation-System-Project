@@ -4,6 +4,70 @@
   <meta charset="UTF-8">
   <title>Villa Valore Hotel</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+    }
+
+    .sidebar {
+      width: 260px;
+      background-color: #008000;
+      color: white;
+      min-height: 100vh;
+      padding: 20px;
+      position: fixed;
+    }
+
+    .sidebar h4 {
+      margin-bottom: 30px;
+      font-size: 1.5em;
+    }
+
+    .nav-section {
+      margin-bottom: 20px;
+    }
+
+    .nav-link {
+      display: block;
+      color: white;
+      text-decoration: none;
+      padding: 8px 10px;
+      margin: 4px 0;
+      border-radius: 4px;
+    }
+
+    .nav-link:hover {
+      background-color: #34495e;
+    }
+
+    .submenu {
+      display: none;
+      padding-left: 15px;
+    }
+
+    .submenu a {
+      font-size: 0.95em;
+    }
+
+    .toggle-btn {
+      cursor: pointer;
+    }
+    
+    .main-content {
+      margin-left: 290px; /* Adjusted for sidebar width */
+      padding: 20px;
+    }
+    
+    h2 {
+      color: #333333; /* Darker color for better contrast */
+    }
+    
+    p {
+      color: #555555; /* Lighter gray for text */
+    }
+  </style>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 </head>
