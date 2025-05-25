@@ -235,6 +235,10 @@ $recentBookings = getRecentBookings(5);
             min-height: 100vh;
             padding: 1rem;
             color: white;
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
         }
 
         .nav-section {
@@ -279,6 +283,7 @@ $recentBookings = getRecentBookings(5);
         .main-content {
             flex: 1;
             padding: 2rem;
+            margin-left: 250px; /* Match sidebar width */
             overflow-x: hidden;
         }
 
@@ -490,12 +495,12 @@ $recentBookings = getRecentBookings(5);
     <div class="sidebar">
         <div class="nav-section">
             <a class="nav-link" href="home.php"><i class="fas fa-th-large"></i> Dashboard</a>
-            <a class="nav-link" href="guest.php"><i class="fas fa-user"></i> Guest</a>
+            <a class="nav-link" href="student.php"><i class="fas fa-user"></i> Guest</a>
             <a class="nav-link" href="booking.php"><i class="fas fa-book"></i> Booking</a>
         </div>
 
         <div class="nav-section">
-            <div style="color: #ffffff; font-size: 0.9em; margin: 10px 0 5px;">MANAGEMENT</div>
+            <div style="color: #aaa; font-size: 0.9em; margin: 10px 0 5px;">MANAGEMENT</div>
             <div class="nav-link toggle-btn" onclick="toggleMenu('management')"><i class="fas fa-cog"></i> Manage</div>
             <div class="submenu" id="management">
                 <a class="nav-link" href="room.php"><i class="fas fa-door-open"></i> Room</a>
@@ -507,7 +512,7 @@ $recentBookings = getRecentBookings(5);
 
         <div class="nav-section">
             <a class="nav-link" href="payment.php"><i class="fas fa-credit-card"></i> Payments</a>
-            <a class="nav-link" href="statistics.php"><i class="fas fa-chart-line"></i> Statistics</a>
+            <a class="nav-link" href="#"><i class="fas fa-chart-line"></i> Statistics</a>
             <a class="nav-link" href="inbox.php"><i class="fas fa-inbox"></i> Inbox</a>
         </div>
 
