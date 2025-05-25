@@ -214,6 +214,7 @@ $recentBookings = getRecentBookings(5);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hotel Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -224,7 +225,61 @@ $recentBookings = getRecentBookings(5);
 
         body {
             background-color: #f5f6fa;
+            display: flex;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 250px;
+            background: #1a237e;
+            min-height: 100vh;
+            padding: 1rem;
+            color: white;
+        }
+
+        .nav-section {
+            margin-bottom: 2rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            margin-bottom: 0.25rem;
+            transition: background-color 0.2s;
+        }
+
+        .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-link i {
+            margin-right: 0.75rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        .submenu {
+            margin-left: 1rem;
+            display: none;
+        }
+
+        .submenu.active {
+            display: block;
+        }
+
+        .toggle-btn {
+            cursor: pointer;
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            flex: 1;
             padding: 2rem;
+            overflow-x: hidden;
         }
 
         .dashboard {
@@ -431,151 +486,185 @@ $recentBookings = getRecentBookings(5);
     </style>
 </head>
 <body>
-    <div class="dashboard">
-        <h1>Villa Valore Hotel</h1>
-        
-        <!-- Stats Cards -->
-        <div class="stats-cards">
-            <div class="stat-card">
-                <div class="stat-icon">📅</div>
-                <div class="stat-info">
-                    <h3>New Booking</h3>
-                    <p><?php echo $stats['new_bookings']; ?></p>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">🛏️</div>
-                <div class="stat-info">
-                    <h3>Available Room</h3>
-                    <p><?php echo $stats['available_rooms']; ?></p>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">📥</div>
-                <div class="stat-info">
-                    <h3>Check In</h3>
-                    <p><?php echo $stats['check_ins']; ?></p>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">📤</div>
-                <div class="stat-info">
-                    <h3>Check Out</h3>
-                    <p><?php echo $stats['check_outs']; ?></p>
-                </div>
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <div class="nav-section">
+            <a class="nav-link" href="home.php"><i class="fas fa-th-large"></i> Dashboard</a>
+            <a class="nav-link" href="guest.php"><i class="fas fa-user"></i> Guest</a>
+            <a class="nav-link" href="booking.php"><i class="fas fa-book"></i> Booking</a>
+        </div>
+
+        <div class="nav-section">
+            <div style="color: #ffffff; font-size: 0.9em; margin: 10px 0 5px;">MANAGEMENT</div>
+            <div class="nav-link toggle-btn" onclick="toggleMenu('management')"><i class="fas fa-cog"></i> Manage</div>
+            <div class="submenu" id="management">
+                <a class="nav-link" href="room.php"><i class="fas fa-door-open"></i> Room</a>
+                <a class="nav-link" href="menu_service.php"><i class="fas fa-utensils"></i> Menu & Service</a>
+                <a class="nav-link" href="account.php"><i class="fas fa-user"></i> Account</a>
+                <a class="nav-link" href="inventory.php"><i class="fas fa-box"></i> Inventory</a>
             </div>
         </div>
-        
-        <div class="content-grid">
-            <!-- Calendar Section -->
-            <div class="left-section">
-                <div class="booking-schedule">
-                    <div class="calendar-nav">
-                        <h2>Recent Booking Schedule</h2>
-                        <div class="month-nav">
-                            <button class="nav-btn prev-month">&lt;</button>
-                            <span class="current-month"><?php echo date('F Y'); ?></span>
-                            <button class="nav-btn next-month">&gt;</button>
+
+        <div class="nav-section">
+            <a class="nav-link" href="payment.php"><i class="fas fa-credit-card"></i> Payments</a>
+            <a class="nav-link" href="statistics.php"><i class="fas fa-chart-line"></i> Statistics</a>
+            <a class="nav-link" href="inbox.php"><i class="fas fa-inbox"></i> Inbox</a>
+        </div>
+
+        <div class="nav-section">
+            <a class="nav-link" href="profile.php"><i class="fas fa-user-lock"></i> Profile Account</a>
+            <a class="nav-link" href="logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="dashboard">
+            <h1>Villa Valore Hotel</h1>
+            
+            <!-- Stats Cards -->
+            <div class="stats-cards">
+                <div class="stat-card">
+                    <div class="stat-icon">📅</div>
+                    <div class="stat-info">
+                        <h3>New Booking</h3>
+                        <p><?php echo $stats['new_bookings']; ?></p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🛏️</div>
+                    <div class="stat-info">
+                        <h3>Available Room</h3>
+                        <p><?php echo $stats['available_rooms']; ?></p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📥</div>
+                    <div class="stat-info">
+                        <h3>Check In</h3>
+                        <p><?php echo $stats['check_ins']; ?></p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📤</div>
+                    <div class="stat-info">
+                        <h3>Check Out</h3>
+                        <p><?php echo $stats['check_outs']; ?></p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="content-grid">
+                <!-- Calendar Section -->
+                <div class="left-section">
+                    <div class="booking-schedule">
+                        <div class="calendar-nav">
+                            <h2>Recent Booking Schedule</h2>
+                            <div class="month-nav">
+                                <button class="nav-btn prev-month">&lt;</button>
+                                <span class="current-month"><?php echo date('F Y'); ?></span>
+                                <button class="nav-btn next-month">&gt;</button>
+                            </div>
                         </div>
-                    </div>
-                    <div class="calendar-header">
-                        <div>MON</div>
-                        <div>TUE</div>
-                        <div>WED</div>
-                        <div>THU</div>
-                        <div>FRI</div>
-                        <div>SAT</div>
-                        <div>SUN</div>
-                    </div>
-                    <div class="calendar-grid">
-                        <?php
-                        $firstDay = mktime(0, 0, 0, $currentMonth, 1, $currentYear);
-                        $daysInMonth = date('t', $firstDay);
-                        $startDay = date('N', $firstDay);
-                        $currentDate = date('j');
-                        
-                        for ($i = 1; $i < $startDay; $i++) {
-                            echo '<div class="calendar-day empty"></div>';
-                        }
-                        
-                        for ($day = 1; $day <= $daysInMonth; $day++) {
-                            $classes = ['calendar-day'];
-                            if ($day == $currentDate && $currentMonth == date('n')) {
-                                $classes[] = 'current-day';
-                            }
-                            if (isset($bookingSchedule[$day]) && $bookingSchedule[$day] > 0) {
-                                $classes[] = 'has-bookings';
+                        <div class="calendar-header">
+                            <div>MON</div>
+                            <div>TUE</div>
+                            <div>WED</div>
+                            <div>THU</div>
+                            <div>FRI</div>
+                            <div>SAT</div>
+                            <div>SUN</div>
+                        </div>
+                        <div class="calendar-grid">
+                            <?php
+                            $firstDay = mktime(0, 0, 0, $currentMonth, 1, $currentYear);
+                            $daysInMonth = date('t', $firstDay);
+                            $startDay = date('N', $firstDay);
+                            $currentDate = date('j');
+                            
+                            for ($i = 1; $i < $startDay; $i++) {
+                                echo '<div class="calendar-day empty"></div>';
                             }
                             
-                            echo '<div class="' . implode(' ', $classes) . '">';
-                            echo (int)$day;
-                            echo '</div>';
-                        }
-                        ?>
+                            for ($day = 1; $day <= $daysInMonth; $day++) {
+                                $classes = ['calendar-day'];
+                                if ($day == $currentDate && $currentMonth == date('n')) {
+                                    $classes[] = 'current-day';
+                                }
+                                if (isset($bookingSchedule[$day]) && $bookingSchedule[$day] > 0) {
+                                    $classes[] = 'has-bookings';
+                                }
+                                
+                                echo '<div class="' . implode(' ', $classes) . '">';
+                                echo (int)$day;
+                                echo '</div>';
+                            }
+                            ?>
+                        </div>
+                    </div>
+
+                    <!-- Recent Bookings Table -->
+                    <div class="booking-list">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Room</th>
+                                    <th>No.</th>
+                                    <th>Check In</th>
+                                    <th>Check Out</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($recentBookings as $booking): ?>
+                                <tr>
+                                    <td><?php echo htmlspecialchars($booking['guest_name']); ?></td>
+                                    <td><?php echo htmlspecialchars($booking['room_type'] ?? 'Standard'); ?></td>
+                                    <td><?php echo htmlspecialchars($booking['room_number']); ?></td>
+                                    <td><?php echo date('m/d/y', strtotime($booking['check_in_date'])); ?></td>
+                                    <td><?php echo date('m/d/y', strtotime($booking['check_out_date'])); ?></td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
-                <!-- Recent Bookings Table -->
-                <div class="booking-list">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Room</th>
-                                <th>No.</th>
-                                <th>Check In</th>
-                                <th>Check Out</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($recentBookings as $booking): ?>
-                            <tr>
-                                <td><?php echo htmlspecialchars($booking['guest_name']); ?></td>
-                                <td><?php echo htmlspecialchars($booking['room_type'] ?? 'Standard'); ?></td>
-                                <td><?php echo htmlspecialchars($booking['room_number']); ?></td>
-                                <td><?php echo date('m/d/y', strtotime($booking['check_in_date'])); ?></td>
-                                <td><?php echo date('m/d/y', strtotime($booking['check_out_date'])); ?></td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Right Section -->
-            <div class="right-section">
-                <div class="stats-section">
-                    <h2>Reservation Stats</h2>
-                    <div class="stats-content">
-                        <div class="stat-item">
-                            <h4>Total Reservations</h4>
-                            <p><?php echo $stats['total_reservations']; ?></p>
-                        </div>
-                        <div class="stat-item">
-                            <h4>Average Stay</h4>
-                            <p><?php echo $stats['average_stay']; ?> days</p>
-                        </div>
-                        <div class="stat-item">
-                            <h4>Occupancy Rate</h4>
-                            <p><?php echo $stats['occupancy_rate']; ?>%</p>
+                <!-- Right Section -->
+                <div class="right-section">
+                    <div class="stats-section">
+                        <h2>Reservation Stats</h2>
+                        <div class="stats-content">
+                            <div class="stat-item">
+                                <h4>Total Reservations</h4>
+                                <p><?php echo $stats['total_reservations']; ?></p>
+                            </div>
+                            <div class="stat-item">
+                                <h4>Average Stay</h4>
+                                <p><?php echo $stats['average_stay']; ?> days</p>
+                            </div>
+                            <div class="stat-item">
+                                <h4>Occupancy Rate</h4>
+                                <p><?php echo $stats['occupancy_rate']; ?>%</p>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="housekeeping">
-                    <h2>Housekeeping</h2>
-                    <div class="housekeeping-content">
-                        <div class="housekeeping-item">
-                            <h4>Rooms to Clean</h4>
-                            <p><?php echo $stats['rooms_to_clean']; ?></p>
-                        </div>
-                        <div class="housekeeping-item">
-                            <h4>Rooms Cleaned</h4>
-                            <p><?php echo $stats['rooms_cleaned']; ?></p>
-                        </div>
-                        <div class="housekeeping-item">
-                            <h4>Maintenance Required</h4>
-                            <p><?php echo $stats['maintenance_required']; ?></p>
+                    <div class="housekeeping">
+                        <h2>Housekeeping</h2>
+                        <div class="housekeeping-content">
+                            <div class="housekeeping-item">
+                                <h4>Rooms to Clean</h4>
+                                <p><?php echo $stats['rooms_to_clean']; ?></p>
+                            </div>
+                            <div class="housekeeping-item">
+                                <h4>Rooms Cleaned</h4>
+                                <p><?php echo $stats['rooms_cleaned']; ?></p>
+                            </div>
+                            <div class="housekeeping-item">
+                                <h4>Maintenance Required</h4>
+                                <p><?php echo $stats['maintenance_required']; ?></p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -583,74 +672,40 @@ $recentBookings = getRecentBookings(5);
         </div>
     </div>
 
-    <div class="sidebar">
-
-  <div class="nav-section">
-    <a class="nav-link" href="home.php"><i class="fas fa-th-large"></i> Dashboard</a>
-    <a class="nav-link" href="guest.php"><i class="fas fa-user"></i> Guest</a>
-    <a class="nav-link" href="booking.php"><i class="fas fa-book"></i> Booking</a>
-  </div>
-
-  <div class="nav-section">
-    <div style="color: #ffffff; font-size: 0.9em; margin: 10px 0 5px;">MANAGEMENT</div>
-    <div class="nav-link toggle-btn" onclick="toggleMenu('management')"><i class="fas fa-cog"></i> Manage</div>
-    <div class="submenu" id="management">
-      <a class="nav-link" href="room.php"><i class="fas fa-door-open"></i> Room</a>
-      <a class="nav-link" href="menu_service.php"><i class="fas fa-utensils"></i> Menu & Service</a>
-      <a class="nav-link" href="account.php"><i class="fas fa-user"></i> Account</a>
-      <a class="nav-link" href="inventory.php"><i class="fas fa-box"></i> Inventory</a>
-    </div>
-  </div>
-
-  <div class="nav-section">
-    <a class="nav-link" href="payment.php"><i class="fas fa-credit-card"></i> Payments</a>
-    <a class="nav-link" href="statistics.php"><i class="fas fa-chart-line"></i> Statistics</a>
-    <a class="nav-link" href="inbox.php"><i class="fas fa-inbox"></i> Inbox</a>
-  </div>
-
-  <div class="nav-section">
-    <a class="nav-link" href="profile.php"><i class="fas fa-user-lock"></i> Profile Account</a>
-    <a class="nav-link" href="logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
-  </div>
-</div> 
-
-<div class="main-content">
-  <h2>Booking</h2>
-  <p>This is where the hotel booking information is listed.</p>
-
-  <button class="add-btn" onclick="document.getElementById('addBookingModal').style.display='block'">+ Add New Booking</button>
-
-   <div class="table-scroll">
-    <table id="bookingTable">
-
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const prevMonthBtn = document.querySelector('.prev-month');
-        const nextMonthBtn = document.querySelector('.next-month');
-        const currentMonthSpan = document.querySelector('.current-month');
-        
-        let currentDate = new Date();
-        
-        function updateCalendar(year, month) {
-            fetch(`?ajax_calendar=1&year=${year}&month=${month}`)
-                .then(response => response.json())
-                .then(data => {
-                    const calendarGrid = document.querySelector('.calendar-grid');
-                    calendarGrid.innerHTML = data.calendarHtml;
-                    currentMonthSpan.textContent = data.monthDisplay;
-                });
+        // Add toggle menu functionality
+        function toggleMenu(menuId) {
+            const submenu = document.getElementById(menuId);
+            submenu.classList.toggle('active');
         }
-        
-        prevMonthBtn.addEventListener('click', () => {
-            currentDate.setMonth(currentDate.getMonth() - 1);
-            updateCalendar(currentDate.getFullYear(), currentDate.getMonth() + 1);
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const prevMonthBtn = document.querySelector('.prev-month');
+            const nextMonthBtn = document.querySelector('.next-month');
+            const currentMonthSpan = document.querySelector('.current-month');
+            
+            let currentDate = new Date();
+            
+            function updateCalendar(year, month) {
+                fetch(`?ajax_calendar=1&year=${year}&month=${month}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const calendarGrid = document.querySelector('.calendar-grid');
+                        calendarGrid.innerHTML = data.calendarHtml;
+                        currentMonthSpan.textContent = data.monthDisplay;
+                    });
+            }
+            
+            prevMonthBtn.addEventListener('click', () => {
+                currentDate.setMonth(currentDate.getMonth() - 1);
+                updateCalendar(currentDate.getFullYear(), currentDate.getMonth() + 1);
+            });
+            
+            nextMonthBtn.addEventListener('click', () => {
+                currentDate.setMonth(currentDate.getMonth() + 1);
+                updateCalendar(currentDate.getFullYear(), currentDate.getMonth() + 1);
+            });
         });
-        
-        nextMonthBtn.addEventListener('click', () => {
-            currentDate.setMonth(currentDate.getMonth() + 1);
-            updateCalendar(currentDate.getFullYear(), currentDate.getMonth() + 1);
-        });
-    });
     </script>
 </body>
 </html>
