@@ -231,7 +231,7 @@ $recentBookings = getRecentBookings(5);
         /* Sidebar Styles */
         .sidebar {
             width: 250px;
-            background: #1a237e;
+            background: #008000;
             min-height: 100vh;
             padding: 1rem;
             color: white;
