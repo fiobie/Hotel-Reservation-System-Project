@@ -1,15 +1,220 @@
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8">
-      <title>Villa Valore Hotel</title>
-      <link rel="stylesheet" href="style.css">
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<?php
+// Database Connection
+$host = "localhost";
+$user = "root";
+$password = "";
+$dbname = "hotel_reservation_systemdb";
 
-      <!-- DataTables CSS -->
-      <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-      <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css">
+$conn = new mysqli($host, $user, $password, $dbname);
 
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Database Query Functions
+function getStats() {
+    global $conn;
+    
+    $stats = [
+        'new_bookings' => 0,
+        'available_rooms' => 0,
+        'check_ins' => 0,
+        'check_outs' => 0,
+        'total_reservations' => 0,
+        'average_stay' => 0,
+        'occupancy_rate' => 0,
+        'rooms_to_clean' => 0,
+        'rooms_cleaned' => 0,
+        'maintenance_required' => 0
+    ];
+
+    // Get new bookings (bookings made in the last 24 hours)
+    $query = "SELECT COUNT(*) as count FROM booking WHERE BookingDate >= DATE_SUB(NOW(), INTERVAL 24 HOUR)";
+    $result = $conn->query($query);
+    if ($result && $row = $result->fetch_assoc()) {
+        $stats['new_bookings'] = $row['count'];
+    }
+
+    // Get available rooms
+    $query = "SELECT COUNT(*) as count FROM room WHERE RoomStatus = 'Available'";
+    $result = $conn->query($query);
+    if ($result && $row = $result->fetch_assoc()) {
+        $stats['available_rooms'] = $row['count'];
+    }
+
+    // Get today's check-ins
+    $query = "SELECT COUNT(*) as count FROM booking WHERE DATE(CheckInDate) = CURDATE() AND BookingStatus = 'Confirmed'";
+    $result = $conn->query($query);
+    if ($result && $row = $result->fetch_assoc()) {
+        $stats['check_ins'] = $row['count'];
+    }
+
+    // Get today's check-outs
+    $query = "SELECT COUNT(*) as count FROM booking WHERE DATE(CheckOutDate) = CURDATE()";
+    $result = $conn->query($query);
+    if ($result && $row = $result->fetch_assoc()) {
+        $stats['check_outs'] = $row['count'];
+    }
+
+    // Get total reservations
+    $query = "SELECT COUNT(*) as count FROM booking WHERE BookingStatus != 'Cancelled'";
+    $result = $conn->query($query);
+    if ($result && $row = $result->fetch_assoc()) {
+        $stats['total_reservations'] = $row['count'];
+    }
+
+    // Calculate average stay
+    $query = "SELECT AVG(TIMESTAMPDIFF(DAY, CheckInDate, CheckOutDate)) as avg_stay 
+              FROM booking 
+              WHERE BookingStatus != 'Cancelled' AND CheckOutDate > CheckInDate";
+    $result = $conn->query($query);
+    if ($result && $row = $result->fetch_assoc()) {
+        $stats['average_stay'] = round($row['avg_stay'], 1);
+    }
+
+    // Calculate occupancy rate
+    $query = "SELECT 
+                (SELECT COUNT(*) FROM room WHERE RoomStatus = 'Occupied') as occupied,
+                (SELECT COUNT(*) FROM room) as total";
+    $result = $conn->query($query);
+    if ($result && $row = $result->fetch_assoc()) {
+        $stats['occupancy_rate'] = $row['total'] > 0 
+            ? round(($row['occupied'] / $row['total']) * 100) 
+            : 0;
+    }
+
+    // Get housekeeping stats
+    $query = "SELECT 
+                SUM(CASE WHEN RoomStatus = 'Cleaning' THEN 1 ELSE 0 END) as to_clean,
+                SUM(CASE WHEN RoomStatus = 'Available' THEN 1 ELSE 0 END) as cleaned,
+                SUM(CASE WHEN RoomStatus = 'Maintenance' THEN 1 ELSE 0 END) as maintenance
+              FROM room";
+    $result = $conn->query($query);
+    if ($result && $row = $result->fetch_assoc()) {
+        $stats['rooms_to_clean'] = $row['to_clean'];
+        $stats['rooms_cleaned'] = $row['cleaned'];
+        $stats['maintenance_required'] = $row['maintenance'];
+    }
+
+    return $stats;
+}
+
+function getBookingSchedule($year, $month) {
+    global $conn;
+    
+    $bookings = [];
+    
+    $query = "SELECT 
+                DAY(CheckInDate) as day,
+                COUNT(*) as booking_count
+              FROM booking
+              WHERE YEAR(CheckInDate) = ? 
+              AND MONTH(CheckInDate) = ?
+              AND BookingStatus != 'Cancelled'
+              GROUP BY DAY(CheckInDate)";
+              
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("ii", $year, $month);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    while ($row = $result->fetch_assoc()) {
+        $bookings[$row['day']] = $row['booking_count'];
+    }
+    
+    return $bookings;
+}
+
+function getRecentBookings($limit = 5) {
+    global $conn;
+    
+    $bookings = [];
+    
+    $query = "SELECT 
+                b.BookingID as id,
+                CONCAT(s.FirstName, ' ', s.LastName) as guest_name,
+                b.CheckInDate as check_in_date,
+                b.CheckOutDate as check_out_date,
+                b.RoomNumber as room_id,
+                b.BookingStatus as status,
+                r.RoomNumber as room_number
+              FROM booking b
+              LEFT JOIN account s ON b.StudentID = s.ID
+              JOIN room r ON b.RoomNumber = r.RoomNumber
+              ORDER BY b.BookingDate DESC
+              LIMIT ?";
+              
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("i", $limit);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    while ($row = $result->fetch_assoc()) {
+        $bookings[] = $row;
+    }
+    
+    return $bookings;
+}
+
+// Handle AJAX Calendar Updates
+if (isset($_GET['ajax_calendar'])) {
+    $year = isset($_GET['year']) ? (int)$_GET['year'] : date('Y');
+    $month = isset($_GET['month']) ? (int)$_GET['month'] : date('n');
+    
+    $bookingSchedule = getBookingSchedule($year, $month);
+    $firstDay = mktime(0, 0, 0, $month, 1, $year);
+    $daysInMonth = date('t', $firstDay);
+    $startDay = date('N', $firstDay);
+    $currentDate = date('j');
+    $currentMonth = date('n');
+    $currentYear = date('Y');
+    
+    $calendarHtml = '';
+    
+    for ($i = 1; $i < $startDay; $i++) {
+        $calendarHtml .= '<div class="calendar-day empty"></div>';
+    }
+    
+    for ($day = 1; $day <= $daysInMonth; $day++) {
+        $classes = ['calendar-day'];
+        if ($day == $currentDate && $month == $currentMonth && $year == $currentYear) {
+            $classes[] = 'current-day';
+        }
+        if (isset($bookingSchedule[$day]) && $bookingSchedule[$day] > 0) {
+            $classes[] = 'has-bookings';
+        }
+        
+        $calendarHtml .= '<div class="' . implode(' ', $classes) . '">';
+        $calendarHtml .= (int)$day;
+        if (isset($bookingSchedule[$day])) {
+            $calendarHtml .= '<span class="booking-count">' . $bookingSchedule[$day] . '</span>';
+        }
+        $calendarHtml .= '</div>';
+    }
+    
+    header('Content-Type: application/json');
+    echo json_encode([
+        'calendarHtml' => $calendarHtml,
+        'monthDisplay' => date('F Y', $firstDay)
+    ]);
+    exit;
+}
+
+// Get initial data
+$stats = getStats();
+$currentYear = date('Y');
+$currentMonth = date('n');
+$bookingSchedule = getBookingSchedule($currentYear, $currentMonth);
+$recentBookings = getRecentBookings(5);
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotel Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
         #addRoomModal {
           display: none;
@@ -223,6 +428,5 @@
         });
       });
     </script>
-
-        </body>
-            </html>
+</body>
+</html>
