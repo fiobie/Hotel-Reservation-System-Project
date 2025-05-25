@@ -185,7 +185,7 @@ if (isset($_GET['ajax_calendar'])) {
         }
         
         $calendarHtml .= '<div class="' . implode(' ', $classes) . '">';
-        $calendarHtml .= $day;
+        $calendarHtml .= (int)$day;
         if (isset($bookingSchedule[$day])) {
             $calendarHtml .= '<span class="booking-count">' . $bookingSchedule[$day] . '</span>';
         }
@@ -215,7 +215,6 @@ $recentBookings = getRecentBookings(5);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hotel Dashboard</title>
     <style>
-        /* Custom styles */
         * {
             margin: 0;
             padding: 0;
@@ -239,92 +238,61 @@ $recentBookings = getRecentBookings(5);
             font-size: 2rem;
         }
 
-        h2 {
-            color: #1a237e;
-            font-size: 1.4rem;
-            margin-bottom: 1.5rem;
-            font-weight: 600;
-            padding-bottom: 0.75rem;
-            border-bottom: 2px solid #f0f2f5;
+        /* Stats Cards Container */
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
         }
 
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .stat-icon {
+            background: #f0f2f5;
+            padding: 0.8rem;
+            border-radius: 8px;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stat-info h3 {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 0.3rem;
+        }
+
+        .stat-info p {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        /* Content Grid */
         .content-grid {
             display: grid;
             grid-template-columns: 1.5fr 1fr;
-            gap: 0.25rem;
+            gap: 2rem;
+            margin-bottom: 2rem;
         }
 
-        .right-section {
-            display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
-        }
-
-        .stats-section, .housekeeping {
-            background: white;
-            padding: 0.75rem;
+        /* Calendar Styles */
+        .booking-schedule {
+            background: #f8f9fa;
+            padding: 1.5rem;
             border-radius: 8px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-        }
-
-        .stats-content, .housekeeping-content {
-            display: grid;
-            gap: 0.25rem;
-        }
-
-        .stat-item, .housekeeping-item {
-            padding: 0.5rem;
-            background: #f8f9fa;
-            border-radius: 6px;
-            transition: all 0.2s ease;
-            border: 1px solid rgba(0, 0, 0, 0.05);
-        }
-
-        .stat-item:hover, .housekeeping-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            background: white;
-        }
-
-        .calendar-day {
-            aspect-ratio: 1;
-            padding: 0.4rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            border-radius: 6px;
-            cursor: pointer;
-            position: relative;
-            font-size: 0.85rem;
-            color: #333;
-            transition: all 0.2s ease;
-            min-width: 28px;
-            min-height: 28px;
-        }
-
-        .calendar-day:not(.empty):hover {
-            background-color: #f0f2f5;
-        }
-
-        .calendar-day.empty {
-            cursor: default;
-        }
-
-        .calendar-day.has-bookings {
-            background-color: #e3f2fd;
-            color: #1976d2;
-        }
-
-        .calendar-day.current-day {
-            background-color: #147219;
-            color: white;
-        }
-
-        .booking-count {
-            font-size: 0.7rem;
-            margin-top: 0.2rem;
-            opacity: 0.8;
         }
 
         .calendar-header {
@@ -332,55 +300,47 @@ $recentBookings = getRecentBookings(5);
             grid-template-columns: repeat(7, 1fr);
             text-align: center;
             font-weight: 500;
-            color: #666;
-            margin-bottom: 0.75rem;
-            padding: 0.4rem;
-            border-bottom: 1px solid #eee;
-            font-size: 0.8rem;
+            margin-bottom: 1rem;
         }
 
         .calendar-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 0.4rem;
-            padding: 0.5rem;
-            max-width: 100%;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
         }
 
-        .calendar-nav {
+        .calendar-day {
+            aspect-ratio: 1;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 0.75rem;
-            margin-bottom: 1rem;
-        }
-
-        .nav-btn {
-            border: none;
-            background: #f0f2f5;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
+            border-radius: 4px;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1rem;
-            color: #666;
-            transition: all 0.2s ease;
-        }
-
-        .nav-btn:hover {
-            background: #e4e6e9;
-            color: #333;
-        }
-
-        .booking-list {
-            margin-top: 1rem;
+            font-size: 0.9rem;
             background: white;
-            padding: 1.25rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .calendar-day.current-day {
+            background-color: #147219;
+            color: white;
+        }
+
+        .calendar-day.has-bookings {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .calendar-day.empty {
+            background: transparent;
+            cursor: default;
+        }
+
+        /* Recent Bookings Table */
+        .booking-list {
+            margin-top: 0;
+            padding-top: 1.5rem;
+            border-top: 1px solid #dee2e6;
         }
 
         table {
@@ -391,49 +351,82 @@ $recentBookings = getRecentBookings(5);
         th, td {
             padding: 0.75rem;
             text-align: left;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid #dee2e6;
+            background: #f8f9fa;
         }
 
         th {
-            font-weight: 500;
             color: #666;
-            background-color: #f8f9fa;
+            font-weight: 500;
         }
 
-        td {
-            color: #333;
+        tr:last-child td {
+            border-bottom: none;
         }
 
-        tr:hover {
-            background-color: #f8f9fa;
+        /* Right Section */
+        .right-section > div {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            margin-bottom: 1.5rem;
         }
 
-        .housekeeping-item {
+        .stats-content, .housekeeping-content {
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .stat-item, .housekeeping-item {
+            padding: 0.75rem;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+
+        .stat-item h4, .housekeeping-item h4 {
+            color: #666;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-item p, .housekeeping-item p {
+            color: #333;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        h2 {
+            color: #333;
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .calendar-nav {
+            display: flex;
             align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
         }
 
-        .housekeeping-item .icon {
-            color: #1a237e;
-            opacity: 0.2;
-            font-size: 1.5rem;
+        .month-nav {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
         }
 
-        @media (max-width: 1024px) {
-            .content-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 768px) {
-            body {
-                padding: 1rem;
-            }
-            
-            .calendar-day {
-                font-size: 0.8rem;
-            }
+        .nav-btn {
+            border: none;
+            background: #f0f2f5;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
     </style>
 </head>
@@ -441,58 +434,116 @@ $recentBookings = getRecentBookings(5);
     <div class="dashboard">
         <h1>Villa Valore Hotel</h1>
         
+        <!-- Stats Cards -->
+        <div class="stats-cards">
+            <div class="stat-card">
+                <div class="stat-icon">📅</div>
+                <div class="stat-info">
+                    <h3>New Booking</h3>
+                    <p><?php echo $stats['new_bookings']; ?></p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🛏️</div>
+                <div class="stat-info">
+                    <h3>Available Room</h3>
+                    <p><?php echo $stats['available_rooms']; ?></p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📥</div>
+                <div class="stat-info">
+                    <h3>Check In</h3>
+                    <p><?php echo $stats['check_ins']; ?></p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📤</div>
+                <div class="stat-info">
+                    <h3>Check Out</h3>
+                    <p><?php echo $stats['check_outs']; ?></p>
+                </div>
+            </div>
+        </div>
+        
         <div class="content-grid">
             <!-- Calendar Section -->
-            <div class="booking-schedule">
-                <h2>Recent Booking Schedule</h2>
-                <div class="calendar-nav">
-                    <button class="nav-btn prev-month">&lt;</button>
-                    <span class="current-month"><?php echo date('F Y'); ?></span>
-                    <button class="nav-btn next-month">&gt;</button>
-                </div>
-                <div class="calendar-header">
-                    <div>Mon</div>
-                    <div>Tue</div>
-                    <div>Wed</div>
-                    <div>Thu</div>
-                    <div>Fri</div>
-                    <div>Sat</div>
-                    <div>Sun</div>
-                </div>
-                <div class="calendar-grid">
-                    <?php
-                    $firstDay = mktime(0, 0, 0, $currentMonth, 1, $currentYear);
-                    $daysInMonth = date('t', $firstDay);
-                    $startDay = date('N', $firstDay);
-                    $currentDate = date('j');
-                    
-                    for ($i = 1; $i < $startDay; $i++) {
-                        echo '<div class="calendar-day empty"></div>';
-                    }
-                    
-                    for ($day = 1; $day <= $daysInMonth; $day++) {
-                        $classes = ['calendar-day'];
-                        if ($day == $currentDate && $currentMonth == date('n')) {
-                            $classes[] = 'current-day';
-                        }
-                        if (isset($bookingSchedule[$day]) && $bookingSchedule[$day] > 0) {
-                            $classes[] = 'has-bookings';
+            <div class="left-section">
+                <div class="booking-schedule">
+                    <div class="calendar-nav">
+                        <h2>Recent Booking Schedule</h2>
+                        <div class="month-nav">
+                            <button class="nav-btn prev-month">&lt;</button>
+                            <span class="current-month"><?php echo date('F Y'); ?></span>
+                            <button class="nav-btn next-month">&gt;</button>
+                        </div>
+                    </div>
+                    <div class="calendar-header">
+                        <div>MON</div>
+                        <div>TUE</div>
+                        <div>WED</div>
+                        <div>THU</div>
+                        <div>FRI</div>
+                        <div>SAT</div>
+                        <div>SUN</div>
+                    </div>
+                    <div class="calendar-grid">
+                        <?php
+                        $firstDay = mktime(0, 0, 0, $currentMonth, 1, $currentYear);
+                        $daysInMonth = date('t', $firstDay);
+                        $startDay = date('N', $firstDay);
+                        $currentDate = date('j');
+                        
+                        for ($i = 1; $i < $startDay; $i++) {
+                            echo '<div class="calendar-day empty"></div>';
                         }
                         
-                        echo '<div class="' . implode(' ', $classes) . '">';
-                        echo $day;
-                        if (isset($bookingSchedule[$day])) {
-                            echo '<span class="booking-count">' . $bookingSchedule[$day] . '</span>';
+                        for ($day = 1; $day <= $daysInMonth; $day++) {
+                            $classes = ['calendar-day'];
+                            if ($day == $currentDate && $currentMonth == date('n')) {
+                                $classes[] = 'current-day';
+                            }
+                            if (isset($bookingSchedule[$day]) && $bookingSchedule[$day] > 0) {
+                                $classes[] = 'has-bookings';
+                            }
+                            
+                            echo '<div class="' . implode(' ', $classes) . '">';
+                            echo (int)$day;
+                            echo '</div>';
                         }
-                        echo '</div>';
-                    }
-                    ?>
+                        ?>
+                    </div>
+                </div>
+
+                <!-- Recent Bookings Table -->
+                <div class="booking-list">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Room</th>
+                                <th>No.</th>
+                                <th>Check In</th>
+                                <th>Check Out</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($recentBookings as $booking): ?>
+                            <tr>
+                                <td><?php echo htmlspecialchars($booking['guest_name']); ?></td>
+                                <td><?php echo htmlspecialchars($booking['room_type'] ?? 'Standard'); ?></td>
+                                <td><?php echo htmlspecialchars($booking['room_number']); ?></td>
+                                <td><?php echo date('m/d/y', strtotime($booking['check_in_date'])); ?></td>
+                                <td><?php echo date('m/d/y', strtotime($booking['check_out_date'])); ?></td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
             <!-- Right Section -->
             <div class="right-section">
-                <!-- Reservation Stats -->
                 <div class="stats-section">
                     <h2>Reservation Stats</h2>
                     <div class="stats-content">
@@ -511,62 +562,23 @@ $recentBookings = getRecentBookings(5);
                     </div>
                 </div>
 
-                <!-- Housekeeping -->
                 <div class="housekeeping">
                     <h2>Housekeeping</h2>
                     <div class="housekeeping-content">
                         <div class="housekeeping-item">
-                            <div>
-                                <h4>Rooms to Clean</h4>
-                                <p><?php echo $stats['rooms_to_clean']; ?></p>
-                            </div>
-                            <span class="icon">🧹</span>
+                            <h4>Rooms to Clean</h4>
+                            <p><?php echo $stats['rooms_to_clean']; ?></p>
                         </div>
                         <div class="housekeeping-item">
-                            <div>
-                                <h4>Rooms Cleaned</h4>
-                                <p><?php echo $stats['rooms_cleaned']; ?></p>
-                            </div>
-                            <span class="icon">✓</span>
+                            <h4>Rooms Cleaned</h4>
+                            <p><?php echo $stats['rooms_cleaned']; ?></p>
                         </div>
                         <div class="housekeeping-item">
-                            <div>
-                                <h4>Maintenance Required</h4>
-                                <p><?php echo $stats['maintenance_required']; ?></p>
-                            </div>
-                            <span class="icon">🔧</span>
+                            <h4>Maintenance Required</h4>
+                            <p><?php echo $stats['maintenance_required']; ?></p>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <!-- Recent Bookings Table -->
-        <div class="booking-list">
-            <h2>Recent Bookings</h2>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Guest Name</th>
-                            <th>Room</th>
-                            <th>Check In</th>
-                            <th>Check Out</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($recentBookings as $booking): ?>
-                        <tr>
-                            <td><?php echo htmlspecialchars($booking['guest_name']); ?></td>
-                            <td><?php echo htmlspecialchars($booking['room_number']); ?></td>
-                            <td><?php echo date('M d, Y', strtotime($booking['check_in_date'])); ?></td>
-                            <td><?php echo date('M d, Y', strtotime($booking['check_out_date'])); ?></td>
-                            <td><?php echo htmlspecialchars(ucfirst($booking['status'])); ?></td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
             </div>
         </div>
     </div>
