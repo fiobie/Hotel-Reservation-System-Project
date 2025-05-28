@@ -11,72 +11,6 @@
       <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css">
 
     <style>
-       body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-    }
-
-    .sidebar {
-      width: 200px;
-      background-color: #008000;
-      color: white;
-      height: 100vh;
-      padding: 20px;
-      position: fixed;
-      top: 0;
-      left: 0;
-      overflow-y: auto;
-    }
-
-    .sidebar h4 {
-      margin-bottom: 30px;
-      font-size: 1.5em;
-    }
-
-    .nav-section {
-      margin-bottom: 20px;
-    }
-
-    .nav-link {
-      display: block;
-      color: white;
-      text-decoration: none;
-      padding: 8px 10px;
-      margin: 4px 0;
-      border-radius: 4px;
-    }
-
-    .nav-link:hover {
-      background-color: #34495e;
-    }
-
-    .submenu {
-      display: none;
-      padding-left: 15px;
-    }
-
-    .submenu a {
-      font-size: 0.95em;
-    }
-
-    .toggle-btn {
-      cursor: pointer;
-    }
-
-    .toggle-btn::after {
-      content: " ▼";
-      font-size: 0.8em;
-    }
-
-    .toggle-btn.expanded::after {
-      content: " ▲";
-    }
-
-    .main-content {
-      margin-left: 220px;
-      padding: 30px;
-    }
-
         #addRoomModal {
           display: none;
           position: fixed;
@@ -153,19 +87,12 @@
       }
 
       $stmt->close();
-    }
+  }
     ?>
 
   <div class="sidebar">
       <h4>Villa Valore Hotel</h4>
-
-        <div class="nav-section">
-          <a class="nav-link" href="home.php"><i class="fas fa-th-large"></i> Dashboard</a>
-          <a class="nav-link" href="student.php"><i class="fas fa-user"></i> Guest</a>
-          <a class="nav-link" href="booking.php"><i class="fas fa-book"></i> Booking</a>
-        </div>
-
-        <div class="nav-section">
+<div class="nav-section">
         <div style="color: #aaa; font-size: 0.9em; margin: 10px 0 5px;">MANAGEMENT</div>
         <div class="nav-link toggle-btn" onclick="toggleMenu('management')"><i class="fas fa-cog"></i> Manage</div>
         <div class="submenu" id="management">
@@ -176,21 +103,21 @@
         </div>
   </div>
 
-  <div class="nav-section">
+ <div class="nav-section">
     <a class="nav-link" href="payment.php"><i class="fas fa-credit-card"></i> Payments</a>
     <a class="nav-link" href="#"><i class="fas fa-chart-line"></i> Statistics</a>
     <a class="nav-link" href="inbox.php"><i class="fas fa-inbox"></i> Inbox</a>
   </div>
 
-  <div class="nav-section">
+<div class="nav-section">
     <a class="nav-link" href="profile.php"><i class="fas fa-user-lock"></i> Profile Account</a>
     <a class="nav-link" href="logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
   </div>
 </div>
 
     <div class="main-content">
-      <h2>Inventory</h2>
-      <p>This is for the inventory items offered by the hotel.</p>
+      <h2>Menu & Service</h2>
+      <p>This is for the menu and services offered by the hotel.</p>
 
       <button class="add-btn" onclick="document.getElementById('addRoomModal').style.display='block'">+ Add Menu Service</button>
 
@@ -245,7 +172,7 @@
     </div>
     
 
-    <!-- Modal Add Room Form -->
+ <!-- Modal Add Room Form -->
     <div id="addRoomModal">
       <div class="modal-content">
         <h3>Add New Inventory Item</h3>
@@ -254,39 +181,23 @@
           <input type="text" name="ItemID" required>
 
           <label>Name</label>
-          <input type="text" name="ItemName" required>
+          <input type="text" name="Name" required>
 
-          <label>Date Received</label>
-          <input type="date" name="DateReceived" required>
+          <label>Type</label>
+          <input type="text" name="Type" required>
 
-          <label>Date Expiry</label>
-          <input type="date" name="DateExpiry" required>
+          <label>Description</label>
+          <textarea name="Description" required></textarea>
 
-          <label>Quantity</label>
-          <input type="number" name="Quantity" required>
-
-          <label>Price</label>
-          <input type="number" name="Price" required>
-
-          <label>Total</label>
-          <input type="number" name="Total" required>
-
-          <label>Current Stocks</label>
-          <input type="number" name="CurrentStocks" required>
-
-          <label>Requested Stocks</label>
-          <input type="number" name="RqStocks" required>
-
-          <label>Status</label>
-          <input type="text" name="Status" required>
+          <label>Selling Price</label>
+          <input type="number" name="SellingPrice" required>
 
           <button type="submit" name="addRoom">Save</button>
           <button type="button" onclick="document.getElementById('addRoomModal').style.display='none'">Cancel</button>
         </form>
       </div>
-    </div>
 
-    <!-- jQuery + DataTables + Buttons JS -->
+<!-- jQuery + DataTables + Buttons JS -->
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
@@ -295,7 +206,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
 
     <script>
       function toggleMenu(id) {
@@ -318,3 +228,4 @@
 
         </body>
             </html>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
