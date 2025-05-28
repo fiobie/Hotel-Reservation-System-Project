@@ -104,9 +104,9 @@
         .add-btn:hover {
         background-color: #45a049;
         }
-          .table-scroll {
-      width: 100%;
-      overflow-x: auto;
+        .table-scroll {
+        width: 100%;
+        overflow-x: auto;
     }
 
       </style>
@@ -175,7 +175,7 @@
       <h2>Payments</h2>
       <p>This is for the payments.</p>
 
-      <button class="add-btn" onclick="document.getElementById('addPaymentModal').style.display='block'">+ Add Invoice</button>
+      <button class="add-btn" onclick="document.getElementById('addRoomModal').style.display='block'">+ Add Invoice</button>
 
       <div class="table-scroll">
       <?php
