@@ -72,6 +72,82 @@ $booking_result = $conn->query($booking_sql);
         span.label {
             font-weight: bold;
         }
+
+        body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: #fff;
+  color: #000;
+}
+
+.container {
+  padding: 30px;
+  max-width: 900px;
+  margin: auto;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.small-title {
+  margin: 0;
+  font-size: 14px;
+  color: #555;
+}
+
+.section-title {
+  margin-top: 30px;
+  font-size: 16px;
+  color: #333;
+}
+
+.update-btn {
+  padding: 10px 20px;
+  border: none;
+  background: #e0e0e0;
+  border-radius: 20px;
+  cursor: pointer;
+}
+
+.account-info {
+  display: flex;
+  gap: 50px;
+  align-items: flex-start;
+  margin-top: 20px;
+}
+
+.profile {
+  text-align: center;
+}
+
+.avatar {
+  width: 120px;
+  height: 120px;
+  background: #d3d3d3;
+  border-radius: 50%;
+  margin: auto;
+  background-image: url('https://via.placeholder.com/120');
+  background-size: cover;
+  background-position: center;
+}
+
+.info p {
+  margin: 10px 0;
+  font-size: 16px;
+}
+
+.password-btn {
+  margin-top: 30px;
+  padding: 10px 20px;
+  background: #d3d3d3;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+}
+
     </style>
 </head>
 <body>
@@ -109,38 +185,27 @@ $booking_result = $conn->query($booking_sql);
 
     <div class="main-content">
         <h2>Profile Account</h2>
-        <div class="container">
-            <div class="card">
-                <h2>Account Information</h2>
-                <?php if ($guest_result && $guest_result->num_rows > 0): ?>
-                    <?php $guest = $guest_result->fetch_assoc(); ?>
-                    <p><span class="label">Name:</span> <?= $guest['FirstName'] . ' ' . $guest['LastName'] ?></p>
-                    <p><span class="label">Email:</span> <?= $guest['Email'] ?></p>
-                    <p><span class="label">Phone Number:</span> <?= $guest['PhoneNumber'] ?></p>
-                    <p><span class="label">Position:</span> <?= $guest['Position'] ?></p>
-                    <p><span class="label">Status:</span> <?= $guest['Status'] ?></p>
-                <?php else: ?>
-                    <p>No guest info found.</p>
-                <?php endif; ?>
-            </div>
 
-            <div class="card">
-                <h2>Booking Info</h2>
-                <?php if ($booking_result && $booking_result->num_rows > 0): ?>
-                    <?php $booking = $booking_result->fetch_assoc(); ?>
-                    <p><span class="label">Booking ID:</span> <?= $booking['BookingID'] ?></p>
-                    <p><span class="label">Room Number:</span> <?= $booking['RoomNumber'] ?></p>
-                    <p><span class="label">Room Type:</span> <?= $booking['RoomType'] ?></p>
-                    <p><span class="label">Status:</span> <?= $booking['BookingStatus'] ?> / <?= $booking['RoomStatus'] ?></p>
-                    <p><span class="label">Check-In:</span> <?= $booking['CheckInDate'] ?></p>
-                    <p><span class="label">Check-Out:</span> <?= $booking['CheckOutDate'] ?></p>
-                    <p><span class="label">Price:</span> ₱<?= $booking['Price'] ?></p>
-                    <p><span class="label">Notes:</span> <?= $booking['Notes'] ?></p>
-                <?php else: ?>
-                    <p>No booking info found.</p>
-                <?php endif; ?>
-            </div>
-        </div>
+         <button class="update-btn">+ Update Info</button>
+
+         <h3 class="section-title">Account Information</h3>
+
+    <div class="account-info">
+      <div class="profile">
+        <div class="avatar"></div>
+        <p>Bio</p>
+      </div>
+      <div class="info">
+        <p><strong>First Name</strong></p>
+        <p><strong>Last Name</strong></p>
+        <p><strong>Email</strong></p>
+        <p><strong>Phone Number</strong></p>
+        <p><strong>Position</strong></p>
+        <p><strong>Status</strong></p>
+      </div>
+    </div>
+        
+<button class="password-btn">Change Password</button>
     </div>
     <script>
   function toggleMenu(id) {

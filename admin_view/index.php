@@ -520,7 +520,7 @@ $recentBookings = getRecentBookings(5);
         <h4 class="sidebar-title">Villa Valore Hotel</h4>
         
         <div class="nav-section">
-            <a class="nav-link" href="home.php"><i class="fas fa-th-large"></i>Dashboard</a>
+            <a class="nav-link" href="index.php"><i class="fas fa-th-large"></i>Dashboard</a>
             <a class="nav-link" href="student.php"><i class="fas fa-user"></i>Guest</a>
             <a class="nav-link" href="booking.php"><i class="fas fa-book"></i>Booking</a>
         </div>
