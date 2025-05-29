@@ -251,11 +251,11 @@
                       <td>" . htmlspecialchars($row["IssuedDate"]) . "</td>
                       <td>" . htmlspecialchars($row["ExpiryDate"]) . "</td>
                       <td>
-                        <button class='edit-btn'>Edit</button>
-                        <button class='view-btn'>View</button>
-                        <button class='delete-btn'>Delete</button>
+                      <button class='edit-btn'>Edit</button></a>
+                      <button class='view-btn'>View</button></a>
+                      <button class='view-btn'>Delete</button></a>
                       </td>
-                    </tr>";
+                    </tr>"; 
           }
           echo "</tbody></table>";
       } else {
@@ -263,6 +263,22 @@
       }
 
       $conn->close();
+
+      /* View Data 
+      if(isset($_GET['action']) && $_GET['action'] == 'view'){
+        $id = $_GET["StudentID"];
+        $sql = "SELECT * FROM student WHERE StudentID = '$id'"; 
+        $result = $conn->query($sql);
+
+        if($result -> num_rows > 0 ){
+          while($row = $result->fetch_assoc()){
+            echo "<h2>View User</h2>";
+            echo "ID: " . $row["id"] . "<br>"; 
+            echo "Name: " . $row["name"]
+          }
+        }
+
+      */
       ?>
       </div>
       </div>

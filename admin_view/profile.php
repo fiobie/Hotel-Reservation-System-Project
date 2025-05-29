@@ -17,7 +17,7 @@ $booking_result = $conn->query($booking_sql);
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-    <style>
+  <style>
         body {
             font-family: Arial, sans-serif;
             margin: 0;
@@ -45,9 +45,8 @@ $booking_result = $conn->query($booking_sql);
             background-color: #57606f;
         }
         .main-content {
-            padding: 40px;
-            flex: 1;
-            background-color: #f5f6fa;
+           margin-left: 300px; /* Adjusted for sidebar width */
+          padding: 20px;
         }
         .container {
             display: flex;
@@ -74,29 +73,29 @@ $booking_result = $conn->query($booking_sql);
         }
 
         body {
-  margin: 0;
-  font-family: 'Segoe UI', sans-serif;
-  background: #fff;
-  color: #000;
-}
+          margin: 0;
+          font-family: 'Segoe UI', sans-serif;
+          background: #fff;
+          color: #000;
+        }
 
-.container {
-  padding: 30px;
-  max-width: 900px;
-  margin: auto;
-}
+      .container {
+          padding: 30px;
+          max-width: 900px;
+          margin: auto;
+        }
 
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
+      .header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+      }
 
-.small-title {
-  margin: 0;
-  font-size: 14px;
-  color: #555;
-}
+      .small-title {
+          margin: 0;
+          font-size: 14px;
+          color: #555;
+      }
 
 .section-title {
   margin-top: 30px;
@@ -155,7 +154,7 @@ $booking_result = $conn->query($booking_sql);
   <h4>Villa Valore Hotel</h4>
 
   <div class="nav-section">
-    <a class="nav-link" href="home.php"><i class="fas fa-th-large"></i> Dashboard</a>
+    <a class="nav-link" href="index.php"><i class="fas fa-th-large"></i> Dashboard</a>
     <a class="nav-link" href="student.php"><i class="fas fa-user"></i> Guest</a>
     <a class="nav-link" href="booking.php"><i class="fas fa-book"></i> Booking</a>
   </div>

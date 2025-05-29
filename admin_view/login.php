@@ -11,7 +11,7 @@ if (isset($_POST['login'])) {
 
     if (mysqli_num_rows($result) == 1) {
         $_SESSION['email'] = $email;
-        header("Location: home.php");
+        header("Location: index.php");
         exit;
     } else {
         $error = "Invalid email or password.";
