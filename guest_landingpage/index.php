@@ -6,7 +6,7 @@
 
     <meta charsat="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GUEST VIEW</title>
+    <title>Villa Valore Hotel</title>
     <link rel="stylesheet" href="style.css">
 
     </head>
@@ -22,14 +22,14 @@
                         <a href="#" class="nav-link">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a href="#" class="nav-link">About</a>
+                        <a href="#" class="nav-link">Accomodations</a>
                     </li><li class="nav-item">
-                        <a href="#" class="nav-link">Rooms</a>
+                        <a href="#" class="nav-link">Amenities & Services</a>
                     </li><li class="nav-item">
-                        <a href="#" class="nav-link">Testimonials</a>
+                        <a href="#" class="nav-link">Contact Us</a>
                     </li>
                     <li class="nav-item">
-                        <a href="#" class="nav-link">Gallery</a>
+                        <a href="#" class="nav-link">Book a Room</a>
                     </li>
                     <li class="nav-item">
                         <a href="#" class="nav-link">Contact</a>
