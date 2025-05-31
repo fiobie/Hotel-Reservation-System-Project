@@ -204,7 +204,6 @@
       display: flex;
     }
 
-    /* Bedroom Reservation Section */
     .bedroom-reservation {
       position: relative;
       background-image: url('https://images.unsplash.com/photo-1501117716987-c8d7138e4e9b?auto=format&fit=crop&w=1350&q=80');
@@ -219,7 +218,7 @@
       content: "";
       position: absolute;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.2); /* lighter overlay */
+      background: rgba(0,0,0,0.5);
       z-index: 1;
     }
 
@@ -259,10 +258,10 @@
     <div class="top-bar-content">
       <div class="contact-left">
         <div class="address">
-          <i class="fas fa-home"></i>Biga 1, Silang, Cavite, 4118
+          <i class="fas fa-home"></i><span style="font-weight: normal;">Biga 1, Silang, Cavite, 4118</span>
         </div>
         <div class="email">
-          <i class="fas fa-envelope"></i>cvsusilang@cvsu.edu.ph
+          <i class="fas fa-envelope"></i><span style="font-weight: normal;">cvsusilang@cvsu.edu.ph</span>
         </div>
       </div>
     </div>
@@ -301,17 +300,4 @@
             <li><a href="#" class="dropdown-link">Event Hosting</a></li>
           </ul>
         </li>
-        <li class="nav-item"><a href="#" class="nav-link">Contact Us</a></li>
-      </ul>
-    </nav>
-  </header>
-
-  <!-- Bedroom Reservation Section -->
-  <section class="bedroom-reservation">
-    <div class="reservation-content">
-      <h1 class="welcome-message">ALWAYS WELCOME HERE</h1>
-      <button class="book-button">BOOK YOUR STAY</button>
-    </div>
-  </section>
-</body>
-</html>
+        <li class="nav-item"><a href="#" class="nav-link">Contact Us</a></

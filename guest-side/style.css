@@ -82,7 +82,7 @@ header .navbar {
 .navbar .nav_logo .logo-text { /* logo text */
     color: white;
     font-size: var(--font-size-xl)
-    font-weight: var(--font-weight-semibold)
+    font-weight var(--font-weight-semibold)
 }
 
 .navbar .nav-menu {
