@@ -119,7 +119,7 @@
           margin: 20px 0 10px;
           display: inline-block;
           padding: 10px 20px;
-          background-color: #4CAF50;
+          background-color: #008000;
           color: white;
           text-decoration: none;
           border-radius: 4px;
@@ -132,6 +132,62 @@
         .table-scroll {
         width: 100%;
         overflow-x: auto;
+
+        /* Custom DataTable Styling */
+      #studentTable.dataTable {
+      border-collapse: separate;
+      border-spacing: 0;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      }
+
+#studentTable thead {
+  background-color:#008000; 
+  color: white;
+}
+
+#studentTable thead th {
+  padding: 12px;
+  font-weight: 600;
+  text-align: left;
+}
+
+#studentTable tbody tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+#studentTable tbody tr:nth-child(odd) {
+  background-color: #ffffff;
+}
+
+#studentTable tbody td {
+  padding: 10px;
+  vertical-align: middle;
+}
+
+#studentTable tbody tr:hover {
+  background-color: #e0f5e0;
+}
+
+/* Action buttons */
+#studentTable .edit-btn,
+#studentTable .view-btn {
+  background-color: #008000;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  margin-right: 5px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+#studentTable .edit-btn:hover,
+#studentTable .view-btn:hover {
+  background-color: #006400;
+}
+
 
         
     }
@@ -153,13 +209,10 @@
       $Email = $_POST['Email'];
       $Nationality = $_POST['Nationality'];
       $Birthdate = $_POST['Birthdate'];
-      $DocumentIDType = $_POST['DocumentIDType'];
-      $IDNumber = $_POST['IDNumber'];
-      $IssuedDate = $_POST['IssuedDate'];
-      $ExpiryDate = $_POST['ExpiryDate'];
+    
 
-      $stmt = $conn->prepare("INSERT INTO student (StudentID, FirstName, LastName, Gender, PhoneNumber, Address, Email, Nationality, Birthdate, DocumentIDType, IDNumber, IssuedDate, ExpiryDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-      $stmt->bind_param("isssssssssss", $StudentID, $FirstName, $LastName, $Gender, $PhoneNumber, $Address, $Email, $Nationality, $Birthdate, $DocumentIDType, $IDNumber, $IssuedDate, $ExpiryDate);
+      $stmt = $conn->prepare("INSERT INTO student (StudentID, FirstName, LastName, Gender, PhoneNumber, Address, Email, Nationality, Birthdate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+      $stmt->bind_param("issssssss", $StudentID, $FirstName, $LastName, $Gender, $PhoneNumber, $Address, $Email, $Nationality, $Birthdate);
 
       if ($stmt->execute()) {
         echo "<script>alert('Student added successfully!'); window.location.href=window.location.href;</script>";
@@ -211,7 +264,7 @@
 
       <div class="table-scroll">
       <?php
-      $sql = "SELECT StudentID, FirstName, LastName, Gender, PhoneNumber, Address, Email, Nationality, Birthdate, DocumentIDType, IDNumber, IssuedDate, ExpiryDate FROM student";
+      $sql = "SELECT StudentID, FirstName, LastName, Gender, PhoneNumber, Address, Email, Nationality, Birthdate FROM student";
       $result = $conn->query($sql);
 
       if ($result->num_rows > 0) {
@@ -227,10 +280,6 @@
                         <th>Email</th>
                         <th>Nationality</th>
                         <th>Birthdate</th>
-                        <th>Document ID Type</th>
-                        <th>ID Number</th>
-                        <th>Issued Date</th>
-                        <th>Expiry Date</th>
                         <th>Actions</th>
                     </tr>
                   </thead>
@@ -246,10 +295,6 @@
                       <td>" . htmlspecialchars($row["Email"]) . "</td>
                       <td>" . htmlspecialchars($row["Nationality"]) . "</td>
                       <td>" . htmlspecialchars($row["Birthdate"]) . "</td>
-                      <td>" . htmlspecialchars($row["DocumentIDType"]) . "</td>
-                      <td>" . htmlspecialchars($row["IDNumber"]) . "</td>
-                      <td>" . htmlspecialchars($row["IssuedDate"]) . "</td>
-                      <td>" . htmlspecialchars($row["ExpiryDate"]) . "</td>
                       <td>
                       <button class='edit-btn'>Edit</button></a>
                       <button class='view-btn'>View</button></a>
@@ -318,18 +363,6 @@
 
           <label>Birthdate</label>
           <input type="date" name="Birthdate" required>
-
-          <label>Document ID Type</label>
-          <input type="text" name="DocumentIDType" required>
-
-          <label>ID Number</label>
-          <input type="text" name="IDNumber" required>
-
-          <label>Issued Date</label>
-          <input type="date" name="IssuedDate" required>
-
-          <label>Expiry Date</label>
-          <input type="date" name="ExpiryDate" required>
 
           <button type="submit" name="addStudent">Save</button>
           <button type="button" onclick="document.getElementById('addRoomModal').style.display='none'">Cancel</button>

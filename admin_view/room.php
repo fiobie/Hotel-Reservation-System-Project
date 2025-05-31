@@ -190,7 +190,7 @@
                         <th>Room Per Hour</th>
                         <th>Room Status</th>
                         <th>Capacity</th>
-                        <th>Actions</th>
+                        <th>Action</th>
                     </tr>
                   </thead>
                   <tbody>";
@@ -231,7 +231,11 @@
           <input type="text" name="RoomNumber" required>
 
           <label>Room Type</label>
-          <input type="text" name="RoomType" required>
+          <select name="RoomType" required>
+            <option value="Single">Single</option>
+            <option value="Double">Double</option>
+            <option value="Suite">Suite</option>
+          </select>
 
           <label>Room Per Hour</label>
           <input type="text" name="RoomPerHour" required>
