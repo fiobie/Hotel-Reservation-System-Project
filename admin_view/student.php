@@ -119,7 +119,7 @@
           margin: 20px 0 10px;
           display: inline-block;
           padding: 10px 20px;
-          background-color: #008000;
+          background-color: #4CAF50;
           color: white;
           text-decoration: none;
           border-radius: 4px;
@@ -296,9 +296,9 @@
                       <td>" . htmlspecialchars($row["Nationality"]) . "</td>
                       <td>" . htmlspecialchars($row["Birthdate"]) . "</td>
                       <td>
-                      <button class='edit-btn'>Edit</button></a>
-                      <button class='view-btn'>View</button></a>
-                      <button class='view-btn'>Delete</button></a>
+                      <button class='edit-btn' data-id='{$row['StudentID']}'>Edit</button>
+                      <button class='view-btn' data-id='{$row['StudentID']}'>View</button>
+                      <button class='delete-btn' data-id='{$row['StudentID']}'>Delete</button>
                       </td>
                     </tr>"; 
           }
@@ -309,21 +309,6 @@
 
       $conn->close();
 
-      /* View Data 
-      if(isset($_GET['action']) && $_GET['action'] == 'view'){
-        $id = $_GET["StudentID"];
-        $sql = "SELECT * FROM student WHERE StudentID = '$id'"; 
-        $result = $conn->query($sql);
-
-        if($result -> num_rows > 0 ){
-          while($row = $result->fetch_assoc()){
-            echo "<h2>View User</h2>";
-            echo "ID: " . $row["id"] . "<br>"; 
-            echo "Name: " . $row["name"]
-          }
-        }
-
-      */
       ?>
       </div>
       </div>
@@ -369,6 +354,55 @@
         </form>
       </div>
     </div>
+
+    <!-- Modal Overlay -->
+<div id="modalOverlay" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center;">
+  <div id="modalContent" style="background:#fff; padding:20px; border-radius:10px; width:400px; max-width:90%; position:relative;">
+    <span id="closeModal" style="position:absolute; top:10px; right:15px; cursor:pointer; font-size:18px;">&times;</span>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+$(document).ready(function() {
+  $('#studentTable').DataTable({
+    dom: 'Bfrtip',
+    buttons: ['copy', 'csv', 'excel', 'pdf', 'print', 'colvis']
+  });
+
+  // Modal triggers
+  $(document).on('click', '.edit-btn', function() {
+    const id = $(this).data('id');
+    $.post('ajax/student_edit_form.php', { StudentID: id }, function(data) {
+      $('#modalBody').html(data);
+      $('#modalOverlay').fadeIn();
+    });
+  });
+
+  $(document).on('click', '.view-btn', function() {
+    const id = $(this).data('id');
+    $.post('ajax/student_view.php', { StudentID: id }, function(data) {
+      $('#modalBody').html(data);
+      $('#modalOverlay').fadeIn();
+    });
+  });
+
+  $(document).on('click', '.delete-btn', function() {
+    const id = $(this).data('id');
+    if (confirm('Are you sure you want to delete this guest?')) {
+      $.post('ajax/student_delete.php', { StudentID: id }, function(data) {
+        alert('Guest deleted successfully');
+        location.reload();
+      });
+    }
+  });
+
+  $('#closeModal').on('click', function() {
+    $('#modalOverlay').fadeOut();
+  });
+});
+</script>
+
 
     <!-- jQuery + DataTables + Buttons JS -->
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
