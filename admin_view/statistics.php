@@ -1,14 +1,4 @@
-<?php
-// Database Connection
-$host = "localhost";
-$user = "root";
-$password = "";
-$dbname = "hotel_reservation_systemdb";
-
-$conn = new mysqli($host, $user, $password, $dbname);
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+<?php include 'connections.php';
 
 // --- STATISTICS QUERIES ---
 // Cancellation Rate
@@ -49,23 +39,116 @@ for ($m = 1; $m <= 12; $m++) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Statistics - Villa Valore Hotel</title>
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { background-color: #f5f6fa; display: flex; }
-        .sidebar { width: 200px; background: #008000; min-height: 100vh; padding: 0.5rem; color: white; position: fixed; left: 0; top: 0; bottom: 0; }
-        .sidebar-title { color: white; font-size: 1.4rem; font-weight: 500; margin-bottom: 1.5rem; padding: 1rem; }
-        .nav-section { margin-bottom: 1rem; }
-        .nav-link { display: flex; align-items: center; padding: 0.5rem 1rem; color: white; text-decoration: none; font-size: 0.9rem; margin-bottom: 0.25rem; transition: background-color 0.2s; }
-        .nav-link:hover { background-color: rgba(255, 255, 255, 0.1); }
-        .nav-link i { margin-right: 0.75rem; width: 20px; text-align: center; opacity: 0.9; }
-        .management-label { color: #90EE90; font-size: 0.8em; margin: 1rem 0 0.5rem 1rem; }
-        .toggle-btn { display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
-        .toggle-btn::after { content: '▼'; font-size: 0.7rem; margin-left: 0.5rem; }
-        .submenu { margin-left: 1.5rem; display: none; }
-        .submenu.active { display: block; }
-        .main-content { flex: 1; padding: 2rem; margin-left: 200px; overflow-x: hidden; }
-        h1 { color: #333; margin-bottom: 2rem; font-size: 2rem; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: #f5f6fa;
+            display: flex;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 200px;
+            background: #008000;
+            min-height: 100vh;
+            padding: 0.5rem;
+            color: white;
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+        }
+
+        .sidebar-title {
+            color: white;
+            font-size: 1.4rem;
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+        }
+
+        .nav-section {
+            margin-bottom: 1rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            color: white;
+            text-decoration: none;
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+            transition: background-color 0.2s;
+        }
+
+        .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-link i {
+            margin-right: 0.75rem;
+            width: 20px;
+            text-align: center;
+            opacity: 0.9;
+        }
+
+        .management-label {
+            color: #90EE90;
+            font-size: 0.8em;
+            margin: 1rem 0 0.5rem 1rem;
+        }
+
+        .toggle-btn {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+        }
+
+        .toggle-btn::after {
+            content: '▼';
+            font-size: 0.7rem;
+            margin-left: 0.5rem;
+        }
+
+        .submenu {
+            margin-left: 1.5rem;
+            display: none;
+        }
+
+        .submenu.active {
+            display: block;
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            margin-left: 200px; /* Match new sidebar width */
+            overflow-x: hidden;
+        }
+
+        .dashboard {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 2rem;
+            font-size: 2rem;
+        }
+
         .stats-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 2rem; }
         .stat-card { background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); display: flex; flex-direction: column; align-items: center; }
         .stat-title { font-size: 1.1rem; color: #333; margin-bottom: 0.5rem; font-weight: 600; }
@@ -95,14 +178,16 @@ for ($m = 1; $m <= 12; $m++) {
     </style>
 </head>
 <body>
-    <!-- Sidebar Navigation (copied from dashboard.php) -->
+    <!-- Sidebar Navigation -->
     <div class="sidebar">
         <h4 class="sidebar-title">Villa Valore Hotel</h4>
+        
         <div class="nav-section">
-            <a class="nav-link" href="home.php"><i class="fas fa-th-large"></i>Dashboard</a>
+            <a class="nav-link" href="index.php"><i class="fas fa-th-large"></i>Dashboard</a>
             <a class="nav-link" href="student.php"><i class="fas fa-user"></i>Guest</a>
             <a class="nav-link" href="booking.php"><i class="fas fa-book"></i>Booking</a>
         </div>
+
         <div class="nav-section">
             <div class="management-label">MANAGEMENT</div>
             <div class="nav-link toggle-btn" onclick="toggleMenu('management')">
@@ -115,20 +200,24 @@ for ($m = 1; $m <= 12; $m++) {
                 <a class="nav-link" href="inventory.php"><i class="fas fa-box"></i>Inventory</a>
             </div>
         </div>
+
         <div class="nav-section">
             <a class="nav-link" href="payment.php"><i class="fas fa-credit-card"></i>Payments</a>
             <a class="nav-link" href="statistics.php"><i class="fas fa-chart-line"></i>Statistics</a>
             <a class="nav-link" href="inbox.php"><i class="fas fa-inbox"></i>Inbox</a>
         </div>
+
         <div class="nav-section">
             <a class="nav-link" href="profile.php"><i class="fas fa-user-lock"></i>Profile Account</a>
             <a class="nav-link" href="logout.php"><i class="fas fa-sign-out-alt"></i>Logout</a>
         </div>
     </div>
+
     <!-- Main Content -->
     <div class="main-content">
-        <button onclick="window.print()" class="print-btn"><i class="fas fa-print"></i> Print</button>
-        <h1>Statistics</h1>
+        <div class="dashboard">
+            <button onclick="window.print()" class="print-btn"><i class="fas fa-print"></i> Print</button>
+            <h1>Statistics</h1>
         <div class="stats-cards">
             <div class="stat-card">
                 <div class="stat-title">Cancellation Rate</div>

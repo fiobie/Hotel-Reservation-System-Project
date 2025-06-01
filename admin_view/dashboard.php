@@ -1,15 +1,4 @@
-<?php
-// Database Connection
-$host = "localhost";
-$user = "root";
-$password = "";
-$dbname = "hotel_reservation_systemdb";
-
-$conn = new mysqli($host, $user, $password, $dbname);
-
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+<?php include 'connections.php';
 
 // Database Query Functions
 function getStats() {
