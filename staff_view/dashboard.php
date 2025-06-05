@@ -160,30 +160,15 @@ $inventoryStats = getInventoryStats();
     <div class="sidebar">
         <h4 class="sidebar-title">Villa Valore Hotel</h4>
         <div class="nav-section">
-            <a class="nav-link" href="home.php"><i class="fas fa-th-large"></i>Dashboard</a>
-            <a class="nav-link" href="student.php"><i class="fas fa-user"></i>Guest</a>
+            <a class="nav-link" href="staff_dashboard.php"><i class="fas fa-th-large"></i>Dashboard</a>
+            <a class="nav-link" href="reservation.php"><i class="fas fa-calendar-check"></i>Reservation</a>
             <a class="nav-link" href="booking.php"><i class="fas fa-book"></i>Booking</a>
+            <a class="nav-link" href="room.php"><i class="fas fa-door-open"></i>Room</a>
+            <a class="nav-link" href="guest_request.php"><i class="fas fa-comment-dots"></i>Guest Request</a>
+            <a class="nav-link" href="inventory.php"><i class="fas fa-box"></i>Inventory</a>
         </div>
         <div class="nav-section">
-            <div class="management-label">MANAGEMENT</div>
-            <div class="nav-link toggle-btn" onclick="toggleMenu('management')">
-                <div><i class="fas fa-cog"></i>Manage</div>
-            </div>
-            <div class="submenu" id="management">
-                <a class="nav-link" href="room.php"><i class="fas fa-door-open"></i>Room</a>
-                <a class="nav-link" href="menu_service.php"><i class="fas fa-utensils"></i>Menu & Service</a>
-                <a class="nav-link" href="account.php"><i class="fas fa-user"></i>Account</a>
-                <a class="nav-link" href="inventory.php"><i class="fas fa-box"></i>Inventory</a>
-            </div>
-        </div>
-        <div class="nav-section">
-            <a class="nav-link" href="payment.php"><i class="fas fa-credit-card"></i>Payments</a>
-            <a class="nav-link" href="statistics.php"><i class="fas fa-chart-line"></i>Statistics</a>
-            <a class="nav-link" href="inbox.php"><i class="fas fa-inbox"></i>Inbox</a>
-        </div>
-        <div class="nav-section">
-            <a class="nav-link" href="profile.php"><i class="fas fa-user-lock"></i>Profile Account</a>
-            <a class="nav-link" href="logout.php"><i class="fas fa-sign-out-alt"></i>Logout</a>
+            <a class="nav-link" href="logout.php"><i class="fas fa-sign-out-alt"></i>Log out</a>
         </div>
     </div>
     <!-- Main Content -->
