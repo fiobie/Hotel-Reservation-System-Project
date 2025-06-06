@@ -206,7 +206,8 @@
 
 /* Action buttons */
 #studentTable .edit-btn,
-#studentTable .view-btn {
+#studentTable .view-btn,
+#studentTable .delete-btn {
   background-color: #008000;
   color: white;
   border: none;
@@ -218,7 +219,8 @@
 }
 
 #studentTable .edit-btn:hover,
-#studentTable .view-btn:hover {
+#studentTable .view-btn:hover,
+#studentTable .delete-btn:hover {
   background-color: #006400;
 }
 
@@ -256,6 +258,26 @@
 
       $stmt->close();
     }
+
+      // DELETE student
+      if (isset($_POST['deleteStudent'])) {
+      $studentID = $_POST['deleteStudentID'];
+      $stmt = $conn->prepare("DELETE FROM student WHERE StudentID = ?");
+      $stmt->bind_param("i", $studentID);
+      $stmt->execute();
+      $stmt->close();
+      echo "<script>alert('Deleted successfully.'); window.location.href='';</script>";
+}
+
+      // UPDATE student
+      if (isset($_POST['updateStudent'])) {
+      $stmt = $conn->prepare("UPDATE student SET FirstName=?, LastName=?, Gender=?, PhoneNumber=?, Address=?, Email=?, Nationality=?, Birthdate=? WHERE StudentID=?");
+      $stmt->bind_param("ssssssssi", $_POST['editFirstName'], $_POST['editLastName'], $_POST['editGender'], $_POST['editPhoneNumber'], $_POST['editAddress'], $_POST['editEmail'], $_POST['editNationality'], $_POST['editBirthdate'], $_POST['editStudentID']);
+      $stmt->execute();
+      $stmt->close();
+      echo "<script>alert('Updated successfully.'); window.location.href='';</script>";
+}
+
     ?>
 
   <!-- Sidebar Navigation -->
@@ -400,42 +422,44 @@
   </div>
 </div>
 
+<!-- Edit Modal -->
+<div id="editModal" style="display:none;">
+  <div class="modal-content">
+    <h3>Edit Guest</h3>
+    <form method="POST" action="">
+      <input type="hidden" name="editStudentID" id="editStudentID">
+      <label>First Name</label>
+      <input type="text" name="editFirstName" id="editFirstName" required>
+      <label>Last Name</label>
+      <input type="text" name="editLastName" id="editLastName" required>
+      <label>Gender</label>
+      <select name="editGender" id="editGender" required>
+        <option value="Female">Female</option>
+        <option value="Male">Male</option>
+        <option value="Prefer not to say">Prefer not to say</option>
+      </select>
+      <label>Phone Number</label>
+      <input type="text" name="editPhoneNumber" id="editPhoneNumber" required>
+      <label>Address</label>
+      <input type="text" name="editAddress" id="editAddress" required>
+      <label>Email</label>
+      <input type="email" name="editEmail" id="editEmail" required>
+      <label>Nationality</label>
+      <input type="text" name="editNationality" id="editNationality" required>
+      <label>Birthdate</label>
+      <input type="date" name="editBirthdate" id="editBirthdate" required>
+      <button type="submit" name="updateStudent">Update</button>
+      <button type="button" onclick="document.getElementById('editModal').style.display='none'">Cancel</button>
+    </form>
+  </div>
+</div>
+
+
 <script>
 $(document).ready(function() {
   $('#studentTable').DataTable({
     dom: 'Bfrtip',
     buttons: ['copy', 'csv', 'excel', 'pdf', 'print', 'colvis']
-  });
-
-  // Modal triggers
-  $(document).on('click', '.edit-btn', function() {
-    const id = $(this).data('id');
-    $.post('ajax/student_edit_form.php', { StudentID: id }, function(data) {
-      $('#modalBody').html(data);
-      $('#modalOverlay').fadeIn();
-    });
-  });
-
-  $(document).on('click', '.view-btn', function() {
-    const id = $(this).data('id');
-    $.post('ajax/student_view.php', { StudentID: id }, function(data) {
-      $('#modalBody').html(data);
-      $('#modalOverlay').fadeIn();
-    });
-  });
-
-  $(document).on('click', '.delete-btn', function() {
-    const id = $(this).data('id');
-    if (confirm('Are you sure you want to delete this guest?')) {
-      $.post('ajax/student_delete.php', { StudentID: id }, function(data) {
-        alert('Guest deleted successfully');
-        location.reload();
-      });
-    }
-  });
-
-  $('#closeModal').on('click', function() {
-    $('#modalOverlay').fadeOut();
   });
 });
 </script>
@@ -453,6 +477,57 @@ $(document).ready(function() {
     <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
 
     <script>
+      // Handle Edit, View, Delete button clicks
+      document.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+          const row = this.closest('tr');
+          document.getElementById('editStudentID').value = this.dataset.id;
+          document.getElementById('editFirstName').value = row.cells[1].textContent;
+          document.getElementById('editLastName').value = row.cells[2].textContent;
+          document.getElementById('editGender').value = row.cells[3].textContent;
+          document.getElementById('editPhoneNumber').value = row.cells[4].textContent;
+          document.getElementById('editAddress').value = row.cells[5].textContent;
+          document.getElementById('editEmail').value = row.cells[6].textContent;
+          document.getElementById('editNationality').value = row.cells[7].textContent;
+          document.getElementById('editBirthdate').value = row.cells[8].textContent;
+          document.getElementById('editModal').style.display = 'block';
+        });
+      });
+
+      document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+          if (confirm('Are you sure you want to delete this record?')) {
+            const studentID = this.dataset.id;
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.innerHTML = `<input type="hidden" name="deleteStudentID" value="${studentID}">
+                          <input type="hidden" name="deleteStudent">`;
+        document.body.appendChild(form);
+        form.submit();
+      }
+
+    });
+  });
+      document.querySelectorAll('.view-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+          const row = this.closest('tr');
+          const content = `
+            <h3>Guest Details</h3>
+            <p><strong>Student ID:</strong> ${row.cells[0].textContent}</p>
+            <p><strong>First Name:</strong> ${row.cells[1].textContent}</p>
+            <p><strong>Last Name:</strong> ${row.cells[2].textContent}</p>
+            <p><strong>Gender:</strong> ${row.cells[3].textContent}</p>
+            <p><strong>Phone Number:</strong> ${row.cells[4].textContent}</p>
+            <p><strong>Address:</strong> ${row.cells[5].textContent}</p>
+            <p><strong>Email:</strong> ${row.cells[6].textContent}</p>
+            <p><strong>Nationality:</strong> ${row.cells[7].textContent}</p>
+            <p><strong>Birthdate:</strong> ${row.cells[8].textContent}</p>
+          `;
+          document.getElementById('viewModalContent').innerHTML = content;
+          document.getElementById('viewModal').style.display = 'block';
+        });
+      }); 
+
       function toggleMenu(id) {
         const submenu = document.getElementById(id);
         const toggle = submenu.previousElementSibling;
@@ -469,6 +544,25 @@ $(document).ready(function() {
           ]
         });
       });
+
+      $('.viewBtn').click(function () {
+            const row = $(this).closest('tr');
+            $('#viewName').text(row.find('td:eq(1)').text());
+            $('#viewEmail').text(row.find('td:eq(2)').text());
+            $('#viewPhone').text(row.find('td:eq(3)').text());
+            $('#viewAddress').text(row.find('td:eq(4)').text());
+            $('#viewModal').removeClass('hidden');
+        });
+
+        $('.close-view').click(function () {
+            $('#viewModal').addClass('hidden');
+        });
+
+        $('#viewModal').click(function (e) {
+            if (e.target === this) {
+                $(this).addClass('hidden');
+            }
+        });
     </script>
 
         </body>
