@@ -396,3 +396,54 @@ select, .filter-btn {
   text-decoration: none;
   font-size: 14px;
 }
+
+/* Book Now Styles */
+ .container_booking {
+      max-width: 550px;
+      margin: 30px auto;
+      background: white;
+      padding: 25px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      border-radius: 8px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      font-weight: bold;
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    .btn {
+      background-color: #0b3d2e;
+      color: white;
+      padding: 12px 25px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      display: inline-block;
+      margin-top: 10px;
+      text-decoration: none;
+    }
+
+    .btn:hover {
+      background-color: #096649;
+    }
+
+    .confirmation {
+      margin-top: 25px;
+      background-color: #e6f8ec;
+      padding: 20px;
+      border-left: 6px solid #34a56f;
+      border-radius: 6px;
+    }
