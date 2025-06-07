@@ -1,9 +1,33 @@
-<?php include 'connections.php';
+<?php
+include 'connections.php';
+session_start(); // Enable sessions
+
 $confirmation = "";
 $generated_booking_id = "";
 $estimated_price = "";
 $booking_date = date("Y-m-d");
 
+// Fetch booking ID from GET or SESSION
+if (isset($_GET['BookingID'])) {
+    $booking_id_param = $conn->real_escape_string($_GET['BookingID']);
+    $_SESSION['BookingID'] = $booking_id_param;
+} elseif (isset($_SESSION['BookingID'])) {
+    $booking_id_param = $conn->real_escape_string($_SESSION['BookingID']);
+} else {
+    $booking_id_param = "";
+}
+
+if (!empty($booking_id_param)) {
+    $query = "SELECT BookingID, Price FROM booking WHERE BookingID = '$booking_id_param' LIMIT 1";
+    $result = $conn->query($query);
+    if ($result && $result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        $generated_booking_id = $row['BookingID'];
+        $estimated_price = $row['Price'];
+    }
+}
+
+// Form Submission Handling
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (
         empty($_POST['StudentID']) ||
@@ -15,9 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         empty($_POST['Address']) ||
         empty($_POST['Email']) ||
         empty($_POST['Nationality']) ||
-        empty($_POST['Birthdate']) ||
-        empty($_POST['PaymentMethod']) ||
-        empty($_POST['AmountPaid'])
+        empty($_POST['Birthdate'])
     ) {
         $confirmation = "<p style='color: red;'>All fields are required.</p>";
     } else {
@@ -44,18 +66,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
-
-// Fetch booking ID and estimated price if booking ID is passed via GET
-if (isset($_GET['BookingID'])) {
-    $booking_id_param = $conn->real_escape_string($_GET['BookingID']);
-    $query = "SELECT BookingID, Price FROM booking WHERE BookingID = '$booking_id_param' LIMIT 1";
-    $result = $conn->query($query);
-    if ($result && $result->num_rows > 0) {
-        $row = $result->fetch_assoc();
-        $generated_booking_id = $row['BookingID'];
-        $estimated_price = $row['Price'];
-    }
-}
 ?>  
 
 <!DOCTYPE html>
@@ -65,7 +75,7 @@ if (isset($_GET['BookingID'])) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Villa Valore Hotel</title>
   <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
 </head>
 <body>
 
@@ -83,16 +93,21 @@ if (isset($_GET['BookingID'])) {
       <a href="booking.php">Rooms</a>
       <a href="about.php">About</a>
       <a href="mybookings.php">My Bookings</a>
-      <a href="signin.php">Sign In</a>
+      <a href="login.php">Sign In</a>
     </nav>
   </header>
 
-<!-- Student Booking Form -->
+<!-- Guest Details Form -->
 <div class="container_booking">
-  <h2>Guest Registration</h2>
+  <h2>Guest Information</h2>
+  
+  <!-- Optional: Debug -->
+  <!-- <p>Debug Booking ID: <?php echo htmlspecialchars($generated_booking_id); ?></p> -->
+
   <form method="POST">
     <div class="form-group">
       <label for="BookingID">Booking ID:</label>
+      <input type="text" id="BookingID_display" value="<?php echo $generated_booking_id; ?>" readonly class="readonly-field" />
       <input type="hidden" id="BookingID" name="BookingID" value="<?php echo $generated_booking_id; ?>" />
     </div>
 

@@ -447,3 +447,10 @@ select, .filter-btn {
       border-left: 6px solid #34a56f;
       border-radius: 6px;
     }
+
+    .readonly-field {
+  background-color: #f2f2f2;
+  border: 1px solid #ccc;
+  color: #333;
+  cursor: not-allowed;
+}

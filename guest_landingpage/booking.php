@@ -24,10 +24,9 @@
       <a href="booking.php">Rooms</a>
       <a href="about.php">About</a>
       <a href="mybookings.php">My Bookings</a>
-      <a href="signin.php">Sign In</a>
+      <a href="login.php">Log In</a>
     </nav>
 
-    <button class="book-btn" onclick="window.location.href='booking.php'">BOOK NOW</button>
   </header>
 
   <!-- Header -->

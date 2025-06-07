@@ -1,8 +1,19 @@
-<?php include 'connections.php';
+<?php
+include 'connections.php';
 $confirmation = "";
 $generatedBookingID = "";
 $bookingDate = date("Y-m-d");
 
+// Generate Booking ID on page load if not submitting
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    $date_code = date("Ymd");
+    $result = $conn->query("SELECT COUNT(*) AS total FROM booking WHERE DATE(BookingDate) = CURDATE()");
+    $row = $result->fetch_assoc();
+    $count_today = $row['total'] + 1;
+    $generatedBookingID = "BK-" . $date_code . "-" . str_pad($count_today, 4, '0', STR_PAD_LEFT);
+}
+
+// Booking submission logic
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($_POST['RoomType']) || empty($_POST['CheckInDate']) || empty($_POST['CheckOutDate'])) {
         $confirmation = "<p style='color: red;'>All fields are required.</p>";
@@ -11,14 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $check_in = $_POST['CheckInDate'];
         $check_out = $_POST['CheckOutDate'];
         $special_request = $conn->real_escape_string($_POST['Notes']);
-
-        // Generate booking ID
-        $date_code = date("Ymd");
-        $result = $conn->query("SELECT COUNT(*) AS total FROM booking WHERE DATE(BookingDate) = CURDATE()");
-        $row = $result->fetch_assoc();
-        $count_today = $row['total'] + 1;
-        $booking_id = "BK-" . $date_code . "-" . str_pad($count_today, 4, '0', STR_PAD_LEFT);
-        $generatedBookingID = $booking_id;
+        $booking_id = $_POST['booking_id']; // Use the generated one from the form
 
         // Dummy price logic
         $price_map = [
@@ -54,6 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>
 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -79,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <a href="booking.php">Rooms</a>
       <a href="about.php">About</a>
       <a href="mybookings.php">My Bookings</a>
-      <a href="signin.php">Sign In</a>
+      <a href="login.php">Log In</a>
     </nav>
   </header>
 
@@ -87,19 +92,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="container_booking">
   <h2>Book a Room</h2>
   <form method="POST">
-  <div class="form-group">
-  <label for="booking-id">Booking ID:</label>
-  <input type="text" id="booking-id" name="booking_id" readonly />
-</div>
 
     <div class="form-group">
-      <label for="BookingDate">Booking Date:</label>
-      <input type="text" id="BookingDate" value="<?php echo $bookingDate; ?>" readonly />
+        <label for="booking-id">Booking ID:</label>
+        <input type="text" id="booking-id" name="booking_id" value="<?php echo $generatedBookingID; ?>" readonly />
     </div>
 
     <div class="form-group">
       <label for="RoomType">Room Type:</label>
       <select id="RoomType" name="RoomType" required>
+        <option value="">Select a Room Type</option>
         <option value="standard">Standard Room</option>
         <option value="deluxe">Deluxe Room</option>
         <option value="suite">Suite Room</option>
