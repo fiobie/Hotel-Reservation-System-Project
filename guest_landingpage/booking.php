@@ -30,15 +30,15 @@
     <button class="book-btn" onclick="window.location.href='booking.php'">BOOK NOW</button>
   </header>
 
- <!-- Header -->
-  <div class="header-img">
-    <div class="hotel-info">
-      <h2>Hotel Villa Valore</h2>
-      <div class="info-line"><i>📍</i> 2 Portwood Street, Newport City, Pasay City, Metro Manila, Philippines, 1309</div>
-      <div class="info-line"><i>📞</i> 63-2-53182888</div>
-      <div class="info-line"><i>🔗</i> <a href="https://www.villavalore.com/" target="_blank">www.villavalore.com</a></div>
+  <!-- Header -->
+    <div class="header-img">
+      <div class="hotel-info">
+        <h2>Hotel Villa Valore</h2>
+        <div class="info-line"><i>📍</i> CvSU Avenue Brgy. Biga 1, Silang, Cavite 4118</div>
+        <div class="info-line"><i>📞</i> (046) 888-9900</div>
+        <div class="info-line"><i>🔗</i> <a href="https://cvsu-silang.edu.ph/" target="_blank">cvsu-silang.edu.ph</a></div>
+      </div>
     </div>
-  </div>
 
   <!-- Booking Section -->
   <div class="booking-panel">
