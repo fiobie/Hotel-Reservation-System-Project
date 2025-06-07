@@ -107,8 +107,8 @@
       <div class="room-price">
         <p class="price">₱8,000</p>
         <p class="per-night">Per Night<br><small>Including taxes and fees</small></p>
-        <button class="btn green">BOOK NOW</button>
-        <button class="btn green">RESERVE NOW</button>
+        <button class="btn green" onclick="window.location.href='booknow.php'">BOOK NOW</button>
+        <button class="btn green" onclick="window.location.href='reservenow.php'">RESERVE NOW</button>
       </div> 
     </div>
 
@@ -128,8 +128,8 @@
   <div class="room-price">
     <p class="price">₱10,000</p>
     <p class="per-night">Per Night<br><small>Including taxes and fees</small></p>
-    <button class="btn green">BOOK NOW</button>
-    <button class="btn green">RESERVE NOW</button>
+    <button class="btn green" onclick="window.location.href='booknow.php'">BOOK NOW</button>
+    <button class="btn green" onclick="window.location.href='reservenow.php'">RESERVE NOW</button>
   </div>
 </div>
 
@@ -149,8 +149,8 @@
   <div class="room-price">
     <p class="price">₱12,000</p>
     <p class="per-night">Per Night<br><small>Including taxes and fees</small></p>
-    <button class="btn green">BOOK NOW</button>
-    <button class="btn green">RESERVE NOW</button>
+    <button class="btn green" onclick="window.location.href='booknow.php'">BOOK NOW</button>
+    <button class="btn green" onclick="window.location.href='reservenow.php'">RESERVE NOW</button>
   </div>
 </div>
 
