@@ -51,6 +51,18 @@ function getInventoryStats() {
 }
 
 $inventoryStats = getInventoryStats();
+
+// --- Dashboard Stats Queries ---
+// New Booking: count of bookings with BookingStatus = 'Pending'
+$newBooking = $conn->query("SELECT COUNT(*) as count FROM booking WHERE BookingStatus = 'Pending'")->fetch_assoc()['count'] ?? 0;
+// Available Room: count of rooms with RoomStatus = 'Available'
+$availableRoom = $conn->query("SELECT COUNT(*) as count FROM room WHERE RoomStatus = 'Available'")->fetch_assoc()['count'] ?? 0;
+// Check In: count of bookings with today's CheckInDate
+$checkIn = $conn->query("SELECT COUNT(*) as count FROM booking WHERE DATE(CheckInDate) = CURDATE() AND BookingStatus = 'Confirmed'")->fetch_assoc()['count'] ?? 0;
+// Check Out: count of bookings with today's CheckOutDate
+$checkOut = $conn->query("SELECT COUNT(*) as count FROM booking WHERE DATE(CheckOutDate) = CURDATE() AND BookingStatus = 'Confirmed'")->fetch_assoc()['count'] ?? 0;
+// Reservation: count of all reservations (not cancelled)
+$reservation = $conn->query("SELECT COUNT(*) as count FROM booking WHERE BookingStatus != 'Cancelled'")->fetch_assoc()['count'] ?? 0;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -148,6 +160,88 @@ $inventoryStats = getInventoryStats();
             }
             .category-row { justify-content: flex-start; }
         }
+        .stats-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: #fafbfa;
+            border-radius: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            padding: 2rem 2.5rem;
+            min-width: 180px;
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1 1 180px;
+            max-width: 220px;
+        }
+        .stat-icon {
+            font-size: 2.2rem;
+            color: #b0b0b0;
+            margin-bottom: 0.5rem;
+        }
+        .stat-label {
+            font-size: 1.1rem;
+            color: #444;
+            margin-bottom: 0.2rem;
+        }
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #222;
+        }
+        .inventory-card {
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            padding: 2rem 2.5rem;
+            margin-top: 1.5rem;
+            max-width: 420px;
+        }
+        .inventory-card h2 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 1.2rem;
+        }
+        .inventory-table-modern {
+            width: 100%;
+        }
+        .inventory-header {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+        .inventory-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.1rem;
+            gap: 1.2rem;
+        }
+        .inventory-row span {
+            font-size: 1.1rem;
+        }
+        .inventory-icon {
+            font-size: 2rem;
+            margin-right: 0.7rem;
+            color: #b0b0b0;
+        }
+        .inventory-value {
+            font-weight: bold;
+            font-size: 1.3rem;
+            margin-left: auto;
+        }
+        @media (max-width: 900px) {
+            .stats-container { flex-direction: column; gap: 1rem; }
+            .stat-card { max-width: 100%; min-width: 0; }
+            .inventory-card { max-width: 100%; }
+        }
     </style>
 </head>
 <body>
@@ -174,31 +268,57 @@ $inventoryStats = getInventoryStats();
     <!-- Main Content -->
     <div class="main-content">
         <div class="dashboard">
-            <h1>Staff Dashboard</h1>
-            <div class="inventory-section">
+            <h1 style="margin-bottom: 2rem;">Staff Dashboard</h1>
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="far fa-calendar-alt"></i></div>
+                    <div class="stat-label">New Booking</div>
+                    <div class="stat-value"><?php echo $newBooking; ?></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-bed"></i></div>
+                    <div class="stat-label">Available Room</div>
+                    <div class="stat-value"><?php echo $availableRoom; ?></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-door-open"></i></div>
+                    <div class="stat-label">Check In</div>
+                    <div class="stat-value"><?php echo $checkIn; ?></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-door-closed"></i></div>
+                    <div class="stat-label">Check Out</div>
+                    <div class="stat-value"><?php echo $checkOut; ?></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="far fa-calendar-check"></i></div>
+                    <div class="stat-label">Reservation</div>
+                    <div class="stat-value"><?php echo $reservation; ?></div>
+                </div>
+            </div>
+            <div class="inventory-card">
                 <h2>Inventory</h2>
-                <table class="inventory-table">
-                    <thead>
-                        <tr>
-                            <th>Category</th>
-                            <th>Available Stock</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td class="category-row" data-label="Category"><span class="inventory-icon"><i class="fas fa-suitcase"></i></span>Toiletries</td>
-                            <td data-label="Available Stock"><?php echo $inventoryStats['Toiletries']; ?></td>
-                        </tr>
-                        <tr>
-                            <td class="category-row" data-label="Category"><span class="inventory-icon"><i class="fas fa-bed"></i></span>Amenities</td>
-                            <td data-label="Available Stock"><?php echo $inventoryStats['Amenities']; ?></td>
-                        </tr>
-                        <tr>
-                            <td class="category-row" data-label="Category"><span class="inventory-icon"><i class="fas fa-utensils"></i></span>Food</td>
-                            <td data-label="Available Stock"><?php echo $inventoryStats['Food']; ?></td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div class="inventory-table-modern">
+                    <div class="inventory-header">
+                        <span>Category</span>
+                        <span>Available Stock</span>
+                    </div>
+                    <div class="inventory-row">
+                        <span class="inventory-icon"><i class="fas fa-suitcase"></i></span>
+                        <span>Toiletries</span>
+                        <span class="inventory-value"><?php echo $inventoryStats['Toiletries']; ?></span>
+                    </div>
+                    <div class="inventory-row">
+                        <span class="inventory-icon"><i class="fas fa-bed"></i></span>
+                        <span>Amenities</span>
+                        <span class="inventory-value"><?php echo $inventoryStats['Amenities']; ?></span>
+                    </div>
+                    <div class="inventory-row">
+                        <span class="inventory-icon"><i class="fas fa-utensils"></i></span>
+                        <span>Food</span>
+                        <span class="inventory-value"><?php echo $inventoryStats['Food']; ?></span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
