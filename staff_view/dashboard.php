@@ -242,6 +242,28 @@ $reservation = $conn->query("SELECT COUNT(*) as count FROM booking WHERE Booking
             .stat-card { max-width: 100%; min-width: 0; }
             .inventory-card { max-width: 100%; }
         }
+        .stat-link {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            transition: transform 0.1s;
+        }
+        .stat-link:hover .stat-card {
+            box-shadow: 0 4px 16px rgba(0,128,0,0.10);
+            transform: translateY(-2px) scale(1.03);
+            cursor: pointer;
+        }
+        .inventory-link {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            transition: transform 0.1s;
+        }
+        .inventory-link:hover .inventory-card {
+            box-shadow: 0 4px 16px rgba(0,128,0,0.10);
+            transform: translateY(-2px) scale(1.03);
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -270,56 +292,68 @@ $reservation = $conn->query("SELECT COUNT(*) as count FROM booking WHERE Booking
         <div class="dashboard">
             <h1 style="margin-bottom: 2rem;">Staff Dashboard</h1>
             <div class="stats-container">
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="far fa-calendar-alt"></i></div>
-                    <div class="stat-label">New Booking</div>
-                    <div class="stat-value"><?php echo $newBooking; ?></div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="fas fa-bed"></i></div>
-                    <div class="stat-label">Available Room</div>
-                    <div class="stat-value"><?php echo $availableRoom; ?></div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="fas fa-door-open"></i></div>
-                    <div class="stat-label">Check In</div>
-                    <div class="stat-value"><?php echo $checkIn; ?></div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="fas fa-door-closed"></i></div>
-                    <div class="stat-label">Check Out</div>
-                    <div class="stat-value"><?php echo $checkOut; ?></div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="far fa-calendar-check"></i></div>
-                    <div class="stat-label">Reservation</div>
-                    <div class="stat-value"><?php echo $reservation; ?></div>
-                </div>
+                <a href="booking.php" class="stat-link">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="far fa-calendar-alt"></i></div>
+                        <div class="stat-label">New Booking</div>
+                        <div class="stat-value"><?php echo $newBooking; ?></div>
+                    </div>
+                </a>
+                <a href="room.php" class="stat-link">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-bed"></i></div>
+                        <div class="stat-label">Available Room</div>
+                        <div class="stat-value"><?php echo $availableRoom; ?></div>
+                    </div>
+                </a>
+                <a href="booking.php" class="stat-link">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-door-open"></i></div>
+                        <div class="stat-label">Check In</div>
+                        <div class="stat-value"><?php echo $checkIn; ?></div>
+                    </div>
+                </a>
+                <a href="booking.php" class="stat-link">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-door-closed"></i></div>
+                        <div class="stat-label">Check Out</div>
+                        <div class="stat-value"><?php echo $checkOut; ?></div>
+                    </div>
+                </a>
+                <a href="reservation.php" class="stat-link">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="far fa-calendar-check"></i></div>
+                        <div class="stat-label">Reservation</div>
+                        <div class="stat-value"><?php echo $reservation; ?></div>
+                    </div>
+                </a>
             </div>
-            <div class="inventory-card">
-                <h2>Inventory</h2>
-                <div class="inventory-table-modern">
-                    <div class="inventory-header">
-                        <span>Category</span>
-                        <span>Available Stock</span>
-                    </div>
-                    <div class="inventory-row">
-                        <span class="inventory-icon"><i class="fas fa-suitcase"></i></span>
-                        <span>Toiletries</span>
-                        <span class="inventory-value"><?php echo $inventoryStats['Toiletries']; ?></span>
-                    </div>
-                    <div class="inventory-row">
-                        <span class="inventory-icon"><i class="fas fa-bed"></i></span>
-                        <span>Amenities</span>
-                        <span class="inventory-value"><?php echo $inventoryStats['Amenities']; ?></span>
-                    </div>
-                    <div class="inventory-row">
-                        <span class="inventory-icon"><i class="fas fa-utensils"></i></span>
-                        <span>Food</span>
-                        <span class="inventory-value"><?php echo $inventoryStats['Food']; ?></span>
+            <a href="inventory.php" class="inventory-link">
+                <div class="inventory-card">
+                    <h2>Inventory</h2>
+                    <div class="inventory-table-modern">
+                        <div class="inventory-header">
+                            <span>Category</span>
+                            <span>Available Stock</span>
+                        </div>
+                        <div class="inventory-row">
+                            <span class="inventory-icon"><i class="fas fa-suitcase"></i></span>
+                            <span>Toiletries</span>
+                            <span class="inventory-value"><?php echo $inventoryStats['Toiletries']; ?></span>
+                        </div>
+                        <div class="inventory-row">
+                            <span class="inventory-icon"><i class="fas fa-bed"></i></span>
+                            <span>Amenities</span>
+                            <span class="inventory-value"><?php echo $inventoryStats['Amenities']; ?></span>
+                        </div>
+                        <div class="inventory-row">
+                            <span class="inventory-icon"><i class="fas fa-utensils"></i></span>
+                            <span>Food</span>
+                            <span class="inventory-value"><?php echo $inventoryStats['Food']; ?></span>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </a>
         </div>
     </div>
     <script>
