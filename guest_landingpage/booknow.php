@@ -23,6 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $check_out = $_POST['CheckOutDate'];
         $special_request = $conn->real_escape_string($_POST['Notes']);
         $booking_id = $_POST['booking_id']; // Use the generated one from the form
+        $bookingDate = $_POST['BookingDate']; // Get from hidden field
 
         // Dummy price logic
         $price_map = [
@@ -47,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <p>Booking Date: <strong>$bookingDate</strong></p>
                     <p>Total Price: <strong>₱$price</strong></p>
                     <p>Special Request: <em>$special_request</em></p>
-                    <a href='guestdetails.php' class='btn'>Next</a>
+                    <a href='guestdetails.php?BookingID=$booking_id' class='btn'>Next</a>
                 </div>";
         } else {
             $confirmation = "<p style='color: red;'>Error: " . $conn->error . "</p>";
@@ -66,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Villa Valore Hotel</title>
   <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 <body>
 
@@ -93,11 +94,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <h2>Book a Room</h2>
   <form method="POST">
 
+    <!-- Booking ID -->
     <div class="form-group">
         <label for="booking-id">Booking ID:</label>
         <input type="text" id="booking-id" name="booking_id" value="<?php echo $generatedBookingID; ?>" readonly />
     </div>
 
+    <!-- Booking Date (hidden for backend) -->
+    <input type="hidden" name="BookingDate" value="<?php echo $bookingDate; ?>" />
+
+    <!-- Booking Date (visible for user) -->
+    <div class="form-group">
+      <label for="BookingDate">Booking Date:</label>
+      <input type="text" id="BookingDate" value="<?php echo $bookingDate; ?>" readonly />
+    </div>
+
+    <!-- Room Type -->
     <div class="form-group">
       <label for="RoomType">Room Type:</label>
       <select id="RoomType" name="RoomType" required>
@@ -108,21 +120,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </select>
     </div>
 
+    <!-- Check-in Date -->
     <div class="form-group">
       <label for="CheckInDate">Check-in Date:</label>
       <input type="date" id="CheckInDate" name="CheckInDate" required />
     </div>
 
+    <!-- Check-out Date -->
     <div class="form-group">
       <label for="CheckOutDate">Check-out Date:</label>
       <input type="date" id="CheckOutDate" name="CheckOutDate" required />
     </div>
 
+    <!-- Notes -->
     <div class="form-group">
       <label for="Notes">Special Request / Notes:</label>
       <textarea id="Notes" name="Notes" rows="3"></textarea>
     </div>
 
+    <!-- Price (just for UI) -->
     <div class="form-group">
       <label for="Price">Estimated Price:</label>
       <input type="text" id="Price" value="<?php echo isset($price) ? '₱' . $price : ''; ?>" readonly />
@@ -157,7 +173,6 @@ document.getElementById("RoomType").addEventListener("change", maybeGenerateID);
 document.getElementById("CheckInDate").addEventListener("input", maybeGenerateID);
 document.getElementById("CheckOutDate").addEventListener("input", maybeGenerateID);
 </script>
-
 
 </body>
 </html>

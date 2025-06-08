@@ -106,12 +106,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   <form method="POST">
     <div class="form-group">
-      <label for="BookingID">Booking ID:</label>
-      <input type="text" id="BookingID_display" value="<?php echo $generated_booking_id; ?>" readonly class="readonly-field" />
-      <input type="hidden" id="BookingID" name="BookingID" value="<?php echo $generated_booking_id; ?>" />
-    </div>
-
-    <div class="form-group">
       <label for="StudentID">Student ID:</label>
       <input type="text" id="StudentID" name="StudentID" required />
     </div>
