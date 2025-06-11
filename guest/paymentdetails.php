@@ -4,23 +4,25 @@ $confirmation = "";
 $generated_booking_id = "";
 $estimated_price = "";
 $student_id = "";
-$booking_date = date("Y-m-d");
+$payment_date = date("Y-m-d");
 
 // Generate a unique PaymentID
 $generated_payment_id = 'PAY' . time(); // e.g., PAY1723059271
+
+// Generate a unique ReferenceCode
+$generated_reference_code = 'REF' . strtoupper(bin2hex(random_bytes(4))); // e.g., REF1A2B3C4
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (
         empty($_POST['PaymentID']) ||
         empty($_POST['BookingID']) ||
+        empty($_POST['PaymentDate']) ||
         empty($_POST['Amount']) ||
         empty($_POST['PaymentStatus']) ||
-        empty($_POST['PaymentDate']) ||
         empty($_POST['PaymentMethod']) ||
-        empty($_POST['Discount']) ||
-        empty($_POST['TotalBill']) ||
-        empty($_POST['ReferenceCode'])
+        empty($_POST['ReferenceCode']) ||
+        empty($_POST['StudentID']) 
     ) {
         $confirmation = "<p style='color: red;'>All fields are required.</p>";
     } else {
@@ -30,12 +32,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $payment_status = $conn->real_escape_string($_POST['PaymentStatus']);
         $payment_date = $conn->real_escape_string($_POST['PaymentDate']);
         $payment_method = $conn->real_escape_string($_POST['PaymentMethod']);
-        $discount = $conn->real_escape_string($_POST['Discount']);
-        $total_bill = $conn->real_escape_string($_POST['TotalBill']);
         $reference_code = $conn->real_escape_string($_POST['ReferenceCode']);
-
-        $sql = "INSERT INTO payment (PaymentID, BookingID, Amount, PaymentStatus, PaymentDate, PaymentMethod, Discount, TotalBill, ReferenceCode)
-                VALUES ('$payment_id', '$booking_id', '$amount', '$payment_status', '$payment_date', '$payment_method', '$discount', '$total_bill', '$reference_code')";
+        $student_id = $conn->real_escape_string($_POST['StudentID']);
+    }
+        $sql = "INSERT INTO payment (PaymentID, BookingID, Amount, PaymentStatus, PaymentDate, PaymentMethod, ReferenceCode)
+                VALUES ('$payment_id', '$booking_id', '$amount', '$payment_status', '$payment_date', '$payment_method', '$reference_code')";
 
         if ($conn->query($sql)) {
             $conn->close();
@@ -45,8 +46,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $confirmation = "<p style='color: red;'>Error: " . $conn->error . "</p>";
         }
     }
-}
-
 // Fetch BookingID, StudentID, and Price if provided via GET
 if (isset($_GET['BookingID'])) {
     $booking_id_param = $conn->real_escape_string($_GET['BookingID']);
@@ -59,6 +58,7 @@ if (isset($_GET['BookingID'])) {
         $student_id = $row['StudentID'];
     }
 }
+
 ?>
 
 <!DOCTYPE html>
@@ -102,44 +102,36 @@ if (isset($_GET['BookingID'])) {
       <input type="text" id="PaymentID" name="PaymentID" value="<?php echo $generated_payment_id; ?>" readonly />
     </div>
 
+     <!-- Payment Date (hidden for backend) -->
+    <input type="hidden" name="PaymentDate" value="<?php echo $payment_date; ?>" />
+
+    <!-- Payment Date (visible for user) -->
+    <div class="form-group">
+      <label for="PaymentDate">Payment Date:</label>
+      <input type="text" id="PaymentDate" value="<?php echo $payment_date; ?>" readonly />
+    </div>
+
+  
     <div class="form-group">
       <label for="Amount">Amount:</label>
       <input type="text" id="Amount" name="Amount" value="<?php echo htmlspecialchars($estimated_price); ?>" required />
     </div>
 
     <div class="form-group">
-      <label for="PaymentStatus">Payment Status:</label>
-      <input type="text" id="PaymentStatus" name="PaymentStatus" required />
-    </div>
-
-    <div class="form-group">
-      <label for="PaymentDate">Payment Date:</label>
-      <input type="date" id="PaymentDate" name="PaymentDate" required />
-    </div>
-
-    <div class="form-group">
       <label for="PaymentMethod">Payment Method:</label>
       <select id="PaymentMethod" name="PaymentMethod" required>
-        <option value="">Select Payment Method</option>
         <option value="Cash">Cash</option>
-        <option value="Debit Card">Debit Card</option>
-        <option value="PayPal">Online</option>
       </select>
     </div>
 
     <div class="form-group">
-      <label for="Discount">Discount:</label>
-      <input type="text" id="Discount" name="Discount" required />
-    </div>
-
-    <div class="form-group">
-      <label for="TotalBill">Total Bill:</label>
-      <input type="text" id="TotalBill" name="TotalBill" required />
+      <label for="PaymentStatus">Payment Status:</label>
+      <input type="text" id="PaymentStatus" name="PaymentStatus" value="Pending" required />
     </div>
 
     <div class="form-group">
       <label for="ReferenceCode">Reference Code:</label>
-      <input type="text" id="ReferenceCode" name="ReferenceCode" required />
+      <input type="text" id="ReferenceCode" name="ReferenceCode" value="<?php echo $generated_reference_code; ?>" readonly />
     </div>
 
     <button type="submit" class="btn">Submit</button>
