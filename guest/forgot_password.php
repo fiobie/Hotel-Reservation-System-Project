@@ -50,7 +50,7 @@ if (isset($_POST['submit'])) {
             border-radius: 8px;
             cursor: pointer;
             margin-top: 10px;
-        }
+        }   
 
         button:hover {
             background-color: #256428;

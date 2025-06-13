@@ -161,7 +161,7 @@
     }
 
      .header-img {
-      background: url('samplebedroom.png') center/cover no-repeat;
+      background: url('images/samplebedroom.png') center/cover no-repeat;
       height: 300px;
       position: relative;
     }
@@ -453,4 +453,62 @@ select, .filter-btn {
   border: 1px solid #ccc;
   color: #333;
   cursor: not-allowed;
+}
+
+/*Modal Styles*/
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.6);
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background-color: #fff;
+  padding: 30px;
+  border-radius: 10px;
+  width: 100%;
+  max-width: 400px;
+  position: relative;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.modal .close {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 24px;
+  font-weight: bold;
+  color: #666;
+  cursor: pointer;
+}
+
+.modal-content input {
+  display: block;
+  width: 100%;
+  margin: 10px 0;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.sign-in-btn {
+  width: 100%;
+  background-color: #009879;
+  color: white;
+  padding: 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.sign-in-btn:hover {
+  background-color: #007f6b;
 }

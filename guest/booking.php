@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Villa Valore Hotel</title>
     <link rel="stylesheet" href="style.css">
@@ -148,7 +148,7 @@
   <div class="room-price">
     <p class="price">₱12,000</p>
     <p class="per-night">Per Night<br><small>Including taxes and fees</small></p>
-    <button class="btn green" onclick="window.location.href='booknow.php'">BOOK NOW</button>
+    <button id="bookNowBtn" class="btn green">BOOK NOW</button>
     <button class="btn green" onclick="window.location.href='reservenow.php'">RESERVE NOW</button>
   </div>
 </div>
@@ -156,9 +156,21 @@
     <div class="view-more">
       <a href="#">View More Rooms ▾</a>
     </div>
-  </div>
 
-  <!-- Optional: Room list will go here -->
+  <!-- Sign In Modal -->
+<div id="signInModal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h2>Sign In</h2>
+    <form method="POST" action="login.php">
+      <input type="email" name="email" placeholder="Email" required>
+      <input type="password" name="password" placeholder="Password" required>
+      <button type="submit" class="sign-in-btn">Sign In</button>
+      <p>Don't have an account? <a href="register.php">Register here</a></p>
+    </form>
+  </div>
+</div>
+  </div>
 
   <script>
     // Example logic for updating guest selection display
@@ -185,6 +197,23 @@
     document.querySelector('.filter-btn').addEventListener('click', () => {
     alert("Filter functionality not implemented yet.");
     });
+
+    // Show modal on "Book Now" click
+    document.getElementById("bookNowBtn").onclick = function () {
+    document.getElementById("signInModal").style.display = "block";
+    };
+
+    // Close modal
+    document.querySelector(".close").onclick = function () {
+    document.getElementById("signInModal").style.display = "none";
+    };
+
+    // Close modal when clicking outside the content
+    window.onclick = function (event) {
+    if (event.target == document.getElementById("signInModal")) {
+    document.getElementById("signInModal").style.display = "none";
+    }
+    };
   </script>
 </body>
 </html>

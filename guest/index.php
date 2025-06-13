@@ -12,7 +12,7 @@
   <!-- Top Header Bar -->
   <div class="top-bar">
     <div class="logo-container">
-      <img src="cvsu-logo.png" alt="CVSU Logo" class="cvsu-logo">
+      <img src="images/cvsu-logo.png" alt="CVSU Logo" class="cvsu-logo">
       <div class="university-info">
         <strong>CAVITE STATE UNIVERSITY – SILANG CAMPUS</strong>
         <span>Truth | Excellence | Service</span>

@@ -66,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Villa Valore Hotel</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="styles/booknow.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 <body>
@@ -91,8 +91,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <!-- Booking Form -->
 <div class="container_booking">
-  <h2>Book a Room</h2>
-  <form method="POST">
+  <h2>Book a Room</h2> <br>
+  <p>Fill out the form below to book your room.</p><br>
+  <form method="POST"> 
 
     <!-- Booking ID -->
     <div class="form-group">
