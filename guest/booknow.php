@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($conn->query($sql)) {
             $confirmation = "
                 <div class='confirmation'>
-                    <h2>Booking Confirmed!</h2>
+                    <h2>Booked Confirmed!</h2>
                     <p>Thank you for booking!</p>
                     <p>Your Booking ID is: <strong>$booking_id</strong></p>
                     <p>Room Type: <strong>" . ucfirst($room_type) . "</strong></p>
