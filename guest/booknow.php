@@ -13,15 +13,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     $generatedBookingID = "BK-" . $date_code . "-" . str_pad($count_today, 4, '0', STR_PAD_LEFT);
 }
 
-// Redirect if no room is selected
-/*if (!isset($_GET['room']) || empty($_GET['room'])) {
-    header("Location: booking.php");
-    exit;
-}
-
-// Get the selected room type from the URL
-$selectedRoomType = htmlspecialchars($_GET['room']); */
-
 // Booking submission logic
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($_POST['RoomType']) || empty($_POST['CheckInDate']) || empty($_POST['CheckOutDate'])) {
@@ -118,11 +109,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <input type="text" id="BookingDate" value="<?php echo $bookingDate; ?>" readonly />
     </div>
 
-    <!-- Room Type (read-only and auto-filled from URL) -->
+    <!-- Room Type (select dropdown) -->
 <div class="form-group">
   <label for="RoomType">Room Type:</label>
-  <input type="text" id="RoomType" name="RoomType" value="<?php echo htmlspecialchars($selectedRoomType); ?>" readonly required />
+  <select id="RoomType" name="RoomType" required>
+    <option value="">-- Select Room Type --</option>
+    <option value="standard" <?php if (isset($_POST['RoomType']) && $_POST['RoomType'] == 'standard') echo 'selected'; ?>>Standard</option>
+    <option value="deluxe" <?php if (isset($_POST['RoomType']) && $_POST['RoomType'] == 'deluxe') echo 'selected'; ?>>Deluxe</option>
+    <option value="suite" <?php if (isset($_POST['RoomType']) && $_POST['RoomType'] == 'suite') echo 'selected'; ?>>Suite</option>
+  </select>
 </div>
+
 
     <!-- Check-in Date -->
     <div class="form-group">
