@@ -66,7 +66,7 @@ if (isset($_POST['submit'])) {
 <body>
     <div class="container">
         <h2>Forgot Password</h2>
-        <p>Enter your email to reset your password.</p>
+        <p>Enter your email to reset your password.</p> 
         <form method="POST">
             <input type="email" name="email" placeholder="Your email" required>
             <button type="submit" name="submit">Send Reset Link</button>
