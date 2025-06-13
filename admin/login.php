@@ -104,7 +104,7 @@ if (isset($_POST['login'])) {
 <body>
 
 <div class="login-container">
-<img src="cvsu-logo.png" alt="CvSU Logo" class="logo">
+<img src="images/cvsu-logo.png" alt="CvSU Logo" class="logo">
 
     <h1>VILLA VALORE HOTEL</h1>
     <h2>LOG IN </h2>
