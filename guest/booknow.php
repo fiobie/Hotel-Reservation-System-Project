@@ -59,7 +59,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -145,7 +144,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <input type="text" id="Price" value="<?php echo isset($price) ? '₱' . $price : ''; ?>" readonly />
     </div>
 
-    <button type="submit" class="btn">Confirm Booking</button>
+    <!-- Book Now Button -->
+    <button type="submit" class="btn">Book Now</button>
   </form>
 
   <?php echo $confirmation; ?>

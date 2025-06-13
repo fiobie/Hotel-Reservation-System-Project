@@ -97,7 +97,6 @@
         <a href="#" class="room-title">Standard Room</a>
         <p>1 King bed &nbsp; • &nbsp; Max Occupancy including children: 5 &nbsp; • &nbsp; 58 sq m</p>
         <p><strong>✔ Guaranteed with Credit Card</strong></p>
-        <p><strong>✔ Guaranteed with Credit Card</strong></p>
         <ul>
           <li>Non-Smoking</li>
           <li>Complimentary Wi-Fi</li>

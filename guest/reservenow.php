@@ -7,7 +7,7 @@ $reservationDate = date("Y-m-d");
 // Generate Reservation ID on page load if not submitting
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     $date_code = date("Ymd");
-    $result = $conn->query("SELECT COUNT(*) AS total FROM reservation WHERE DATE(ReservationDate) = CURDATE()");
+    $result = $conn->query("SELECT COUNT(*) AS total FROM reservations WHERE DATE(         ) = CURDATE()");
     $row = $result->fetch_assoc();
     $count_today = $row['total'] + 1;
     $generatedReservationID = "RS-" . $date_code . "-" . str_pad($count_today, 4, '0', STR_PAD_LEFT);
