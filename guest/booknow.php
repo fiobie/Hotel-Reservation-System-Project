@@ -14,13 +14,13 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 // Redirect if no room is selected
-if (!isset($_GET['room']) || empty($_GET['room'])) {
+/*if (!isset($_GET['room']) || empty($_GET['room'])) {
     header("Location: booking.php");
     exit;
 }
 
 // Get the selected room type from the URL
-$selectedRoomType = htmlspecialchars($_GET['room']);
+$selectedRoomType = htmlspecialchars($_GET['room']); */
 
 // Booking submission logic
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
