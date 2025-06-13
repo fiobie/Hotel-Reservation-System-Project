@@ -13,6 +13,15 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     $generatedBookingID = "BK-" . $date_code . "-" . str_pad($count_today, 4, '0', STR_PAD_LEFT);
 }
 
+// Redirect if no room is selected
+if (!isset($_GET['room']) || empty($_GET['room'])) {
+    header("Location: booking.php");
+    exit;
+}
+
+// Get the selected room type from the URL
+$selectedRoomType = htmlspecialchars($_GET['room']);
+
 // Booking submission logic
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($_POST['RoomType']) || empty($_POST['CheckInDate']) || empty($_POST['CheckOutDate'])) {
@@ -109,15 +118,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <input type="text" id="BookingDate" value="<?php echo $bookingDate; ?>" readonly />
     </div>
 
-    <!-- Room Type -->
-    <div class="form-group">
-      <label for="RoomType">Room Type:</label>
-      <select id="RoomType" name="RoomType" required>
-        <option value="standard">Standard Room</option>
-        <option value="deluxe">Deluxe Room</option>
-        <option value="suite">Suite Room</option>
-      </select>
-    </div>
+    <!-- Room Type (read-only and auto-filled from URL) -->
+<div class="form-group">
+  <label for="RoomType">Room Type:</label>
+  <input type="text" id="RoomType" name="RoomType" value="<?php echo htmlspecialchars($selectedRoomType); ?>" readonly required />
+</div>
 
     <!-- Check-in Date -->
     <div class="form-group">

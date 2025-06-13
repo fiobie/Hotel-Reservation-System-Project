@@ -106,7 +106,11 @@
       <div class="room-price">
         <p class="price">₱8,000</p>
         <p class="per-night">Per Night<br><small>Including taxes and fees</small></p>
-        <button class="btn green book-now-btn">BOOK NOW</button>
+        <!-- for automatic type of room (onclick="window.location.href='booknow.php?room=standard'") -->
+        <!--<button class="btn green" onclick="window.location.href='booknow.php?room=standard'">BOOK NOW</button> -->
+       <!-- for sign in button -->
+        <button class="btn green book-now-btn">BOOK NOW</button> 
+
         <button class="btn green" onclick="window.location.href='reservenow.php'">RESERVE NOW</button>
       </div> 
     </div>
