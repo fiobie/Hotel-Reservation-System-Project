@@ -92,7 +92,7 @@
     <div class="room-card">
         
       <!-- Standard Room -->
-      <img src="samplebedroom.png" alt="Standard Room" class="room-img"/>
+<img src="samplebedroom.png" alt="Standard Room" class="room-img"/>
       <div class="room-info">
         <a href="#" class="room-title">Standard Room</a>
         <p>1 King bed &nbsp; • &nbsp; Max Occupancy including children: 5 &nbsp; • &nbsp; 58 sq m</p>
@@ -106,7 +106,7 @@
       <div class="room-price">
         <p class="price">₱8,000</p>
         <p class="per-night">Per Night<br><small>Including taxes and fees</small></p>
-        <button class="btn green" onclick="window.location.href='booknow.php'">BOOK NOW</button>
+        <button class="btn green book-now-btn">BOOK NOW</button>
         <button class="btn green" onclick="window.location.href='reservenow.php'">RESERVE NOW</button>
       </div> 
     </div>
@@ -127,7 +127,7 @@
   <div class="room-price">
     <p class="price">₱10,000</p>
     <p class="per-night">Per Night<br><small>Including taxes and fees</small></p>
-    <button class="btn green" onclick="window.location.href='booknow.php'">BOOK NOW</button>
+    <button class="btn green book-now-btn">BOOK NOW</button>
     <button class="btn green" onclick="window.location.href='reservenow.php'">RESERVE NOW</button>
   </div>
 </div>
@@ -182,7 +182,7 @@
 
     function updateCart() {
       let totalGuests = parseInt(adults.value) + parseInt(children.value);
-      document.getElementById('cart-items').innerText = ${totalGuests} guest(s);
+      document.getElementById('cart-items').innerText = `${totalGuests} guest(s)`;
       document.getElementById('cart-total').innerText = totalGuests * 1000; // ₱1000 per guest for demo
     }
 
@@ -201,7 +201,13 @@
     // Show modal on "Book Now" click
     document.getElementById("bookNowBtn").onclick = function () {
     document.getElementById("signInModal").style.display = "block";
-    };
+   };
+
+    document.querySelectorAll(".book-now-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.getElementById("signInModal").style.display = "block";
+  });
+});
 
     // Close modal
     document.querySelector(".close").onclick = function () {
