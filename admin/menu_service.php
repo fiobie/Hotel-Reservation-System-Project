@@ -10,71 +10,111 @@
       <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css">
 
     <style>
-       body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-    }
+       * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
 
-    .sidebar {
-      width: 200px;
-      background-color: #008000;
-      color: white;
-      height: 100vh;
-      padding: 20px;
-      position: fixed;
-      top: 0;
-      left: 0;
-      overflow-y: auto;
-    }
+        body {
+            background-color: #f5f6fa;
+            display: flex;
+        }
 
-    .sidebar h4 {
-      margin-bottom: 30px;
-      font-size: 1.5em;
-    }
+        /* Sidebar Styles */
+        .sidebar {
+            width: 200px;
+            background: #008000;
+            min-height: 100vh;
+            padding: 0.5rem;
+            color: white;
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+        }
 
-    .nav-section {
-      margin-bottom: 20px;
-    }
+        .sidebar-title {
+            color: white;
+            font-size: 1.4rem;
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+        }
 
-    .nav-link {
-      display: block;
-      color: white;
-      text-decoration: none;
-      padding: 8px 10px;
-      margin: 4px 0;
-      border-radius: 4px;
-    }
+        .nav-section {
+            margin-bottom: 1rem;
+        }
 
-    .nav-link:hover {
-      background-color: #34495e;
-    }
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            color: white;
+            text-decoration: none;
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+            transition: background-color 0.2s;
+        }
 
-    .submenu {
-      display: none;
-      padding-left: 15px;
-    }
+        .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
 
-    .submenu a {
-      font-size: 0.95em;
-    }
+        .nav-link i {
+            margin-right: 0.75rem;
+            width: 20px;
+            text-align: center;
+            opacity: 0.9;
+        }
 
-    .toggle-btn {
-      cursor: pointer;
-    }
+        .management-label {
+            color: #90EE90;
+            font-size: 0.8em;
+            margin: 1rem 0 0.5rem 1rem;
+        }
 
-    .toggle-btn::after {
-      content: " ▼";
-      font-size: 0.8em;
-    }
+        .toggle-btn {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+        }
 
-    .toggle-btn.expanded::after {
-      content: " ▲";
-    }
+        .toggle-btn::after {
+            content: '▼';
+            font-size: 0.7rem;
+            margin-left: 0.5rem;
+        }
 
-    .main-content {
-      margin-left: 220px;
-      padding: 30px;
-    }
+        .submenu {
+            margin-left: 1.5rem;
+            display: none;
+        }
+
+        .submenu.active {
+            display: block;
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            margin-left: 200px; /* Match new sidebar width */
+            overflow-x: hidden;
+        }
+
+        .dashboard {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 2rem;
+            font-size: 2rem;
+        }   
 
         #addRoomModal {
           display: none;
@@ -150,40 +190,44 @@
     }
     ?>
 
-  <div class="sidebar">
-      <h4>Villa Valore Hotel</h4>
-
+  <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <h4 class="sidebar-title">Villa Valore Hotel</h4>
+        
         <div class="nav-section">
-          <a class="nav-link" href="index.php"><i class="fas fa-th-large"></i> Dashboard</a>
-          <a class="nav-link" href="student.php"><i class="fas fa-user"></i> Guest</a>
-          <a class="nav-link" href="booking.php"><i class="fas fa-book"></i> Booking</a>
+            <a class="nav-link" href="index.php"><i class="fas fa-th-large"></i>Dashboard</a>
+            <a class="nav-link" href="student.php"><i class="fas fa-user"></i>Guest</a>
+            <a class="nav-link" href="booking.php"><i class="fas fa-book"></i>Booking</a>
         </div>
 
         <div class="nav-section">
-        <div style="color: #aaa; font-size: 0.9em; margin: 10px 0 5px;">MANAGEMENT</div>
-        <div class="nav-link toggle-btn" onclick="toggleMenu('management')"><i class="fas fa-cog"></i> Manage</div>
-        <div class="submenu" id="management">
-          <a class="nav-link" href="room.php"><i class="fas fa-door-open"></i>  Room</a>
-          <a class="nav-link" href="menu_service.php"><i class="fas fa-utensils"></i> Menu & Service</a>
-          <a class="nav-link" href="account.php"><i class="fas fa-user"></i> Account</a>
-          <a class="nav-link" href="inventory.php"><i class="fas fa-box"></i> Inventory</a>
+            <div class="management-label">MANAGEMENT</div>
+            <div class="nav-link toggle-btn" onclick="toggleMenu('management')">
+                <div><i class="fas fa-cog"></i>Manage</div>
+            </div>
+            <div class="submenu" id="management">
+                <a class="nav-link" href="room.php"><i class="fas fa-door-open"></i>Room</a>
+                <a class="nav-link" href="menu_service.php"><i class="fas fa-utensils"></i>Menu & Service</a>
+                <a class="nav-link" href="account.php"><i class="fas fa-user"></i>Account</a>
+                <a class="nav-link" href="inventory.php"><i class="fas fa-box"></i>Inventory</a>
+            </div>
         </div>
-  </div>
 
-  <div class="nav-section">
-    <a class="nav-link" href="payment.php"><i class="fas fa-credit-card"></i> Payments</a>
-    <a class="nav-link" href="#"><i class="fas fa-chart-line"></i> Statistics</a>
-    <a class="nav-link" href="inbox.php"><i class="fas fa-inbox"></i> Inbox</a>
-  </div>
+        <div class="nav-section">
+            <a class="nav-link" href="payment.php"><i class="fas fa-credit-card"></i>Payments</a>
+            <a class="nav-link" href="statistics.php"><i class="fas fa-chart-line"></i>Statistics</a>
+            <a class="nav-link" href="inbox.php"><i class="fas fa-inbox"></i>Inbox</a>
+        </div>
 
-  <div class="nav-section">
-    <a class="nav-link" href="profile.php"><i class="fas fa-user-lock"></i> Profile Account</a>
-    <a class="nav-link" href="logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
-  </div>
-</div>
+        <div class="nav-section">
+            <a class="nav-link" href="profile.php"><i class="fas fa-user-lock"></i>Profile Account</a>
+            <a class="nav-link" href="logout.php"><i class="fas fa-sign-out-alt"></i>Logout</a>
+        </div>
+    </div>
 
+    <!-- Main Content -->
     <div class="main-content">
-      <h2>Menu & Service</h2>
+      <h1>Menu & Services</h1>
       <p>This is for the menu and services offered by the hotel.</p>
 
       <button class="add-btn" onclick="document.getElementById('addRoomModal').style.display='block'">+ Add Menu Service</button>

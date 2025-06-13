@@ -77,6 +77,25 @@ INSERT INTO `booking` (`BookingID`, `ReservationID`, `StudentID`, `StaffID`, `Ro
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `reservation`
+--
+
+CREATE TABLE `reservations` (
+  `ReservationID` INT(11) NOT NULL AUTO_INCREMENT,
+  `GuestName` VARCHAR(255) NOT NULL,
+  `PCheckInDate` DATETIME NOT NULL,
+  `PCheckOutDate` DATETIME NOT NULL,
+  `RoomNumber` INT(11) NOT NULL,
+  `RoomType` ENUM('Standard','Deluxe','Suite','') NOT NULL,
+  `Status` ENUM('Pending','Confirmed','Cancelled') NOT NULL,
+  `RoomStatus` ENUM('Available','Booked','Reserved','Maintenance','Cleaning') NOT NULL,
+  `ReservationFee` DECIMAL(10,2) NOT NULL,
+  PRIMARY KEY (`ReservationID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `guest_request`
 --
 

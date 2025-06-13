@@ -1,20 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" /> 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GUEST VIEW</title>
-
-  <!-- Google Fonts: Poppins -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-
-  <!-- Font Awesome for Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-
-  <style>
-    * {
+* {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
@@ -251,67 +235,3 @@
       background-color: var(--green-color);
       color: var(--white-color);
     }
-  </style>
-</head>
-<body>
-  <!-- TOP CONTACT BAR -->
-  <div class="top-bar">
-    <div class="top-bar-content">
-      <div class="contact-left">
-        <div class="address">
-          <i class="fas fa-home"></i>Biga 1, Silang, Cavite, 4118
-        </div>
-        <div class="email">
-          <i class="fas fa-envelope"></i>cvsusilang@cvsu.edu.ph
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Header / Navbar -->
-  <header>
-    <nav class="navbar section-content">
-      <!-- Logo and Hotel Info -->
-      <a href="#" class="nav_logo">
-        <img src="a71061fe-9eee-4a7d-8e02-94c0fdcb959f.png" />
-        <div class="logo-texts">
-          <span class="main-title">Villa Valore Hotel</span>
-          <span class="subtitle">CAVITE STATE UNIVERSITY - SILANG CAMPUS</span>
-          <span class="motto">Truth | Excellence | Service</span>
-        </div>
-      </a>
-
-      <!-- Navigation Links -->
-      <ul class="nav-menu">
-        <li class="nav-item"><a href="#" class="nav-link">Home</a></li>
-        <li class="nav-item"><a href="#" class="nav-link">About</a></li>
-        <li class="nav-item dropdown">
-          <a href="#" class="nav-link">Accommodations</a>
-          <ul class="dropdown-menu">
-            <li><a href="#" class="dropdown-link">Standard</a></li>
-            <li><a href="#" class="dropdown-link">Deluxe</a></li>
-            <li><a href="#" class="dropdown-link">Suite</a></li>
-          </ul>
-        </li>
-        <li class="nav-item dropdown">
-          <a href="#" class="nav-link">Services</a>
-          <ul class="dropdown-menu">
-            <li><a href="#" class="dropdown-link">Spa</a></li>
-            <li><a href="#" class="dropdown-link">Dining</a></li>
-            <li><a href="#" class="dropdown-link">Event Hosting</a></li>
-          </ul>
-        </li>
-        <li class="nav-item"><a href="#" class="nav-link">Contact Us</a></li>
-      </ul>
-    </nav>
-  </header>
-
-  <!-- Bedroom Reservation Section -->
-  <section class="bedroom-reservation">
-    <div class="reservation-content">
-      <h1 class="welcome-message">ALWAYS WELCOME HERE</h1>
-      <button class="book-button">BOOK YOUR STAY</button>
-    </div>
-  </section>
-</body>
-</html>
