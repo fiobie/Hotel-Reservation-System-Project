@@ -186,6 +186,7 @@ for ($m = 1; $m <= 12; $m++) {
             <a class="nav-link" href="index.php"><i class="fas fa-th-large"></i>Dashboard</a>
             <a class="nav-link" href="student.php"><i class="fas fa-user"></i>Guest</a>
             <a class="nav-link" href="booking.php"><i class="fas fa-book"></i>Booking</a>
+            <a class="nav-link" href="reservation.php"><i class="fas fa-calendar-check"></i>Reservation</a>
         </div>
 
         <div class="nav-section">
