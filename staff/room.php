@@ -80,6 +80,12 @@ while ($room = $roomResult->fetch_assoc()) {
          ============================================================================ -->
     <style>
         /* BASE LAYOUT */
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
         body { background: #fff; display: flex; }
         /* SIDEBAR */
@@ -90,7 +96,7 @@ while ($room = $roomResult->fetch_assoc()) {
         .nav-link:hover { background-color: rgba(255, 255, 255, 0.1); }
         .nav-link i { margin-right: 0.75rem; width: 20px; text-align: center; opacity: 0.9; }
         /* MAIN CONTENT */
-        .main-content { margin: 2rem auto; padding: 2rem; margin-left: 200px; }
+        .main-content { flex: 1; /* Ensure it takes full available width */ padding: 2rem; margin-left: 200px; }
         /* HAMBURGER MENU */
         .hamburger {
             display: none;
@@ -127,7 +133,7 @@ while ($room = $roomResult->fetch_assoc()) {
         .room-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; }
         /* .room-header-left { display: flex; align-items: center; gap: 1.5rem; } Removed as per new design*/
         .room-header-right-section { display: flex; flex-direction: row; align-items: center; gap: 2rem; margin-left: auto; /* Pushes the section to the far right */ }
-        .room-type-nav { display: flex; align-items: right; gap: 1rem; /* Adjusted spacing between arrows and text */ }
+        .room-type-nav { display: flex; align-items: center; gap: 1rem; /* Adjusted spacing between arrows and text */ }
         .room-type-label, .room-type-btn { font-size: 1.3rem; font-weight: 700; cursor: pointer; padding: 0.3rem 1rem; border-radius: 1.2rem; border: none; background: none; transition: background 0.2s, color 0.2s; }
         .room-type-btn.selected, .room-type-label.selected { background: #008000; color: #fff; }
         .room-type-btn:not(.selected):hover { background: #eaeaff; color: #008000; }
@@ -136,8 +142,8 @@ while ($room = $roomResult->fetch_assoc()) {
         .search-wrapper { position: relative; }
         .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #555; }
         .search-input { padding: 0.5rem 1.2rem 0.5rem 2.5rem; border-radius: 1.2rem; border: none; background: #ededed; font-size: 1rem; width: 300px; outline: none; }
-        .room-grid { display: grid; grid-template-columns: repeat(5, 1fr)                         ; gap: 2rem 1.5rem; margin-bottom: 2.5rem; }
-        .room-card { background: #fafaf9; border-radius: 1.2rem; box-shadow: 0 2px 8px rgba(0,0,0,0.04); display: flex; flex-direction: column; align-items: center; padding: 1.2rem 0.5rem 1.5rem 0.5rem; }
+        .room-grid { display: grid; grid-template-columns: repeat(5, 1fr)                         ; gap: 1.5rem 1rem; margin-bottom: 2.5rem; }
+        .room-card { background: #fafaf9; border-radius: 1.2rem; box-shadow: 0 2px 8px rgba(0,0,0,0.04); display: flex; flex-direction: column; align-items: center; padding: 0.8rem 0.3rem 1rem 0.3rem; }
         .room-card[data-status="Available"] { background: #b6f7c1; }
         .room-card[data-status="Booked"] { background: #f76e6e; }
         .room-card[data-status="Reserved"] { background: #fff59e; }
