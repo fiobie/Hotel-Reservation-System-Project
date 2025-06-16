@@ -4,6 +4,64 @@ include 'connections.php';
 
 $error = '';
 
+/* OTP & Activation Code Generation */
+$otp = str_pad(random_int(10000, 99999), 5, '0', STR_PAD_LEFT);
+$activation_code = bin2hex(random_bytes(16));
+
+require_once '../vendor/autoload.php'; // Adjust path if needed
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
+    // Use values from POST if form was submitted (for hidden fields)
+    $otp = $_POST['otp'] ?? $otp;
+    $activation_code = $_POST['activation_code'] ?? $activation_code;
+
+    // Ensure variables are set from POST
+    $email = $_POST['email'] ?? '';
+    $first_name = $_POST['first_name'] ?? '';
+    $last_name = $_POST['last_name'] ?? '';
+
+    if (empty($error)) {
+        // After successful insert, send verification code to guest's email
+        $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
+        try {
+            $mail->isSMTP();
+            $mail->Host       = 'smtp.gmail.com';
+            $mail->SMTPAuth   = true;
+            $mail->Username   = 'your_email@gmail.com';
+            $mail->Password   = 'your_app_specific_password';
+            $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port       = 587;
+
+            $mail->setFrom('your_email@gmail.com', 'Villa Valore Hotel');
+            $mail->addAddress($email, "{$first_name} {$last_name}");
+
+            $mail->isHTML(true);
+            $mail->Subject = 'Your Villa Valore Hotel Verification Code';
+            $mail->Body    = "
+                <h2>Welcome to Villa Valore Hotel!</h2>
+                <p>Your verification code is:</p>
+                <h3 style='color:#008000;'>$otp</h3>
+                <p>Or activate your account using this link:</p>
+                <a href='http://yourdomain.com/guest/activate.php?email=" . urlencode($email) . "&code=$activation_code'>$activation_code</a>
+                <br><br>
+                <small>If you did not register, please ignore this email.</small>
+            ";
+
+            $mail->send();
+
+            header("Location: verify.php?email=" . urlencode($email));
+            exit;
+
+        } catch (\PHPMailer\PHPMailer\Exception $e) {
+            $error = "Verification email could not be sent. Mailer Error: {$mail->ErrorInfo}";
+        }
+    } else {
+        $error = "Registration failed. Please try again.";
+    }
+}
+
+
+// Check if the form is submitted
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     if (!isset($_POST['terms'])) {
         $error = "You must agree to the Terms and Conditions.";
@@ -18,20 +76,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
         if ($password !== $confirm_password) {
             $error = "Passwords do not match.";
         } else {
-            $stmt = $conn->prepare("SELECT * FROM account WHERE Email = ?");
-            $stmt->bind_param("s", $email);
+            // Check for duplicate student ID or email
+            $stmt = $conn->prepare("SELECT * FROM guest_accounts WHERE studentID = ? OR email = ?");
+            $stmt->bind_param("ss", $student_id, $email);
             $stmt->execute();
             $result = $stmt->get_result();
-
-            if ($result->fetch_assoc()) {
-                $error = "Email already registered.";
+            if ($result && $result->num_rows > 0) {
+                $error = "An account with this Student Number or Email already exists.";
             } else {
                 $hashed = password_hash($password, PASSWORD_DEFAULT);
-                $stmt = $conn->prepare("INSERT INTO account (ID, FirstName, LastName, Email, Password) VALUES (?, ?, ?, ?, ?)");
-                $stmt->bind_param("sssss", $student_id, $first_name, $last_name, $email, $hashed);
+                $signup_time = date('Y-m-d H:i:s');
+                $stmt = $conn->prepare("INSERT INTO guest_accounts (studentID, firstName, lastName, email, password, confirmPassword, signup_time, otp, activation_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt->bind_param("sssssssss", $student_id, $first_name, $last_name, $email, $hashed, $confirm_password, $signup_time, $otp, $activation_code);
                 if ($stmt->execute()) {
-                    header("Location: login.php");
-                    exit;
+                    // Instead of redirecting to login, send verification email
+                    // Set variables for email sending
+                    $otp = $_POST['otp'] ?? $otp;
+                    $activation_code = $_POST['activation_code'] ?? $activation_code;
+                    // Set error to empty to trigger email sending block above
+                    $error = '';
                 } else {
                     $error = "Registration failed. Please try again.";
                 }
@@ -441,6 +504,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
             </div>
             <h1>Villa Valore Hotel</h1>
             <form method="POST" action="register.php" id="registerForm" autocomplete="off">
+
+                <input type="hidden" name="otp" value="<?= htmlspecialchars($otp) ?>">
+                <input type="hidden" name="activation_code" value="<?= htmlspecialchars($activation_code) ?>">
+
                 <div class="form-row single">
                     <div class="form-group">
                         <label for="student_id">Student Number</label>
