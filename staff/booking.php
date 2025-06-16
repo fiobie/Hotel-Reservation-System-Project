@@ -265,14 +265,36 @@ while ($row = $bookingResult->fetch_assoc()) {
         .toggle-btn::after { content: '▼'; font-size: 0.7rem; margin-left: 0.5rem; }
         .submenu { margin-left: 1.5rem; display: none; }
         .submenu.active { display: block; }
-        .main-content { 
-            max-width: 950px; 
-            margin: 2.5rem auto; 
-            padding: 2.5rem 2.5rem 1.5rem 2.5rem; 
-            background: #f7f8f6; 
-            border-radius: 24px; 
+        .main-content {
+            max-width: 1800px;
+            width: calc(100vw - 220px); /* 200px sidebar + 20px margin */
+            min-height: 80vh;
+            margin: 2.5vh auto 2.5vh 220px; /* leave space for sidebar */
+            padding: 0.5rem 1.5rem 1.5rem 1.5rem;
+            background: #f7f8f6;
+            border-radius: 24px;
             box-shadow: none;
             border: 1.5px solid #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            position: relative;
+        }
+        @media (max-width: 1200px) {
+            .main-content {
+                max-width: 99vw;
+                width: 99vw;
+                margin-left: 0;
+                padding: 0.5rem 0.5rem 1rem 0.5rem;
+            }
+        }
+        @media (max-width: 900px) {
+            .main-content {
+                margin-left: 0;
+                padding: 0.5rem;
+                min-height: 90vh;
+            }
         }
         /* HAMBURGER MENU */
         .hamburger {
@@ -305,6 +327,14 @@ while ($row = $bookingResult->fetch_assoc()) {
             .sidebar.active { left: 0; box-shadow: 2px 0 8px rgba(0,0,0,0.08); }
             .hamburger { display: flex; }
         }
+        @media (max-width: 1100px) {
+            .main-content {
+                max-width: 98vw;
+                width: 98vw;
+                padding: 1rem;
+                margin-left: 0;
+            }
+        }
         /* ============================================================================
            BASE STYLES
            ============================================================================ */
@@ -312,6 +342,11 @@ while ($row = $bookingResult->fetch_assoc()) {
             background: #fafaf9; 
             font-family: 'Inter', sans-serif; 
             margin: 0; 
+            min-height: 100vh;
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            justify-content: flex-start;
         }
         
         h1 { 
@@ -319,31 +354,36 @@ while ($row = $bookingResult->fetch_assoc()) {
             margin-bottom: 0; 
             font-weight: 800; 
             letter-spacing: -1px;
+            width: 100%;
+            text-align: left;
+            padding-left: 2.5rem;
+            margin-top: 1.2rem;
         }
         
         /* ============================================================================
            CALENDAR HEADER
            ============================================================================ */
-        .calendar-header { 
+        .calendar-header {
             display: flex;
+            flex-direction: column;
             align-items: center;
-            justify-content: flex-start;
+            justify-content: center;
             margin-bottom: 1.2rem;
             flex-wrap: wrap;
+            gap: 0.7rem;
+            width: 100%;
+            margin: 0 auto;
+            text-align: center;
+            width: fit-content;
+            max-width: 100%;
+        }
+        .calendar-nav {
+            display: flex;
+            align-items: center;
             gap: 1.5rem;
-        }
-        
-        .calendar-header h2 { 
-            font-size: 1.3rem; 
-            font-weight: 700; 
-            margin: 0 1rem 0 0; 
-            letter-spacing: 0.5px;
-        }
-        
-        .calendar-nav { 
-            display: flex; 
-            align-items: center; 
-            gap: 1.2rem; 
+            justify-content: center;
+            margin-top: 0.5rem;
+            width: 100%;
         }
         
         .calendar-nav-btn { 
@@ -368,9 +408,26 @@ while ($row = $bookingResult->fetch_assoc()) {
             display: flex;
             align-items: center;
             gap: 1.2rem;
-            margin-left: 2.5rem;
-            flex-wrap: wrap;
+            justify-content: center;
+            min-width: 480px;
+            max-width: 700px;
+            width: 100%;
+            flex-wrap: nowrap;
             padding-right: 0;
+            text-align: center;
+            margin: 0 auto;
+            margin: 0 auto;
+            text-align: center;
+            width: fit-content;
+            max-width: 100%;
+        }
+        @media (max-width: 800px) {
+            .search-filter-bar {
+                min-width: 0;
+                max-width: 100%;
+                width: 98%;
+                flex-wrap: wrap;
+            }
         }
         
         .search-input { 
@@ -459,19 +516,20 @@ while ($row = $bookingResult->fetch_assoc()) {
         .walk-in-btn {
             background: #545b62;
             color: #fff;
-            padding: 0.7rem 2.2rem;
+            padding: 0.5rem 1.3rem;
             border-radius: 2rem;
             border: 2px solid #bdbdbd;
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-weight: 600;
             cursor: pointer;
             transition: background 0.2s;
             white-space: nowrap;
             margin-left: 0.7rem;
             margin-right: 0;
-            min-width: 160px;
+            min-width: 110px;
             max-width: 100%;
             box-sizing: border-box;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
         }
         .walk-in-btn:hover {
             background: #444;
@@ -493,13 +551,14 @@ while ($row = $bookingResult->fetch_assoc()) {
            CALENDAR TABLE
            ============================================================================ */
         .calendar-table { 
+            margin-left: auto;
+            margin-right: auto;
             width: 100%;
+            max-width: none;
+            text-align: center;
             border-collapse: separate;
-            border-spacing: 0 18px;
-            margin-bottom: 1.2rem;
-            background: none;
-            box-shadow: none;
-            border: none;
+            border-spacing: 0 2px;
+            margin-bottom: 0.7rem;
         }
         .calendar-table tr {
             background: none;
@@ -599,6 +658,11 @@ while ($row = $bookingResult->fetch_assoc()) {
             align-items: center;
             margin-bottom: 0.7rem;
             margin-top: 1.2rem;
+            width: 100%;
+            margin: 0 auto;
+            text-align: center;
+            width: fit-content;
+            max-width: 100%;
         }
         .legend-item {
             display: flex;
@@ -662,17 +726,17 @@ while ($row = $bookingResult->fetch_assoc()) {
         .walk-in-btn {
             background: #545b62;
             color: #fff;
-            padding: 0.7rem 2.2rem;
+            padding: 0.5rem 1.3rem;
             border-radius: 2rem;
             border: 2px solid #bdbdbd;
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-weight: 600;
             cursor: pointer;
             transition: background 0.2s;
             white-space: nowrap;
             margin-left: 0.7rem;
             margin-right: 0;
-            min-width: 160px;
+            min-width: 110px;
             max-width: 100%;
             box-sizing: border-box;
             box-shadow: 0 1px 4px rgba(0,0,0,0.04);
@@ -686,8 +750,8 @@ while ($row = $bookingResult->fetch_assoc()) {
             .sidebar { left: -220px; box-shadow: none; }
             .sidebar.active { left: 0; box-shadow: 2px 0 8px rgba(0,0,0,0.08); }
             .hamburger { display: flex; }
-            .calendar-header { flex-direction: column; align-items: flex-start; gap: 1.2rem; }
-            .search-filter-bar { width: 100%; justify-content: flex-start; padding-right: 0; }
+            .calendar-header { flex-direction: column; align-items: center; gap: 1.2rem; }
+            .search-filter-bar { width: 100%; justify-content: center; padding-right: 0; }
             .calendar-table td { height: 54px; font-size: 0.9rem; }
         }
         
@@ -1268,221 +1332,230 @@ while ($row = $bookingResult->fetch_assoc()) {
                 padding: 0.2rem 0.2rem;
             }
         }
+
+        .app-container {
+            display: flex;
+            flex-direction: row;
+            min-height: 100vh;
+            justify-content: flex-start;
+        }
     </style>
 </head>
 
 <body>
-    <button class="hamburger" id="sidebarToggle" aria-label="Open sidebar">
-        <span></span>
-        <span></span>
-        <span></span>
-    </button>
-    <div class="sidebar">
-        <h4 class="sidebar-title">Villa Valore Hotel</h4>
-        <div class="nav-section">
-            <a class="nav-link" href="staff_dashboard.php"><i class="fas fa-th-large"></i>Dashboard</a>
-            <a class="nav-link" href="reservation.php"><i class="fas fa-calendar-check"></i>Reservation</a>
-            <a class="nav-link" href="booking.php"><i class="fas fa-book"></i>Booking</a>
-            <a class="nav-link" href="room.php"><i class="fas fa-door-open"></i>Room</a>
-            <a class="nav-link" href="guest_request.php"><i class="fas fa-comment-dots"></i>Guest Request</a>
-            <a class="nav-link" href="inventory.php"><i class="fas fa-box"></i>Inventory</a>
-        </div>
-        <div class="nav-section">
-            <a class="nav-link" href="logout.php"><i class="fas fa-sign-out-alt"></i>Log out</a>
-        </div>
-    </div>
-    <div class="main-content">
-        
-        <!-- ============================================================================
-             CALENDAR HEADER
-             ============================================================================ -->
-        <div class="calendar-header">
-            <h1>Booking Schedule</h1>
-            
-            <!-- Navigation -->
-            <div class="calendar-nav" style="gap: 1.5rem;">
-                <form method="get" style="display:inline;">
-                    <input type="hidden" name="month" value="<?php echo $month == 1 ? 12 : $month - 1; ?>">
-                    <input type="hidden" name="year" value="<?php echo $month == 1 ? $year - 1 : $year; ?>">
-                    <button type="submit" class="calendar-nav-btn">
-                        <i class="fas fa-chevron-left"></i>
-                    </button>
-                </form>
-                
-                <h2 style="margin: 0 1.5rem; display: flex; flex-direction: column; align-items: center;">
-                    <span><?php echo date('F', $firstDay); ?></span>
-                    <span style="font-size: 1.1rem; font-weight: 400; margin-top: -0.3rem; letter-spacing: 1px;">
-                        <?php echo $year; ?>
-                    </span>
-                </h2>
-                
-                <form method="get" style="display:inline;">
-                    <input type="hidden" name="month" value="<?php echo $month == 12 ? 1 : $month + 1; ?>">
-                    <input type="hidden" name="year" value="<?php echo $month == 12 ? $year + 1 : $year; ?>">
-                    <button type="submit" class="calendar-nav-btn">
-                        <i class="fas fa-chevron-right"></i>
-                    </button>
-                </form>
+    <div class="app-container">
+        <button class="hamburger" id="sidebarToggle" aria-label="Open sidebar">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <div class="sidebar">
+            <h4 class="sidebar-title">Villa Valore Hotel</h4>
+            <div class="nav-section">
+                <a class="nav-link" href="staff_dashboard.php"><i class="fas fa-th-large"></i>Dashboard</a>
+                <a class="nav-link" href="reservation.php"><i class="fas fa-calendar-check"></i>Reservation</a>
+                <a class="nav-link" href="booking.php"><i class="fas fa-book"></i>Booking</a>
+                <a class="nav-link" href="room.php"><i class="fas fa-door-open"></i>Room</a>
+                <a class="nav-link" href="guest_request.php"><i class="fas fa-comment-dots"></i>Guest Request</a>
+                <a class="nav-link" href="inventory.php"><i class="fas fa-box"></i>Inventory</a>
             </div>
+            <div class="nav-section">
+                <a class="nav-link" href="logout.php"><i class="fas fa-sign-out-alt"></i>Log out</a>
+            </div>
+        </div>
+        <div class="main-content">
             
-            <!-- Search and Filter -->
-            <div class="search-filter-bar" style="margin-left: 2.5rem;">
-                <div class="search-wrapper">
-                    <i class="fas fa-search search-icon"></i>
-                    <input type="text" id="searchInput" class="search-input" placeholder="Search">
+            <!-- ============================================================================
+                 CALENDAR HEADER
+                 ============================================================================ -->
+            <div class="calendar-header">
+                <h1>Booking Schedule</h1>
+                
+                <!-- Navigation -->
+                <div class="calendar-nav" style="gap: 1.5rem;">
+                    <form method="get" style="display:inline;">
+                        <input type="hidden" name="month" value="<?php echo $month == 1 ? 12 : $month - 1; ?>">
+                        <input type="hidden" name="year" value="<?php echo $month == 1 ? $year - 1 : $year; ?>">
+                        <button type="submit" class="calendar-nav-btn">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                    </form>
+                    
+                    <h2 style="margin: 0 1.5rem; display: flex; flex-direction: column; align-items: center;">
+                        <span><?php echo date('F', $firstDay); ?></span>
+                        <span style="font-size: 1.1rem; font-weight: 400; margin-top: -0.3rem; letter-spacing: 1px;">
+                            <?php echo $year; ?>
+                        </span>
+                    </h2>
+                    
+                    <form method="get" style="display:inline;">
+                        <input type="hidden" name="month" value="<?php echo $month == 12 ? 1 : $month + 1; ?>">
+                        <input type="hidden" name="year" value="<?php echo $month == 12 ? $year + 1 : $year; ?>">
+                        <button type="submit" class="calendar-nav-btn">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </form>
                 </div>
                 
-                <div style="position: relative;">
-                    <button class="filter-btn" id="filterBtn">Filter</button>
-                    <div class="filter-dropdown" id="filterDropdown">
-                        <form id="filterForm">
-                            <label>Guest Name 
-                                <input type="text" name="GuestName">
-                            </label>
-                            <label>Room Status
-                                <select name="RoomStatus">
-                                    <option value="">Any</option>
-                                    <option value="Available">Available</option>
-                                    <option value="Booked">Booked</option>
-                                    <option value="Reserved">Reserved</option>
-                                    <option value="Maintenance">Maintenance</option>
-                                </select>
-                            </label>
-                            <div class="filter-actions">
-                                <button type="button" id="applyFilterBtn" class="filter-btn">Apply</button>
-                                <button type="button" id="clearFilterBtn" class="filter-btn">Clear</button>
-                            </div>
-                        </form>
+                <!-- Search and Filter -->
+                <div class="search-filter-bar" style="margin-left: 2.5rem;">
+                    <div class="search-wrapper">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" id="searchInput" class="search-input" placeholder="Search">
                     </div>
+                    
+                    <div style="position: relative;">
+                        <button class="filter-btn" id="filterBtn">Filter</button>
+                        <div class="filter-dropdown" id="filterDropdown">
+                            <form id="filterForm">
+                                <label>Guest Name 
+                                    <input type="text" name="GuestName">
+                                </label>
+                                <label>Room Status
+                                    <select name="RoomStatus">
+                                        <option value="">Any</option>
+                                        <option value="Available">Available</option>
+                                        <option value="Booked">Booked</option>
+                                        <option value="Reserved">Reserved</option>
+                                        <option value="Maintenance">Maintenance</option>
+                                    </select>
+                                </label>
+                                <div class="filter-actions">
+                                    <button type="button" id="applyFilterBtn" class="filter-btn">Apply</button>
+                                    <button type="button" id="clearFilterBtn" class="filter-btn">Clear</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <button class="walk-in-btn" id="walkInBookingBtn">Walk-in booking</button>
                 </div>
-                <button class="walk-in-btn" id="walkInBookingBtn">Walk-in booking</button>
             </div>
-        </div>
-        
-        <!-- ============================================================================
-             LEGEND (moved above calendar)
-             ============================================================================ -->
-        <div class="legend" style="display: flex; justify-content: center; align-items: center; gap: 2.5rem; margin-top: 2.5rem;">
-            <div class="legend-item" style="display: flex; align-items: center; gap: 0.5rem;">
-                <span class="legend-badge legend-available" style="width: 1.2rem; height: 1.2rem; border-radius: 50%; display: inline-block; background: #b6f7c1; border: 1.5px solid #b6f7c1;"></span>
-                <span style="font-size: 1.1rem;">Available</span>
+            
+            <!-- ============================================================================
+                 LEGEND (moved above calendar)
+                 ============================================================================ -->
+            <div class="legend" style="display: flex; justify-content: center; align-items: center; gap: 2.5rem; margin-top: 2.5rem;">
+                <div class="legend-item" style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span class="legend-badge legend-available" style="width: 1.2rem; height: 1.2rem; border-radius: 50%; display: inline-block; background: #b6f7c1; border: 1.5px solid #b6f7c1;"></span>
+                    <span style="font-size: 1.1rem;">Available</span>
+                </div>
+                <div class="legend-item" style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span class="legend-badge legend-booked" style="width: 1.2rem; height: 1.2rem; border-radius: 50%; display: inline-block; background: #ff4d4d; border: 1.5px solid #ff4d4d;"></span>
+                    <span style="font-size: 1.1rem;">Booked</span>
+                </div>
+                <div class="legend-item" style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span class="legend-badge legend-reserved" style="width: 1.2rem; height: 1.2rem; border-radius: 50%; display: inline-block; background: #ffe066; border: 1.5px solid #ffe066;"></span>
+                    <span style="font-size: 1.1rem;">Reserved</span>
+                </div>
+                <div class="legend-item" style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span class="legend-badge legend-maintenance" style="width: 1.2rem; height: 1.2rem; border-radius: 50%; display: inline-block; background: #bdbdbd; border: 1.5px solid #bdbdbd;"></span>
+                    <span style="font-size: 1.1rem;">Maintenance</span>
+                </div>
             </div>
-            <div class="legend-item" style="display: flex; align-items: center; gap: 0.5rem;">
-                <span class="legend-badge legend-booked" style="width: 1.2rem; height: 1.2rem; border-radius: 50%; display: inline-block; background: #ff4d4d; border: 1.5px solid #ff4d4d;"></span>
-                <span style="font-size: 1.1rem;">Booked</span>
-            </div>
-            <div class="legend-item" style="display: flex; align-items: center; gap: 0.5rem;">
-                <span class="legend-badge legend-reserved" style="width: 1.2rem; height: 1.2rem; border-radius: 50%; display: inline-block; background: #ffe066; border: 1.5px solid #ffe066;"></span>
-                <span style="font-size: 1.1rem;">Reserved</span>
-            </div>
-            <div class="legend-item" style="display: flex; align-items: center; gap: 0.5rem;">
-                <span class="legend-badge legend-maintenance" style="width: 1.2rem; height: 1.2rem; border-radius: 50%; display: inline-block; background: #bdbdbd; border: 1.5px solid #bdbdbd;"></span>
-                <span style="font-size: 1.1rem;">Maintenance</span>
-            </div>
-        </div>
 
-        <!-- ============================================================================
-             CALENDAR TABLE (Classic Calendar View)
-             ============================================================================ -->
-        <table class="calendar-table">
-            <thead>
-                <tr>
-                    <th>Sunday</th>
-                    <th>Monday</th>
-                    <th>Tuesday</th>
-                    <th>Wednesday</th>
-                    <th>Thursday</th>
-                    <th>Friday</th>
-                    <th>Saturday</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php
-                // Build a 2D array of weeks, each with 7 days (Sun-Sat)
-                $weeks = [];
-                $week = [];
-                $dateCursor = new DateTime("$year-$month-01");
-                $firstDayOfWeek = 0; // 0=Sunday
-                $lastDate = new DateTime("$year-$month-$daysInMonth");
-                $startDayOfWeek = (int)$dateCursor->format('w');
-                // Fill initial empty days
-                for ($i = 0; $i < $startDayOfWeek; $i++) {
-                    $week[] = null;
-                }
-                while ($dateCursor <= $lastDate) {
-                    $week[] = $dateCursor->format('Y-m-d');
-                    if (count($week) === 7) {
-                        $weeks[] = $week;
-                        $week = [];
+            <!-- ============================================================================
+                 CALENDAR TABLE (Classic Calendar View)
+                 ============================================================================ -->
+            <table class="calendar-table">
+                <thead>
+                    <tr>
+                        <th>Sunday</th>
+                        <th>Monday</th>
+                        <th>Tuesday</th>
+                        <th>Wednesday</th>
+                        <th>Thursday</th>
+                        <th>Friday</th>
+                        <th>Saturday</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    // Build a 2D array of weeks, each with 7 days (Sun-Sat)
+                    $weeks = [];
+                    $week = [];
+                    $dateCursor = new DateTime("$year-$month-01");
+                    $firstDayOfWeek = 0; // 0=Sunday
+                    $lastDate = new DateTime("$year-$month-$daysInMonth");
+                    $startDayOfWeek = (int)$dateCursor->format('w');
+                    // Fill initial empty days
+                    for ($i = 0; $i < $startDayOfWeek; $i++) {
+                        $week[] = null;
                     }
-                    $dateCursor->modify('+1 day');
-                }
-                if (count($week) > 0) {
-                    while (count($week) < 7) $week[] = null;
-                    $weeks[] = $week;
-                }
-                // Render weeks
-                foreach ($weeks as $week) {
-                    echo '<tr>';
-                    foreach ($week as $date) {
-                        echo '<td';
-                        if ($date) {
-                            // Find all bookings that cover this date
-                            $bars = [];
-                            $statuses = [];
-                            foreach ($bookings as $roomBookings) {
-                                foreach ($roomBookings as $b) {
-                                    $checkIn = date('Y-m-d', strtotime($b['CheckInDate']));
-                                    $checkOut = date('Y-m-d', strtotime($b['CheckOutDate']));
-                                    if ($checkIn <= $date && $checkOut >= $date) {
-                                        $bars[] = $b;
-                                        $statuses[] = strtolower($b['RoomStatus']);
+                    while ($dateCursor <= $lastDate) {
+                        $week[] = $dateCursor->format('Y-m-d');
+                        if (count($week) === 7) {
+                            $weeks[] = $week;
+                            $week = [];
+                        }
+                        $dateCursor->modify('+1 day');
+                    }
+                    if (count($week) > 0) {
+                        while (count($week) < 7) $week[] = null;
+                        $weeks[] = $week;
+                    }
+                    // Render weeks
+                    foreach ($weeks as $week) {
+                        echo '<tr>';
+                        foreach ($week as $date) {
+                            echo '<td';
+                            if ($date) {
+                                // Find all bookings that cover this date
+                                $bars = [];
+                                $statuses = [];
+                                foreach ($bookings as $roomBookings) {
+                                    foreach ($roomBookings as $b) {
+                                        $checkIn = date('Y-m-d', strtotime($b['CheckInDate']));
+                                        $checkOut = date('Y-m-d', strtotime($b['CheckOutDate']));
+                                        if ($checkIn <= $date && $checkOut >= $date) {
+                                            $bars[] = $b;
+                                            $statuses[] = strtolower($b['RoomStatus']);
+                                        }
                                     }
                                 }
+                                // Determine cell highlight by most important status
+                                $cellClass = '';
+                                if (in_array('booked', $statuses)) $cellClass = 'calendar-cell-booked';
+                                elseif (in_array('reserved', $statuses)) $cellClass = 'calendar-cell-reserved';
+                                elseif (in_array('maintenance', $statuses)) $cellClass = 'calendar-cell-maintenance';
+                                elseif (in_array('available', $statuses)) $cellClass = 'calendar-cell-available';
+                                if ($cellClass) echo ' class="' . $cellClass . '"';
                             }
-                            // Determine cell highlight by most important status
-                            $cellClass = '';
-                            if (in_array('booked', $statuses)) $cellClass = 'calendar-cell-booked';
-                            elseif (in_array('reserved', $statuses)) $cellClass = 'calendar-cell-reserved';
-                            elseif (in_array('maintenance', $statuses)) $cellClass = 'calendar-cell-maintenance';
-                            elseif (in_array('available', $statuses)) $cellClass = 'calendar-cell-available';
-                            if ($cellClass) echo ' class="' . $cellClass . '"';
-                        }
-                        echo '>';
-                        if ($date) {
-                            $dayNum = (int)date('j', strtotime($date));
-                            echo '<div class="calendar-date">' . $dayNum . '</div>';
-                            // Render bars (stacked if multiple)
-                            foreach ($bars as $bar) {
-                                $statusClass = strtolower($bar['RoomStatus']);
-                                $barClass = 'calendar-bar calendar-bar-searchable ';
-                                if (count($bars) > 1) $barClass .= 'calendar-bar-double ';
-                                elseif ($statusClass === 'booked') $barClass .= 'calendar-bar-booked ';
-                                elseif ($statusClass === 'reserved') $barClass .= 'calendar-bar-reserved ';
-                                elseif ($statusClass === 'maintenance') $barClass .= 'calendar-bar-maintenance ';
-                                elseif ($statusClass === 'available') $barClass .= 'calendar-bar-available ';
-                                else $barClass .= 'calendar-bar-available ';
-                                echo '<div class="' . $barClass . '" '
-                                    . 'data-guest-name="' . htmlspecialchars($bar['GuestName']) . '" '
-                                    . 'data-booking-id="' . htmlspecialchars($bar['BookingID']) . '" '
-                                    . 'data-check-in="' . htmlspecialchars($bar['CheckInDate']) . '" '
-                                    . 'data-check-out="' . htmlspecialchars($bar['CheckOutDate']) . '" '
-                                    . 'data-room-status="' . htmlspecialchars($bar['RoomStatus']) . '" '
-                                    . 'data-room-number="' . htmlspecialchars($bar['RoomNumber']) . '" '
-                                    . 'data-room-type="' . htmlspecialchars($bar['RoomType']) . '" '
-                                    . 'data-booking-status="' . htmlspecialchars($bar['BookingStatus']) . '" >';
-                                echo '<span class="calendar-bar-label">Room ' . $bar['RoomNumber'] . '</span>';
-                                echo '<span class="calendar-bar-status">' . ucfirst($statusClass) . '</span>';
-                                echo '</div>';
+                            echo '>';
+                            if ($date) {
+                                $dayNum = (int)date('j', strtotime($date));
+                                echo '<div class="calendar-date">' . $dayNum . '</div>';
+                                // Render bars (stacked if multiple)
+                                foreach ($bars as $bar) {
+                                    $statusClass = strtolower($bar['RoomStatus']);
+                                    $barClass = 'calendar-bar calendar-bar-searchable ';
+                                    if (count($bars) > 1) $barClass .= 'calendar-bar-double ';
+                                    elseif ($statusClass === 'booked') $barClass .= 'calendar-bar-booked ';
+                                    elseif ($statusClass === 'reserved') $barClass .= 'calendar-bar-reserved ';
+                                    elseif ($statusClass === 'maintenance') $barClass .= 'calendar-bar-maintenance ';
+                                    elseif ($statusClass === 'available') $barClass .= 'calendar-bar-available ';
+                                    else $barClass .= 'calendar-bar-available ';
+                                    echo '<div class="' . $barClass . '" '
+                                        . 'data-guest-name="' . htmlspecialchars($bar['GuestName']) . '" '
+                                        . 'data-booking-id="' . htmlspecialchars($bar['BookingID']) . '" '
+                                        . 'data-check-in="' . htmlspecialchars($bar['CheckInDate']) . '" '
+                                        . 'data-check-out="' . htmlspecialchars($bar['CheckOutDate']) . '" '
+                                        . 'data-room-status="' . htmlspecialchars($bar['RoomStatus']) . '" '
+                                        . 'data-room-number="' . htmlspecialchars($bar['RoomNumber']) . '" '
+                                        . 'data-room-type="' . htmlspecialchars($bar['RoomType']) . '" '
+                                        . 'data-booking-status="' . htmlspecialchars($bar['BookingStatus']) . '" >';
+                                    echo '<span class="calendar-bar-label">Room ' . $bar['RoomNumber'] . '</span>';
+                                    echo '<span class="calendar-bar-status">' . ucfirst($statusClass) . '</span>';
+                                    echo '</div>';
+                                }
                             }
+                            echo '</td>';
                         }
-                        echo '</td>';
+                        echo '</tr>';
                     }
-                    echo '</tr>';
-                }
-                ?>
-            </tbody>
-        </table>
+                    ?>
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <!-- ============================================================================
