@@ -267,28 +267,7 @@ $recentBookings = getRecentBookings(5);
         .management-label {
             color: #90EE90;
             font-size: 0.8em;
-            margin: 1rem 0 0.5rem 1rem;
-        }
-
-        .toggle-btn {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            cursor: pointer;
-        }
-
-        .toggle-btn::after {
-            content: '▼';
-            font-size: 0.7rem;
-            margin-left: 0.5rem;
-        }
-
-        .submenu {
-            margin-left: 1.5rem;
-            display: none;
-        }
-
-        .submenu.active {
+            margin: 2rem 0 0.5rem 1rem;
             display: block;
         }
 
@@ -512,29 +491,26 @@ $recentBookings = getRecentBookings(5);
             <a class="nav-link" href="index.php"><i class="fas fa-th-large"></i>Dashboard</a>
             <a class="nav-link" href="student.php"><i class="fas fa-user"></i>Guest</a>
             <a class="nav-link" href="booking.php"><i class="fas fa-book"></i>Booking</a>
+            <a class="nav-link" href="reservation.php"><i class="fas fa-calendar-check"></i>Reservation</a>
         </div>
 
         <div class="nav-section">
             <div class="management-label">MANAGEMENT</div>
-            <div class="nav-link toggle-btn" onclick="toggleMenu('management')">
-                <div><i class="fas fa-cog"></i>Manage</div>
-            </div>
-            <div class="submenu" id="management">
+            <div class="submenu" id="management" style="display:block;">
                 <a class="nav-link" href="room.php"><i class="fas fa-door-open"></i>Room</a>
                 <a class="nav-link" href="menu_service.php"><i class="fas fa-utensils"></i>Menu & Service</a>
                 <a class="nav-link" href="account.php"><i class="fas fa-user"></i>Account</a>
                 <a class="nav-link" href="inventory.php"><i class="fas fa-box"></i>Inventory</a>
             </div>
-        </div>
+        </div> <br>
 
         <div class="nav-section">
             <a class="nav-link" href="payment.php"><i class="fas fa-credit-card"></i>Payments</a>
             <a class="nav-link" href="statistics.php"><i class="fas fa-chart-line"></i>Statistics</a>
             <a class="nav-link" href="inbox.php"><i class="fas fa-inbox"></i>Inbox</a>
-        </div>
+        </div> <br><br>
 
         <div class="nav-section">
-            <a class="nav-link" href="profile.php"><i class="fas fa-user-lock"></i>Profile Account</a>
             <a class="nav-link" href="logout.php"><i class="fas fa-sign-out-alt"></i>Logout</a>
         </div>
     </div>
@@ -695,12 +671,6 @@ $recentBookings = getRecentBookings(5);
     </div>
 
     <script>
-        // Add toggle menu functionality
-        function toggleMenu(menuId) {
-            const submenu = document.getElementById(menuId);
-            submenu.classList.toggle('active');
-        }
-
         document.addEventListener('DOMContentLoaded', function() {
             const prevMonthBtn = document.querySelector('.prev-month');
             const nextMonthBtn = document.querySelector('.next-month');
