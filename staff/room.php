@@ -29,8 +29,7 @@ $nextRoomType = $roomTypes[$nextIndex];
 // FETCH ROOMS AND DETERMINE STATUS
 // ============================================================================
 $rooms = [];
-$roomQuery = $conn->prepare("SELECT RoomNumber, RoomType, RoomStatus FROM room WHERE RoomType = ? ORDER BY RoomNumber ASC");
-$roomQuery->bind_param('s', $roomType);
+$roomQuery = $conn->prepare("SELECT RoomNumber, RoomType, RoomStatus FROM room ORDER BY RoomNumber ASC");
 $roomQuery->execute();
 $roomResult = $roomQuery->get_result();
 
@@ -177,6 +176,26 @@ while ($room = $roomResult->fetch_assoc()) {
         .btn-primary:hover { background: #0056b3; }
         .btn-secondary { background: #6c757d; color: white; }
         .btn-secondary:hover { background: #545b62; }
+        .room-card.faded-room {
+            opacity: 0.45;
+            filter: grayscale(0.2);
+            border: 1.5px dashed #bbb;
+        }
+        .room-card.highlight-room {
+            box-shadow: 0 0 0 4px #008000, 0 2px 8px rgba(0,128,0,0.10);
+            z-index: 2;
+            animation: highlightFade 2s forwards;
+        }
+        @keyframes highlightFade {
+            0% { box-shadow: 0 0 0 4px #008000, 0 2px 8px rgba(0,128,0,0.10); }
+            80% { box-shadow: 0 0 0 4px #008000, 0 2px 8px rgba(0,128,0,0.10); }
+            100% { box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        }
+        .room-type-badge {
+            font-size: 0.85rem;
+            color: #888;
+            margin-bottom: 0.5rem;
+        }
     </style>
 </head>
 <body>
@@ -196,7 +215,7 @@ while ($room = $roomResult->fetch_assoc()) {
             <a class="nav-link" href="booking.php"><i class="fas fa-book"></i>Booking</a>
             <a class="nav-link" href="room.php"><i class="fas fa-door-open"></i>Room</a>
             <a class="nav-link" href="guest_request.php"><i class="fas fa-comment-dots"></i>Guest Request</a>
-            <a class="nav-link" href="inventory.php"><i class="fas fa-box"></i>Inventory</a>
+            <a class="nav-link" href="staff_inventory.php"><i class="fas fa-box"></i>Inventory</a>
         </div>
         <div class="nav-section">
             <a class="nav-link" href="logout.php"><i class="fas fa-sign-out-alt"></i>Log out</a>
@@ -217,14 +236,18 @@ while ($room = $roomResult->fetch_assoc()) {
                 <div class="search-wrapper">
                     <i class="fas fa-search search-icon"></i>
                     <input type="text" class="search-input" id="searchInput" placeholder="Search Room Number">
+                    <button id="clearSearchBtn" style="display:none; position:absolute; right:5px; top:50%; transform:translateY(-50%); border:none; background:transparent; color:#888; font-size:1.2rem; cursor:pointer;">&times;</button>
                 </div>
             </div>
         </div>
         <div class="room-grid" id="roomGrid">
             <?php foreach ($rooms as $room): ?>
-                <div class="room-card" data-room="<?php echo $room['RoomNumber']; ?>" data-status="<?php echo $room['Status']; ?>">
+                <div class="room-card<?php echo ($room['RoomType'] !== $roomType) ? ' faded-room' : ''; ?>" data-room="<?php echo $room['RoomNumber']; ?>" data-status="<?php echo $room['Status']; ?>" data-type="<?php echo $room['RoomType']; ?>">
                     <div class="room-number"><?php echo $room['RoomNumber']; ?></div>
                     <div class="room-status-label"><?php echo $room['Status']; ?></div>
+                    <?php if ($room['RoomType'] !== $roomType): ?>
+                        <div class="room-type-badge" style="font-size:0.85rem;color:#888;margin-bottom:0.5rem;">(<?php echo htmlspecialchars($room['RoomType']); ?>)</div>
+                    <?php endif; ?>
                     <button class="edit-btn" onclick="openEditModal(<?php echo $room['RoomNumber']; ?>, '<?php echo $room['Status']; ?>')">Edit</button>
                 </div>
             <?php endforeach; ?>
@@ -278,13 +301,56 @@ while ($room = $roomResult->fetch_assoc()) {
         // Room search filter
         const searchInput = document.getElementById('searchInput');
         const roomGrid = document.getElementById('roomGrid');
+        const clearSearchBtn = document.getElementById('clearSearchBtn');
         searchInput.oninput = function() {
-            const val = searchInput.value.toLowerCase();
+            const val = searchInput.value.trim().toLowerCase();
             const cards = roomGrid.querySelectorAll('.room-card');
-            cards.forEach(card => {
-                const roomNum = card.querySelector('.room-number').innerText.toLowerCase();
-                card.style.display = roomNum.includes(val) ? '' : 'none';
-            });
+            if (val) {
+                // Show all rooms that match the search, regardless of category
+                cards.forEach(card => {
+                    const roomNum = String(card.querySelector('.room-number').innerText).trim().toLowerCase();
+                    card.style.display = roomNum.includes(val) ? '' : 'none';
+                });
+            } else {
+                // Show only rooms from the selected category
+                cards.forEach(card => {
+                    if (card.getAttribute('data-type') === '<?php echo $roomType; ?>') {
+                        card.style.display = '';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            }
+            clearSearchBtn.style.display = val ? '' : 'none';
+        };
+        // On page load, show only selected category
+        window.addEventListener('DOMContentLoaded', function() {
+            searchInput.oninput();
+        });
+        // Pressing Enter focuses first visible result
+        searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const val = searchInput.value.trim().toLowerCase();
+                const cards = Array.from(roomGrid.querySelectorAll('.room-card')).filter(card => {
+                    const roomNum = String(card.querySelector('.room-number').innerText).trim().toLowerCase();
+                    return card.style.display !== 'none' && roomNum.includes(val);
+                });
+                if (cards.length > 0) {
+                    cards[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    cards[0].classList.add('highlight-room');
+                    setTimeout(() => cards[0].classList.remove('highlight-room'), 2000);
+                }
+            }
+        });
+        // Clear search button
+        clearSearchBtn.onclick = function(e) {
+            e.preventDefault();
+            searchInput.value = '';
+            const cards = roomGrid.querySelectorAll('.room-card');
+            cards.forEach(card => { card.style.display = ''; });
+            clearSearchBtn.style.display = 'none';
+            searchInput.focus();
         };
 
         // Modal logic
