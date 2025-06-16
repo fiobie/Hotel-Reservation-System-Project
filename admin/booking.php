@@ -1,17 +1,7 @@
 <?php include 'connections.php';
 
-// Handle AJAX delete request
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['deleteBookingID'])) {
-  $bookingid = intval($_POST['deleteBookingID']);
-  $sql = "DELETE FROM booking WHERE BookingID=$bookingid";
-  $success = $conn->query($sql);
-  header('Content-Type: application/json');
-  echo json_encode(['success' => $success]);
-  exit;
-}
-
 // Handle AJAX update request
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['BookingID'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['BookingID']) && !isset($_POST['deleteBooking'])) {
   $bookingid = intval($_POST['BookingID']);
   $bookingdate = $conn->real_escape_string($_POST['BookingDate']);
   $checkin = $conn->real_escape_string($_POST['CheckInDate']);
@@ -40,6 +30,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['BookingID'])) {
   echo json_encode(['success' => $success]);
   exit;
 }
+
+// Handle delete booking AJAX
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['deleteBooking']) && isset($_POST['BookingID'])) {
+  $bookingid = intval($_POST['BookingID']);
+  $sql = "DELETE FROM booking WHERE BookingID=$bookingid";
+  $success = $conn->query($sql);
+  header('Content-Type: application/json');
+  echo json_encode(['success' => $success]);
+  exit;
+}
+
 // Handle create booking POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['createBooking'])) {
   $bookingdate = $conn->real_escape_string($_POST['BookingDate']);
@@ -67,124 +68,247 @@ $resResult = $conn->query($resQuery);
   <title>Booking</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { background-color: #f5f6fa; display: flex; }
-        .sidebar { width: 200px; background: #008000; min-height: 100vh; padding: 0.5rem; color: white; position: fixed; left: 0; top: 0; bottom: 0; transition: left 0.3s, box-shadow 0.3s; z-index: 1000; }
-        .sidebar-title { color: white; font-size: 1.4rem; font-weight: 500; margin-bottom: 1.5rem; padding: 1rem; }
-        .nav-section { margin-bottom: 1rem; }
-        .nav-link { display: flex; align-items: center; padding: 0.5rem 1rem; color: white; text-decoration: none; font-size: 0.9rem; margin-bottom: 0.25rem; transition: background-color 0.2s; }
-        .nav-link:hover { background-color: rgba(255, 255, 255, 0.1); }
-        .nav-link i { margin-right: 0.75rem; width: 20px; text-align: center; opacity: 0.9; }
-        .management-label { color: #90EE90; font-size: 0.8em; margin: 1rem 0 0.5rem 1rem; }
-        .toggle-btn { display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
-        .toggle-btn::after { content: '▼'; font-size: 0.7rem; margin-left: 0.5rem; }
-        .submenu { margin-left: 1.5rem; display: none; }
-        .submenu.active { display: block; }
-        .main-content { flex: 1; padding: 2rem; margin-left: 200px; overflow-x: hidden; transition: margin-left 0.3s; }
-        .reservation-section { max-width: 1200px; margin: 2rem auto; background: #fff; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); padding: 2rem; }
-        h1 { font-size: 2rem; margin-bottom: 1.5rem; color: #333; }
-        .reservation-table { width: 100%; border-collapse: collapse; }
-        .reservation-table th, .reservation-table td { padding: 1rem; border-bottom: 1px solid #f0f2f5; text-align: left; }
-        .reservation-table th { background: #f8f9fa; color: #666; font-weight: 600; }
-        .reservation-table td { color: #222; font-weight: 500; }
-        .action-link { color: #008000; cursor: pointer; margin-right: 1rem; text-decoration: underline; }
-        .delete-btn { color: #c00; cursor: pointer; text-decoration: underline; }
-        /* Modal styles */
-        .modal { display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background: rgba(0,0,0,0.3); }
-        .modal-content { background: #fff; margin: 5% auto; padding: 2rem; border-radius: 10px; width: 400px; position: relative; }
-        .close { position: absolute; right: 1rem; top: 1rem; font-size: 1.5rem; color: #888; cursor: pointer; }
-        .modal-content h2 { margin-bottom: 1rem; }
-        .modal-content label { font-weight: 600; }
-        .modal-content p { margin-bottom: 0.5rem; }
-        /* Hamburger menu styles */
-        .hamburger {
-            display: none;
-            position: fixed;
-            top: 1rem;
-            left: 1rem;
-            z-index: 1100;
-            width: 36px;
-            height: 36px;
-            background: #008000;
-            border: none;
-            border-radius: 6px;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-        }
-        .hamburger span {
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+    body { background-color: #f5f6fa; display: flex; }
+    .sidebar { width: 200px; background: #008000; min-height: 100vh; padding: 0.5rem; color: white; position: fixed; left: 0; top: 0; bottom: 0; transition: left 0.3s, box-shadow 0.3s; z-index: 1000; }
+    .sidebar-title { color: white; font-size: 1.4rem; font-weight: 500; margin-bottom: 1.5rem; padding: 1rem; }
+    .nav-section { margin-bottom: 1rem; }
+    .nav-link { display: flex; align-items: center; padding: 0.5rem 1rem; color: white; text-decoration: none; font-size: 0.9rem; margin-bottom: 0.25rem; transition: background-color 0.2s; }
+    .nav-link:hover { background-color: rgba(255, 255, 255, 0.1); }
+    .nav-link i { margin-right: 0.75rem; width: 20px; text-align: center; opacity: 0.9; }
+    .management-label { color: #90EE90; font-size: 0.8em; margin: 1rem 0 0.5rem 1rem; }
+    .toggle-btn { display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+    .toggle-btn::after { content: '▼'; font-size: 0.7rem; margin-left: 0.5rem; }
+    .submenu { margin-left: 1.5rem; display: none; }
+    .submenu.active { display: block; }
+    .main-content { flex: 1; padding: 2rem; margin-left: 200px; overflow-x: hidden; transition: margin-left 0.3s; }
+    .reservation-section { max-width: 1200px; margin: 2rem auto; background: #fff; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); padding: 2rem; }
+    h1 { font-size: 2rem; margin-bottom: 1.5rem; color: #333; }
+    .reservation-table { width: 100%; border-collapse: collapse; }
+    .reservation-table th, .reservation-table td { padding: 1rem; border-bottom: 1px solid #f0f2f5; text-align: left; }
+    .reservation-table th { background: #f8f9fa; color: #666; font-weight: 600; }
+    .reservation-table td { color: #222; font-weight: 500; }
+    .action-group {
+      display: flex;
+      flex-direction: row;
+      gap: 0.3rem;
+      align-items: center;
+      justify-content: flex-start;
+    }
+    .action-link {
+      color: #fff;
+      background: #008000;
+      border: none;
+      border-radius: 0.5rem;
+      padding: 0.4rem 0.7rem;
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 1.1rem;
+      display: inline-block;
+      transition: background 0.2s;
+      min-width: 36px;
+      text-align: center;
+    }
+    .action-link:hover { background: #005c00; }
+    .delete-btn { background: #e74c3c !important; }
+    .delete-btn:hover { background: #c0392b !important; }
+    /* Modal styles */
+    .modal { display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background: rgba(0,0,0,0.3); }
+    .modal-content { background: #fff; margin: 5% auto; padding: 2rem; border-radius: 10px; width: 400px; position: relative; }
+    .close { position: absolute; right: 1rem; top: 1rem; font-size: 1.5rem; color: #888; cursor: pointer; }
+    .modal-content h2 { margin-bottom: 1rem; }
+    .modal-content label { font-weight: 600; }
+    .modal-content p { margin-bottom: 0.5rem; }
+    /* Hamburger menu styles */
+    .hamburger {
+        display: none;
+        position: fixed;
+        top: 1rem;
+        left: 1rem;
+        z-index: 1100;
+        width: 36px;
+        height: 36px;
+        background: #008000;
+        border: none;
+        border-radius: 6px;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+    .hamburger span {
+        display: block;
+        width: 22px;
+        height: 3px;
+        background: #fff;
+        margin: 4px 0;
+        border-radius: 2px;
+        transition: 0.3s;
+    }
+    @media (max-width: 900px) {
+        .main-content { margin-left: 0; padding: 1rem; }
+        .sidebar { left: -220px; box-shadow: none; }
+        .sidebar.active { left: 0; box-shadow: 2px 0 8px rgba(0,0,0,0.08); }
+        .hamburger { display: flex; }
+    }
+    @media (max-width: 600px) {
+        .reservation-section { padding: 1rem; }
+        .reservation-table th, .reservation-table td { padding: 0.5rem; font-size: 0.9rem; }
+        h1 { font-size: 1.2rem; }
+    }
+    @media (max-width: 500px) {
+        .reservation-table, .reservation-table thead, .reservation-table tbody, .reservation-table th, .reservation-table td, .reservation-table tr {
             display: block;
-            width: 22px;
-            height: 3px;
-            background: #fff;
-            margin: 4px 0;
-            border-radius: 2px;
-            transition: 0.3s;
+            width: 100%;
         }
-        @media (max-width: 900px) {
-            .main-content { margin-left: 0; padding: 1rem; }
-            .sidebar { left: -220px; box-shadow: none; }
-            .sidebar.active { left: 0; box-shadow: 2px 0 8px rgba(0,0,0,0.08); }
-            .hamburger { display: flex; }
-        }
-        @media (max-width: 600px) {
-            .reservation-section { padding: 1rem; }
-            .reservation-table th, .reservation-table td { padding: 0.5rem; font-size: 0.9rem; }
-            h1 { font-size: 1.2rem; }
-        }
-        @media (max-width: 500px) {
-            .reservation-table, .reservation-table thead, .reservation-table tbody, .reservation-table th, .reservation-table td, .reservation-table tr {
-                display: block;
-                width: 100%;
-            }
-            .reservation-table thead { display: none; }
-            .reservation-table tr { margin-bottom: 1rem; border-bottom: 2px solid #f0f2f5; }
-            .reservation-table td {
-                padding-left: 40%;
-                position: relative;
-                font-size: 1rem;
-                border: none;
-                border-bottom: 1px solid #f0f2f5;
-            }
-            .reservation-table td:before {
-                position: absolute;
-                left: 1rem;
-                top: 50%;
-                transform: translateY(-50%); 
-                font-weight: bold;
-                color: #666;
-                content: attr(data-label);
-                font-size: 0.95rem;
-            }
-        }
-        .search-filter-bar {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        .search-input {
-            padding: 0.7rem 2.5rem 0.7rem 2.5rem;
-            border-radius: 1.2rem;
-            border: none;
-            background: #ededed;
+        .reservation-table thead { display: none; }
+        .reservation-table tr { margin-bottom: 1rem; border-bottom: 2px solid #f0f2f5; }
+        .reservation-table td {
+            padding-left: 40%;
+            position: relative;
             font-size: 1rem;
-            width: 260px;
-            outline: none;
+            border: none;
+            border-bottom: 1px solid #f0f2f5;
         }
-        .search-icon {
+        .reservation-table td:before {
             position: absolute;
             left: 1rem;
             top: 50%;
             transform: translateY(-50%);
-            color: #888;
+            font-weight: bold;
+            color: #666;
+            content: attr(data-label);
+            font-size: 0.95rem;
         }
-        .search-wrapper {
-            position: relative;
-            display: flex;
-            align-items: center;
+        .action-group {
+          flex-direction: row;
+          gap: 0.2rem;
         }
-        .filter-btn, .create-btn {
+    }
+    .search-filter-bar {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    .search-input {
+        padding: 0.7rem 2.5rem 0.7rem 2.5rem;
+        border-radius: 1.2rem;
+        border: none;
+        background: #ededed;
+        font-size: 1rem;
+        width: 260px;
+        outline: none;
+    }
+    .search-icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #888;
+    }
+    .search-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+    .filter-btn, .create-btn {
+        padding: 0.7rem 1.5rem;
+        border-radius: 1rem;
+        border: 2px solid #222;
+        background: #f5f6fa;
+        font-size: 1rem;
+        cursor: pointer;
+        margin-left: 0.5rem;
+        transition: background 0.2s, color 0.2s;
+    }
+    .filter-btn:hover, .create-btn:hover {
+        background: #222;
+        color: #fff;
+    }
+    .filter-dropdown {
+        display: none;
+        position: absolute;
+        top: 2.5rem;
+        left: 0;
+        background: #fff;
+        border: 1px solid #ccc;
+        border-radius: 0.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        z-index: 10;
+        min-width: 220px;
+        padding: 1rem;
+    }
+    .filter-dropdown.active {
+        display: block;
+    }
+    .filter-dropdown label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+    }
+    .filter-dropdown input, .filter-dropdown select {
+        width: 100%;
+        margin-bottom: 1rem;
+        padding: 0.4rem 0.7rem;
+        border-radius: 0.5rem;
+        border: 1px solid #ccc;
+    }
+    .filter-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.5rem;
+    }
+    .modal-content form input, .modal-content form select {
+        width: 100%;
+        margin-bottom: 1rem;
+        padding: 0.5rem 0.7rem;
+        border-radius: 0.5rem;
+        border: 1px solid #ccc;
+    }
+    .modal-content form button[type="submit"] {
+        width: 100%;
+        padding: 0.7rem;
+        border-radius: 0.7rem;
+        border: none;
+        background: #008000;
+        color: #fff;
+        font-size: 1.1rem;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    .modal-content form button[type="submit"]:hover {
+        background: #005c00;
+    }
+    /* Delete Modal */
+    #deleteModal .modal-content {
+      width: 350px;
+      text-align: center;
+    }
+    #deleteModal .modal-content button {
+      width: 45%;
+      margin: 0 2%;
+      padding: 0.7rem 0;
+      border-radius: 0.7rem;
+      border: none;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    #deleteModal .modal-content .confirm-delete {
+      background: #e74c3c;
+      color: #fff;
+    }
+    #deleteModal .modal-content .confirm-delete:hover {
+      background: #c0392b;
+    }
+    #deleteModal .modal-content .cancel-delete {
+      background: #008000;
+      color: #fff;
+    }
+    #deleteModal .modal-content .cancel-delete:hover {
+      background: #005c00;
+    }
+    .filter-btn, .create-btn {
             padding: 0.7rem 1.5rem;
             border-radius: 1rem;
             border: 2px solid #222;
@@ -231,38 +355,16 @@ $resResult = $conn->query($resQuery);
             justify-content: flex-end;
             gap: 0.5rem;
         }
-        .modal-content form input, .modal-content form select {
-            width: 100%;
-            margin-bottom: 1rem;
-            padding: 0.5rem 0.7rem;
-            border-radius: 0.5rem;
-            border: 1px solid #ccc;
-        }
-        .modal-content form button[type="submit"] {
-            width: 100%;
-            padding: 0.7rem;
-            border-radius: 0.7rem;
-            border: none;
-            background: #008000;
-            color: #fff;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .modal-content form button[type="submit"]:hover {
-            background: #005c00;
-        }
   </style>
 </head>
 <body>
-  <button class="hamburger" id="sidebarToggle" aria-label="Open sidebar">
+  <div class="sidebar">
+        <h4 class="sidebar-title">Villa Valore Hotel</h4>
+    <button class="hamburger" id="sidebarToggle" aria-label="Open sidebar">
         <span></span>
         <span></span>
         <span></span>
     </button>
-    <div class="sidebar">
-        <h4 class="sidebar-title">Villa Valore Hotel</h4>
-        
         <div class="nav-section">
             <a class="nav-link" href="index.php"><i class="fas fa-th-large"></i>Dashboard</a>
             <a class="nav-link" href="student.php"><i class="fas fa-user"></i>Guest</a>
@@ -303,6 +405,46 @@ $resResult = $conn->query($resQuery);
             <i class="fas fa-search search-icon"></i>
             <input type="text" id="searchInput" class="search-input" placeholder="Search">
           </div>
+          <div style="position: relative;">
+                        <button class="filter-btn" id="filterBtn">Filter</button>
+                        <div class="filter-dropdown" id="filterDropdown">
+                            <form id="filterForm">
+                                <label>Booking ID <input type="text" name="BookingID"></label>
+                                <label>Booking Date <input type="date" name="PBookingDate"></label>
+                                <label>Check-in Date <input type="date" name="PCheckInDate"></label>
+                                <label>Check-out Date <input type="date" name="PCheckOutDate"></label>
+                                <label>Room Number <input type="text" name="RoomNumber"></label>
+                                <label>Room Type
+                                    <select name="RoomType">
+                                        <option value="">Any</option>
+                                        <option value="Standard">Standard</option>
+                                        <option value="Deluxe">Deluxe</option>
+                                        <option value="Suite">Suite</option>
+                                    </select>
+                                </label>
+                                <label>Status
+                                    <select name="Status">
+                                        <option value="">Any</option>
+                                        <option value="Pending">Pending</option>
+                                        <option value="Confirmed">Confirmed</option>
+                                        <option value="Cancelled">Cancelled</option>
+                                    </select>
+                                </label>
+                                <label>Room Status
+                                    <select name="RoomStatus">
+                                        <option value="">Any</option>
+                                        <option value="Available">Available</option>
+                                        <option value="Occupied">Occupied</option>
+                                        <option value="Maintenance">Maintenance</option>
+                                    </select>
+                                <div class="filter-actions">
+                                    <button type="button" id="applyFilterBtn" class="filter-btn">Apply</button>
+                                    <button type="button" id="clearFilterBtn" class="filter-btn">Clear</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
           <button class="create-btn" id="createBtn">Create Booking</button>
         </div>
       </div>
@@ -337,33 +479,35 @@ $resResult = $conn->query($resQuery);
             <td><?php echo htmlspecialchars($row['Notes']); ?></td>
             <td><?php echo htmlspecialchars($row['Price']); ?></td>
             <td>
-              <span class="action-link edit-btn"
-                  data-id="<?php echo $row['BookingID']; ?>"
-                  data-bookingdate="<?php echo htmlspecialchars($row['BookingDate']); ?>"
-                  data-checkin="<?php echo $row['CheckInDate']; ?>"
-                  data-checkout="<?php echo $row['CheckOutDate']; ?>"
-                  data-room="<?php echo $row['RoomNumber']; ?>"
-                  data-type="<?php echo $row['RoomType']; ?>"
-                  data-bookingstatus="<?php echo $row['BookingStatus']; ?>"
-                  data-roomstatus="<?php echo $row['RoomStatus']; ?>"
-                  data-notes="<?php echo htmlspecialchars($row['Notes']); ?>"
-                  data-price="<?php echo htmlspecialchars($row['Price']); ?>"
-              >Edit</span>
-              <span class="action-link view-btn"
-                  data-id="<?php echo $row['BookingID']; ?>"
-                  data-bookingdate="<?php echo htmlspecialchars($row['BookingDate']); ?>"
-                  data-checkin="<?php echo $row['CheckInDate']; ?>"
-                  data-checkout="<?php echo $row['CheckOutDate']; ?>"
-                  data-room="<?php echo $row['RoomNumber']; ?>"
-                  data-type="<?php echo $row['RoomType']; ?>"
-                  data-bookingstatus="<?php echo $row['BookingStatus']; ?>"
-                  data-roomstatus="<?php echo $row['RoomStatus']; ?>"
-                  data-notes="<?php echo htmlspecialchars($row['Notes']); ?>"
-                  data-price="<?php echo htmlspecialchars($row['Price']); ?>"
-              >View</span>
-              <span class="delete-btn"
-                  data-id="<?php echo $row['BookingID']; ?>"
-              >Delete</span>
+              <div class="action-group">
+                <button type="button" class="action-link edit-btn"
+                    data-id="<?php echo $row['BookingID']; ?>"
+                    data-bookingdate="<?php echo htmlspecialchars($row['BookingDate']); ?>"
+                    data-checkin="<?php echo $row['CheckInDate']; ?>"
+                    data-checkout="<?php echo $row['CheckOutDate']; ?>"
+                    data-room="<?php echo $row['RoomNumber']; ?>"
+                    data-type="<?php echo $row['RoomType']; ?>"
+                    data-bookingstatus="<?php echo $row['BookingStatus']; ?>"
+                    data-roomstatus="<?php echo $row['RoomStatus']; ?>"
+                    data-notes="<?php echo htmlspecialchars($row['Notes']); ?>"
+                    data-price="<?php echo htmlspecialchars($row['Price']); ?>"
+                ><i class="fas fa-edit"></i></button>
+                <button type="button" class="action-link view-btn"
+                    data-id="<?php echo $row['BookingID']; ?>"
+                    data-bookingdate="<?php echo htmlspecialchars($row['BookingDate']); ?>"
+                    data-checkin="<?php echo $row['CheckInDate']; ?>"
+                    data-checkout="<?php echo $row['CheckOutDate']; ?>"
+                    data-room="<?php echo $row['RoomNumber']; ?>"
+                    data-type="<?php echo $row['RoomType']; ?>"
+                    data-bookingstatus="<?php echo $row['BookingStatus']; ?>"
+                    data-roomstatus="<?php echo $row['RoomStatus']; ?>"
+                    data-notes="<?php echo htmlspecialchars($row['Notes']); ?>"
+                    data-price="<?php echo htmlspecialchars($row['Price']); ?>"
+                ><i class="fas fa-eye"></i></button>
+                <button type="button" class="action-link delete-btn"
+                    data-id="<?php echo $row['BookingID']; ?>"
+                ><i class="fas fa-trash"></i></button>
+              </div>
             </td>
           </tr>
           <?php endwhile; ?>
@@ -460,16 +604,16 @@ $resResult = $conn->query($resQuery);
       </form>
     </div>
   </div>
-  <!-- Delete Confirm Modal -->
+  <!-- Delete Modal -->
   <div id="deleteModal" class="modal">
     <div class="modal-content">
       <span class="close" id="closeDeleteModal">&times;</span>
       <h2>Delete Booking</h2>
       <p>Are you sure you want to delete this booking?</p>
-      <form id="deleteForm">
-        <input type="hidden" name="deleteBookingID" id="deleteBookingID">
-        <button type="submit" style="background:#c00;margin-top:1rem;">Delete</button>
-      </form>
+      <div style="margin-top:1.5rem;">
+        <button class="confirm-delete">Delete</button>
+        <button class="cancel-delete">Cancel</button>
+      </div>
     </div>
   </div>
   <script>
@@ -560,19 +704,42 @@ $resResult = $conn->query($resQuery);
   // Delete Modal
   const deleteModal = document.getElementById('deleteModal');
   const closeDeleteModal = document.getElementById('closeDeleteModal');
-  let deleteBookingID = document.getElementById('deleteBookingID');
+  let deleteBookingId = null;
   document.querySelectorAll('.delete-btn').forEach(btn => {
     btn.onclick = function() {
-      deleteBookingID.value = this.dataset.id;
+      deleteBookingId = this.dataset.id;
       deleteModal.style.display = 'block';
     }
   });
+
+  // Search and filter logic
+    const searchInput = document.getElementById('searchInput');
+    const filterBtn = document.getElementById('filterBtn');
+    const filterDropdown = document.getElementById('filterDropdown');
+    const applyFilterBtn = document.getElementById('applyFilterBtn');
+    const clearFilterBtn = document.getElementById('clearFilterBtn');
+    const filterForm = document.getElementById('filterForm');
+    const tableRows = document.querySelectorAll('.reservation-table tbody tr');
+
+    filterBtn.onclick = function() {
+        filterDropdown.classList.toggle('active');
+    }
+    document.addEventListener('click', function(e) {
+        if (!filterDropdown.contains(e.target) && e.target !== filterBtn) {
+            filterDropdown.classList.remove('active');
+        }
+    });
+
   closeDeleteModal.onclick = function() { deleteModal.style.display = 'none'; }
-  // Delete Form
-  const deleteForm = document.getElementById('deleteForm');
-  deleteForm.onsubmit = function(e) {
-    e.preventDefault();
-    const formData = new FormData(deleteForm);
+  document.querySelector('#deleteModal .cancel-delete').onclick = function() {
+    deleteModal.style.display = 'none';
+    deleteBookingId = null;
+  }
+  document.querySelector('#deleteModal .confirm-delete').onclick = function() {
+    if (!deleteBookingId) return;
+    const formData = new FormData();
+    formData.append('deleteBooking', 1);
+    formData.append('BookingID', deleteBookingId);
     fetch('booking.php', {
       method: 'POST',
       body: formData
