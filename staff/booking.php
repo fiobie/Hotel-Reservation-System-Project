@@ -18,9 +18,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['BookingID'])) {
     handleBookingUpdate($conn);
 }
 
+// Handle early checkout/cancellation
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    handleBookingAction($conn);
+}
+
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
+function handleBookingAction($conn) {
+    $bookingId = intval($_POST['BookingID']);
+    $action = $_POST['action'];
+    $currentTime = date('Y-m-d H:i:s');
+    
+    if ($action === 'complete_stay') {
+        // Complete the stay early - update checkout time to now
+        $sql = "UPDATE booking SET 
+                CheckOutDate = '$currentTime',
+                BookingStatus = 'Completed',
+                RoomStatus = 'Available'
+                WHERE BookingID = $bookingId";
+    } elseif ($action === 'cancel_stay') {
+        // Cancel the stay - mark as cancelled
+        $sql = "UPDATE booking SET 
+                BookingStatus = 'Cancelled',
+                RoomStatus = 'Available'
+                WHERE BookingID = $bookingId";
+    }
+    
+    $success = $conn->query($sql);
+    
+    header('Content-Type: application/json');
+    echo json_encode(['success' => $success]);
+    exit;
+}
+
 function handleBookingUpdate($conn) {
     $bookingId = intval($_POST['BookingID']);
     $checkIn = $conn->real_escape_string($_POST['CheckInDate']);
@@ -72,26 +104,26 @@ function getBookingsForMonth($conn, $year, $month) {
                OR (YEAR(b.CheckOutDate) = $year AND MONTH(b.CheckOutDate) = $month)";
     
     $result = $conn->query($sql);
-    $bookings = [];
+$bookings = [];
     
-    if ($result) {
-        while ($row = $result->fetch_assoc()) {
-            $checkIn = date('Y-m-d', strtotime($row['CheckInDate']));
-            $checkOut = date('Y-m-d', strtotime($row['CheckOutDate']));
+if ($result) {
+    while ($row = $result->fetch_assoc()) {
+        $checkIn = date('Y-m-d', strtotime($row['CheckInDate']));
+        $checkOut = date('Y-m-d', strtotime($row['CheckOutDate']));
             $guest = $row['GuestName'] ? $row['GuestName'] : 'Guest #' . $row['BookingID'];
             
             // Create date range for this booking
-            $period = new DatePeriod(
-                new DateTime($checkIn),
-                new DateInterval('P1D'),
-                (new DateTime($checkOut))->modify('+1 day')
-            );
+        $period = new DatePeriod(
+            new DateTime($checkIn),
+            new DateInterval('P1D'),
+            (new DateTime($checkOut))->modify('+1 day')
+        );
             
-            foreach ($period as $date) {
-                $d = $date->format('Y-m-d');
-                $bookings[$d][] = [
+        foreach ($period as $date) {
+            $d = $date->format('Y-m-d');
+            $bookings[$d][] = [
                     'bookingId' => $row['BookingID'],
-                    'guest' => $guest,
+                'guest' => $guest,
                     'status' => $row['RoomStatus'],
                     'roomNumber' => $row['RoomNumber'],
                     'roomType' => $row['RoomType'],
@@ -100,10 +132,10 @@ function getBookingsForMonth($conn, $year, $month) {
                     'checkOut' => $row['CheckOutDate'],
                     'notes' => $row['Notes'],
                     'price' => $row['Price']
-                ];
-            }
+            ];
         }
     }
+}
     
     return $bookings;
 }
@@ -134,6 +166,51 @@ $bookings = getBookingsForMonth($conn, $year, $month);
          CSS STYLES
          ============================================================================ -->
     <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background: #fafaf9; display: flex; }
+        .sidebar { width: 200px; background: #008000; min-height: 100vh; padding: 0.5rem; color: white; position: fixed; left: 0; top: 0; bottom: 0; transition: left 0.3s, box-shadow 0.3s; z-index: 1000; }
+        .sidebar-title { color: white; font-size: 1.4rem; font-weight: 500; margin-bottom: 1.5rem; padding: 1rem; }
+        .nav-section { margin-bottom: 1rem; }
+        .nav-link { display: flex; align-items: center; padding: 0.5rem 1rem; color: white; text-decoration: none; font-size: 0.9rem; margin-bottom: 0.25rem; transition: background-color 0.2s; }
+        .nav-link:hover { background-color: rgba(255, 255, 255, 0.1); }
+        .nav-link i { margin-right: 0.75rem; width: 20px; text-align: center; opacity: 0.9; }
+        .management-label { color: #90EE90; font-size: 0.8em; margin: 1rem 0 0.5rem 1rem; }
+        .toggle-btn { display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+        .toggle-btn::after { content: '▼'; font-size: 0.7rem; margin-left: 0.5rem; }
+        .submenu { margin-left: 1.5rem; display: none; }
+        .submenu.active { display: block; }
+        .main-content { flex: 1; padding: 2rem; margin-left: 200px; overflow-x: hidden; transition: margin-left 0.3s; max-width: 900px; }
+        /* HAMBURGER MENU */
+        .hamburger {
+            display: none;
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 1100;
+            width: 36px;
+            height: 36px;
+            background: #008000;
+            border: none;
+            border-radius: 6px;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .hamburger span {
+            display: block;
+            width: 22px;
+            height: 3px;
+            background: #fff;
+            margin: 4px 0;
+            border-radius: 2px;
+            transition: 0.3s;
+        }
+        @media (max-width: 900px) {
+            .main-content { margin-left: 0; padding: 1rem; }
+            .sidebar { left: -220px; box-shadow: none; }
+            .sidebar.active { left: 0; box-shadow: 2px 0 8px rgba(0,0,0,0.08); }
+            .hamburger { display: flex; }
+        }
         /* ============================================================================
            BASE STYLES
            ============================================================================ */
@@ -353,7 +430,6 @@ $bookings = getBookingsForMonth($conn, $year, $month);
         .booked { background: #f7b6b6; color: #222; }
         .reserved { background: #f7f3b6; color: #222; }
         .maintenance { background: #e0e0e0; color: #222; }
-        .cleaning { background: #ffd59e; color: #222; }
         
         /* ============================================================================
            LEGEND
@@ -383,7 +459,6 @@ $bookings = getBookingsForMonth($conn, $year, $month);
         .legend-booked { background: #f7b6b6; }
         .legend-reserved { background: #f7f3b6; }
         .legend-maintenance { background: #e0e0e0; }
-        .legend-cleaning { background: #ffd59e; }
         
         /* ============================================================================
            MODAL STYLES
@@ -497,13 +572,47 @@ $bookings = getBookingsForMonth($conn, $year, $month);
         .btn-secondary:hover { 
             background: #545b62; 
         }
+        
+        .btn-warning { 
+            background: #ffc107; 
+            color: white; 
+        }
+        
+        .btn-warning:hover { 
+            background: #e0a800; 
+        }
+        
+        .btn-danger { 
+            background: #dc3545; 
+            color: white; 
+        }
+        
+        .btn-danger:hover { 
+            background: #c82333; 
+        }
     </style>
 </head>
 
 <body>
-    <!-- ============================================================================
-         MAIN CONTENT
-         ============================================================================ -->
+    <button class="hamburger" id="sidebarToggle" aria-label="Open sidebar">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+    <div class="sidebar">
+        <h4 class="sidebar-title">Villa Valore Hotel</h4>
+        <div class="nav-section">
+            <a class="nav-link" href="staff_dashboard.php"><i class="fas fa-th-large"></i>Dashboard</a>
+            <a class="nav-link" href="reservation.php"><i class="fas fa-calendar-check"></i>Reservation</a>
+            <a class="nav-link" href="booking.php"><i class="fas fa-book"></i>Booking</a>
+            <a class="nav-link" href="room.php"><i class="fas fa-door-open"></i>Room</a>
+            <a class="nav-link" href="guest_request.php"><i class="fas fa-comment-dots"></i>Guest Request</a>
+            <a class="nav-link" href="inventory.php"><i class="fas fa-box"></i>Inventory</a>
+        </div>
+        <div class="nav-section">
+            <a class="nav-link" href="logout.php"><i class="fas fa-sign-out-alt"></i>Log out</a>
+        </div>
+    </div>
     <div class="main-content">
         
         <!-- ============================================================================
@@ -559,7 +668,6 @@ $bookings = getBookingsForMonth($conn, $year, $month);
                                     <option value="Booked">Booked</option>
                                     <option value="Reserved">Reserved</option>
                                     <option value="Maintenance">Maintenance</option>
-                                    <option value="Cleaning">Cleaning</option>
                                 </select>
                             </label>
                             <div class="filter-actions">
@@ -655,9 +763,6 @@ $bookings = getBookingsForMonth($conn, $year, $month);
             <div class="legend-item">
                 <span class="legend-badge legend-maintenance"></span>Maintenance
             </div>
-            <div class="legend-item">
-                <span class="legend-badge legend-cleaning"></span>Cleaning
-            </div>
         </div>
     </div>
 
@@ -715,7 +820,6 @@ $bookings = getBookingsForMonth($conn, $year, $month);
                             <option value="Booked">Booked</option>
                             <option value="Reserved">Reserved</option>
                             <option value="Maintenance">Maintenance</option>
-                            <option value="Cleaning">Cleaning</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -744,6 +848,8 @@ $bookings = getBookingsForMonth($conn, $year, $month);
                 <!-- Action Buttons -->
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+                    <button type="button" class="btn btn-warning" onclick="completeStay()">Complete Stay</button>
+                    <button type="button" class="btn btn-danger" onclick="cancelStay()">Cancel Stay</button>
                     <button type="submit" class="btn btn-primary">Save Changes</button>
                 </div>
             </form>
@@ -757,68 +863,68 @@ $bookings = getBookingsForMonth($conn, $year, $month);
         // ============================================================================
         // DOM ELEMENTS
         // ============================================================================
-        const searchInput = document.getElementById('searchInput');
-        const filterBtn = document.getElementById('filterBtn');
-        const filterDropdown = document.getElementById('filterDropdown');
-        const applyFilterBtn = document.getElementById('applyFilterBtn');
-        const clearFilterBtn = document.getElementById('clearFilterBtn');
-        const filterForm = document.getElementById('filterForm');
-        const guestBadges = document.querySelectorAll('.guest-badge');
+    const searchInput = document.getElementById('searchInput');
+    const filterBtn = document.getElementById('filterBtn');
+    const filterDropdown = document.getElementById('filterDropdown');
+    const applyFilterBtn = document.getElementById('applyFilterBtn');
+    const clearFilterBtn = document.getElementById('clearFilterBtn');
+    const filterForm = document.getElementById('filterForm');
+    const guestBadges = document.querySelectorAll('.guest-badge');
 
         // ============================================================================
         // SEARCH AND FILTER FUNCTIONS
         // ============================================================================
         
         // Toggle filter dropdown
-        filterBtn.onclick = function() {
-            filterDropdown.classList.toggle('active');
-        }
+    filterBtn.onclick = function() {
+        filterDropdown.classList.toggle('active');
+    }
         
         // Close dropdown when clicking outside
-        document.addEventListener('click', function(e) {
-            if (!filterDropdown.contains(e.target) && e.target !== filterBtn) {
-                filterDropdown.classList.remove('active');
-            }
-        });
+    document.addEventListener('click', function(e) {
+        if (!filterDropdown.contains(e.target) && e.target !== filterBtn) {
+            filterDropdown.classList.remove('active');
+        }
+    });
 
         // Check if badge matches filter criteria
-        function badgeMatches(badge, filters) {
+    function badgeMatches(badge, filters) {
             if (filters.GuestName && !badge.innerText.toLowerCase().includes(filters.GuestName.toLowerCase())) {
                 return false;
             }
             if (filters.RoomStatus && !badge.classList.contains(filters.RoomStatus.toLowerCase())) {
                 return false;
             }
-            return true;
-        }
+        return true;
+    }
 
         // Apply filters
-        applyFilterBtn.onclick = function() {
-            const formData = new FormData(filterForm);
-            const filters = Object.fromEntries(formData.entries());
+    applyFilterBtn.onclick = function() {
+        const formData = new FormData(filterForm);
+        const filters = Object.fromEntries(formData.entries());
             
-            guestBadges.forEach(badge => {
-                badge.style.display = badgeMatches(badge, filters) ? '' : 'none';
-            });
+        guestBadges.forEach(badge => {
+            badge.style.display = badgeMatches(badge, filters) ? '' : 'none';
+        });
             
-            filterDropdown.classList.remove('active');
-        }
+        filterDropdown.classList.remove('active');
+    }
         
         // Clear filters
-        clearFilterBtn.onclick = function() {
-            filterForm.reset();
+    clearFilterBtn.onclick = function() {
+        filterForm.reset();
             guestBadges.forEach(badge => { 
                 badge.style.display = ''; 
             });
-        }
+    }
         
         // Search functionality
-        searchInput.oninput = function() {
-            const val = searchInput.value.toLowerCase();
-            guestBadges.forEach(badge => {
-                badge.style.display = badge.innerText.toLowerCase().includes(val) ? '' : 'none';
-            });
-        }
+    searchInput.oninput = function() {
+        const val = searchInput.value.toLowerCase();
+        guestBadges.forEach(badge => {
+            badge.style.display = badge.innerText.toLowerCase().includes(val) ? '' : 'none';
+        });
+    }
 
         // ============================================================================
         // MODAL FUNCTIONS
@@ -880,6 +986,79 @@ $bookings = getBookingsForMonth($conn, $year, $month);
                 console.error('Error:', error);
                 alert('Error updating booking. Please try again.');
             });
+        };
+
+        // ============================================================================
+        // EARLY CHECKOUT/CANCELLATION FUNCTIONS
+        // ============================================================================
+        
+        // Complete stay early
+        function completeStay() {
+            const bookingId = document.getElementById('editBookingID').value;
+            const guestName = document.getElementById('editGuestName').value;
+            
+            if (confirm(`Are you sure you want to complete the stay for ${guestName}? This will mark the guest as checked out and make the room available.`)) {
+                const formData = new FormData();
+                formData.append('BookingID', bookingId);
+                formData.append('action', 'complete_stay');
+                
+                fetch('booking.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Stay completed successfully! Guest has been checked out early.');
+                        closeEditModal();
+                        location.reload();
+                    } else {
+                        alert('Error completing stay. Please try again.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error completing stay. Please try again.');
+                });
+            }
+        }
+        
+        // Cancel stay
+        function cancelStay() {
+            const bookingId = document.getElementById('editBookingID').value;
+            const guestName = document.getElementById('editGuestName').value;
+            
+            if (confirm(`Are you sure you want to cancel the stay for ${guestName}? This will cancel the booking and make the room available.`)) {
+                const formData = new FormData();
+                formData.append('BookingID', bookingId);
+                formData.append('action', 'cancel_stay');
+                
+                fetch('booking.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Stay cancelled successfully! Room is now available.');
+                        closeEditModal();
+                        location.reload();
+                    } else {
+                        alert('Error cancelling stay. Please try again.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error cancelling stay. Please try again.');
+                });
+            }
+        }
+
+        // Sidebar toggle menu functionality
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebar = document.querySelector('.sidebar');
+        sidebarToggle.onclick = function() {
+            sidebar.classList.toggle('active');
         };
     </script>
 </body>
