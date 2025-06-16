@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ReservationID'])) {
     $type = $conn->real_escape_string($_POST['RoomType']);
     $status = $conn->real_escape_string($_POST['Status']);
 
-    $sql = "UPDATE reservation SET 
+    $sql = "UPDATE reservations SET 
         GuestName='$guest',
         PCheckInDate='$checkin',
         PCheckOutDate='$checkout',
@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['createReservation']))
     exit;
 }
 // Fetch reservations
-$resQuery = "SELECT * FROM reservation"; // Adjust table name/fields as needed
+$resQuery = "SELECT * FROM reservations"; // Adjust table name/fields as needed
 $resResult = $conn->query($resQuery);
 ?>
 <!DOCTYPE html>
