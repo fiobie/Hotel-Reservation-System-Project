@@ -437,7 +437,7 @@ if (count($where) > 0) {
         </form>
       </div>
       </div>
-      <button class="create-btn" id="createBtn">Create Booking</button>
+      <button class="create-btn" id="createBtn">Create Item</button>
     </div>
     </div>
     <table class="reservation-table">

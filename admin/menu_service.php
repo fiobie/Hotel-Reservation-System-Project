@@ -7,47 +7,45 @@ $params = [];
 
 // If filter form is submitted (GET)
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && (
-  isset($_GET['RoomID']) || isset($_GET['RoomNumber']) || isset($_GET['RoomType']) ||
-  isset($_GET['RoomPerHour']) || isset($_GET['RoomStatus']) || isset($_GET['Capacity'])
+  isset($_GET['MenuID']) || isset($_GET['Name']) || isset($_GET['Type']) ||
+  isset($_GET['Description']) || isset($_GET['SellingPrice'])
 )) {
-  if (!empty($_GET['RoomID'])) {
-    $where[] = "RoomID = ?";
-    $params[] = $_GET['RoomID'];
+  if (!empty($_GET['MenuID'])) {
+    $where[] = "MenuID = ?";
+    $params[] = $_GET['MenuID'];
   }
-  if (!empty($_GET['RoomNumber'])) {
-    $where[] = "RoomNumber = ?";
-    $params[] = $_GET['RoomNumber'];
+  if (!empty($_GET['Name'])) {
+    $where[] = "Name = ?";
+    $params[] = $_GET['Name'];
   }
-  if (!empty($_GET['RoomPerHour'])) {
-    $where[] = "RoomPerHour = ?";
-    $params[] = $_GET['RoomPerHour'];
+  if (!empty($_GET['Type'])) {
+    $where[] = "Type = ?";
+    $params[] = $_GET['Type'];
   }
-  if (!empty($_GET['RoomStatus'])) {
-    $where[] = "RoomStatus = ?";
-    $params[] = $_GET['RoomStatus'];
+  if (!empty($_GET['Description'])) {
+    $where[] = "Description = ?";
+    $params[] = $_GET['Description'];
   }
-  if (!empty($_GET['Capacity'])) {
-    $where[] = "Capacity = ?";
-    $params[] = $_GET['Capacity'];
+  if (!empty($_GET['SellingPrice'])) {
+    $where[] = "SellingPrice = ?";
+    $params[] = $_GET['SellingPrice'];
   }
 }
 
 // --- AJAX UPDATE ---
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['RoomID']) && !isset($_POST['RoomNumber']) && !isset($_POST['RoomType'])) {
-  $roomid = intval($_POST['RoomID']);
-  $roomnumber = $conn->real_escape_string($_POST['RoomNumber']);
-  $roomtype = $conn->real_escape_string($_POST['RoomType']);
-  $roomperhour = $conn->real_escape_string($_POST['RoomPerHour']);
-  $roomstatus = $conn->real_escape_string($_POST['RoomStatus']);
-  $capacity = $conn->real_escape_string($_POST['Capacity']);
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['MenuID']) && !isset($_POST['Name']) && !isset($_POST['Type'])) {
+  $menuid = intval($_POST['MenuID']);
+  $name = $conn->real_escape_string($_POST['Name']);
+  $type = $conn->real_escape_string($_POST['Type']);
+  $description = $conn->real_escape_string($_POST['Description']);
+  $sellingprice = $conn->real_escape_string($_POST['SellingPrice']);
 
-  $sql = "UPDATE room SET 
-    RoomNumber='$roomnumber',
-    RoomType='$roomtype',
-    RoomPerHour='$roomperhour',
-    RoomStatus='$roomstatus',
-    Capacity='$capacity'
-    WHERE RoomID=$roomid";
+  $sql = "UPDATE menu SET 
+    Name='$name',
+    Type='$type',
+    Description='$description',
+    SellingPrice='$sellingprice'
+    WHERE MenuID=$menuid";
   $success = $conn->query($sql);
 
   header('Content-Type: application/json');
@@ -56,37 +54,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['RoomID']) && !isset($
 }
 
 // --- AJAX DELETE ---
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['deleteRoom']) && isset($_POST['RoomID'])) {
-  $roomid = intval($_POST['RoomID']);
-  $sql = "DELETE FROM room WHERE RoomID=$roomid";
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['deleteMenu']) && isset($_POST['MenuID'])) {
+  $menuid = intval($_POST['MenuID']);
+  $sql = "DELETE FROM menu WHERE MenuID=$menuid";
   $success = $conn->query($sql);
   header('Content-Type: application/json');
   echo json_encode(['success' => $success]);
   exit;
 }
 
-// --- CREATE ROOM (AJAX/POST) ---
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['createRoom'])) {
-  $roomnumber = $conn->real_escape_string($_POST['RoomNumber']);
-  $roomtype = $conn->real_escape_string($_POST['RoomType']);
-  $roomperhour = $conn->real_escape_string($_POST['RoomPerHour']);
-  $roomstatus = $conn->real_escape_string($_POST['RoomStatus']);
-  $capacity = $conn->real_escape_string($_POST['Capacity']);
-  $sql = "INSERT INTO room (RoomNumber, RoomType, RoomPerHour, RoomStatus, Capacity) VALUES ('$roomnumber', '$roomtype', '$roomperhour', '$roomstatus', '$capacity')";
+// --- CREATE MENU (AJAX/POST) ---
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['createMenu'])) {
+  $name = $conn->real_escape_string($_POST['Name']);
+  $type = $conn->real_escape_string($_POST['Type']);
+  $description = $conn->real_escape_string($_POST['Description']);
+  $sellingprice = $conn->real_escape_string($_POST['SellingPrice']);
+  $sql = "INSERT INTO menu (Name, Type, Description, SellingPrice) VALUES ('$name', '$type', '$description', '$sellingprice')";
   $success = $conn->query($sql);
   if (isset($_SERVER['HTTP_X_REQUESTED_WITH'])) {
     header('Content-Type: application/json');
     echo json_encode(['success' => $success]);
     exit;
   } else {
-    header('Location: room.php');
+    header('Location: menu_service.php');
     exit;
   }
 }
 
-// --- FETCH ROOMS (with filter) ---
+// --- FETCH MENUS (with filter) ---
 if (count($where) > 0) {
-  $sql = "SELECT * FROM room WHERE " . implode(' AND ', $where) . " ORDER BY RoomID DESC";
+  $sql = "SELECT * FROM menu_service WHERE " . implode(' AND ', $where) . " ORDER BY MenuID DESC";
   $stmt = $conn->prepare($sql);
   if ($params) {
     $types = str_repeat('s', count($params));
@@ -95,7 +92,7 @@ if (count($where) > 0) {
   $stmt->execute();
   $resResult = $stmt->get_result();
 } else {
-  $resQuery = "SELECT * FROM room ORDER BY RoomID DESC";
+  $resQuery = "SELECT * FROM menu_service ORDER BY MenuID DESC";
   $resResult = $conn->query($resQuery);
 }
 ?>
@@ -103,7 +100,7 @@ if (count($where) > 0) {
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Room</title>
+  <title>Menu</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   <style>
         :root {
@@ -411,7 +408,7 @@ if (count($where) > 0) {
   <div class="main-content">
   <div class="reservation-section">
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
-    <h1 style="margin-bottom: 0; border-bottom: 4px solid rgb(255, 255, 255); display: inline-block; padding-bottom: 0.2rem;">Room</h1>
+    <h1 style="margin-bottom: 0; border-bottom: 4px solid rgb(255, 255, 255); display: inline-block; padding-bottom: 0.2rem;">Menu</h1>
     <div class="search-filter-bar">
       <div class="search-wrapper">
       <i class="fas fa-search search-icon"></i>
@@ -421,19 +418,11 @@ if (count($where) > 0) {
       <button class="filter-btn" id="filterBtn">Filter</button>
       <div class="filter-dropdown" id="filterDropdown">
         <form id="filterForm" method="GET">
-        <label>Room ID <input type="text" name="RoomID" value="<?php echo isset($_GET['RoomID']) ? htmlspecialchars($_GET['RoomID']) : ''; ?>"></label>
-        <label>Room Number <input type="text" name="RoomNumber" value="<?php echo isset($_GET['RoomNumber']) ? htmlspecialchars($_GET['RoomNumber']) : ''; ?>"></label>
-        <label>Room Type <input type="text" name="RoomType" value="<?php echo isset($_GET['RoomType']) ? htmlspecialchars($_GET['RoomType']) : ''; ?>"></label>
-        <label>Room Per Hour <input type="text" name="RoomPerHour" value="<?php echo isset($_GET['RoomPerHour']) ? htmlspecialchars($_GET['RoomPerHour']) : ''; ?>"></label>
-        <label>Room Status
-          <select name="RoomStatus">
-          <option value="">Any</option>
-          <option value="Available" <?php if(isset($_GET['RoomStatus']) && $_GET['RoomStatus']=='Available') echo 'selected'; ?>>Available</option>
-          <option value="Occupied" <?php if(isset($_GET['RoomStatus']) && $_GET['RoomStatus']=='Occupied') echo 'selected'; ?>>Occupied</option>
-          <option value="Maintenance" <?php if(isset($_GET['RoomStatus']) && $_GET['RoomStatus']=='Maintenance') echo 'selected'; ?>>Maintenance</option>
-          </select>
-        </label>
-        <label>Capacity <input type="number" name="Capacity" value="<?php echo isset($_GET['Capacity']) ? htmlspecialchars($_GET['Capacity']) : ''; ?>"></label>
+        <label>Menu ID <input type="text" name="MenuID" value="<?php echo isset($_GET['MenuID']) ? htmlspecialchars($_GET['MenuID']) : ''; ?>"></label>
+        <label>Name <input type="text" name="Name" value="<?php echo isset($_GET['Name']) ? htmlspecialchars($_GET['Name']) : ''; ?>"></label>
+        <label>Type <input type="text" name="Type" value="<?php echo isset($_GET['Type']) ? htmlspecialchars($_GET['Type']) : ''; ?>"></label>
+        <label>Description <input type="text" name="Description" value="<?php echo isset($_GET['Description']) ? htmlspecialchars($_GET['Description']) : ''; ?>"></label>
+        <label>Selling Price <input type="text" name="SellingPrice" value="<?php echo isset($_GET['SellingPrice']) ? htmlspecialchars($_GET['SellingPrice']) : ''; ?>"></label>
         <div class="filter-actions">
           <button type="submit" id="applyFilterBtn" class="filter-btn">Apply</button>
           <button type="button" id="clearFilterBtn" class="filter-btn">Clear</button>
@@ -447,54 +436,50 @@ if (count($where) > 0) {
     <table class="reservation-table">
     <thead>
       <tr>
-      <th>Room ID</th>
-      <th>Room Number</th>
-      <th>Room Type</th>
-      <th>Room Per Hour</th>
-      <th>Room Status</th>
-      <th>Capacity</th>
+      <th>Menu ID</th>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Selling Price</th>
       <th>Actions</th>
       </tr>
     </thead>
     <tbody>
     <?php if ($resResult && $resResult->num_rows > 0): ?>
       <?php while($row = $resResult->fetch_assoc()): ?>
-      <tr data-id="<?php echo $row['RoomID']; ?>">
-      <td><b><?php echo $row['RoomID']; ?></b></td>
-      <td><b><?php echo htmlspecialchars($row['RoomNumber']); ?></b></td>
-      <td><b><?php echo htmlspecialchars($row['RoomType']); ?></b></td>
-      <td><b><?php echo htmlspecialchars($row['RoomPerHour']); ?></b></td>
-      <td><?php echo $row['RoomStatus']; ?></td>
-      <td><b><?php echo $row['Capacity']; ?></b></td>
+      <tr data-id="<?php echo $row['MenuID']; ?>">
+      <td><b><?php echo $row['MenuID']; ?></b></td>
+      <td><b><?php echo htmlspecialchars($row['Name']); ?></b></td>
+      <td><b><?php echo htmlspecialchars($row['Type']); ?></b></td>
+      <td><b><?php echo htmlspecialchars($row['Description']); ?></b></td>
+      <td><?php echo $row['SellingPrice']; ?></td>
       <td>
         <div class="action-group">
         <button type="button" class="action-btn edit-btn"
-          data-id="<?php echo $row['RoomID']; ?>"
-          data-roomnumber="<?php echo htmlspecialchars($row['RoomNumber']); ?>"
-          data-roomtype="<?php echo htmlspecialchars($row['RoomType']); ?>"
-          data-roomperhour="<?php echo htmlspecialchars($row['RoomPerHour']); ?>"
-          data-roomstatus="<?php echo htmlspecialchars($row['RoomStatus']); ?>"
-          data-capacity="<?php echo htmlspecialchars($row['Capacity']); ?>"
+          data-id="<?php echo $row['MenuID']; ?>"
+          data-name="<?php echo htmlspecialchars($row['Name']); ?>"
+          data-type="<?php echo htmlspecialchars($row['Type']); ?>"
+          data-description="<?php echo htmlspecialchars($row['Description']); ?>"
+          data-sellingprice="<?php echo htmlspecialchars($row['SellingPrice']); ?>"
 
 ><i class="fas fa-edit"></i></button>
 <button type="button" class="action-btn view-btn"
-  data-id="<?php echo $row['RoomID']; ?>"
-  data-roomnumber="<?php echo htmlspecialchars($row['RoomNumber']); ?>"
-  data-roomtype="<?php echo htmlspecialchars($row['RoomType']); ?>"
-  data-roomperhour="<?php echo htmlspecialchars($row['RoomPerHour']); ?>"
-  data-roomstatus="<?php echo htmlspecialchars($row['RoomStatus']); ?>"
-  data-capacity="<?php echo htmlspecialchars($row['Capacity']); ?>"
+  data-id="<?php echo $row['MenuID']; ?>"
+  data-name="<?php echo htmlspecialchars($row['Name']); ?>"
+  data-type="<?php echo htmlspecialchars($row['Type']); ?>"
+  data-description="<?php echo htmlspecialchars($row['Description']); ?>"
+  data-sellingprice="<?php echo htmlspecialchars($row['SellingPrice']); ?>"
 
 ><i class="fas fa-eye"></i></button>
 <button type="button" class="action-btn delete-btn"
-  data-id="<?php echo $row['RoomID']; ?>"
+  data-id="<?php echo $row['MenuID']; ?>"
 ><i class="fas fa-trash"></i></button>
         </div>
       </td>
       </tr>
       <?php endwhile; ?>
     <?php else: ?>
-      <tr><td colspan="11">No rooms found.</td></tr>
+      <tr><td colspan="11">No menus found.</td></tr>
     <?php endif; ?>
     </tbody>
     </table>
@@ -504,27 +489,20 @@ if (count($where) > 0) {
   <div id="editModal" class="modal">
   <div class="modal-content">
     <span class="close" id="closeEditModal">&times;</span>
-    <h2>Edit Room</h2>
+    <h2>Edit Menu</h2>
     <form id="editForm">
-    <input type="hidden" name="RoomID" id="editRoomID">
-    <p><label>Room Number:</label><br><input type="number" name="RoomNumber" id="editRoomNumber" required></p>
-    <p><label>Room Type:</label><br>
-      <select name="RoomType" id="editRoomType" required>
+    <input type="hidden" name="MenuID" id="editMenuID">
+    <p><label>Name:</label><br><input type="text" name="Name" id="editName" required></p>
+    <p><label>Type:</label><br>
+      <select name="Type" id="editType" required>
       <option value="Standard">Standard</option>
       <option value="Deluxe">Deluxe</option>
       <option value="Suite">Suite</option>
       </select>
     </p>
-    <p><label>Room Per Hour:</label><br><input type="number" name="RoomPerHour" id="editRoomPerHour" required></p>
-    <p><label>Room Status:</label><br>
-      <select name="RoomStatus" id="editRoomStatus" required>
-      <option value="Available">Available</option>
-      <option value="Occupied">Occupied</option>
-      <option value="Maintenance">Maintenance</option>
-      <option value="Cleaning">Cleaning</option>
-      </select>
+    <p><label>Description:</label><br><input type="text" name="Description" id="editDescription" required></p>
+    <p><label>Selling Price:</label><br><input type="number" name="SellingPrice" id="editSellingPrice" required></p>
     </p>
-    <p><label>Capacity:</label><br><input type="number" step="0.01" name="Capacity" id="editCapacity" required></p>
     <button type="submit" style="margin-top:1rem;">Save</button>
     </form>
   </div>
@@ -533,7 +511,7 @@ if (count($where) > 0) {
   <div id="viewModal" class="modal">
   <div class="modal-content">
     <span class="close" id="closeViewModal">&times;</span>
-    <h2>View Room</h2>
+    <h2>View Menu</h2>
     <div id="viewDetails"></div>
   </div>
   </div>
@@ -541,27 +519,23 @@ if (count($where) > 0) {
   <div id="createModal" class="modal">
   <div class="modal-content">
     <span class="close" id="closeCreateModal">&times;</span>
-    <h2>Create Room</h2>
+    <h2>Create Menu</h2>
     <form id="createForm">
-    <input type="hidden" name="createRoom" value="1">
-    <p><label>Room Number:</label><br><input type="number" name="RoomNumber" required></p>
-    <p><label>Room Type:</label><br>
-      <select name="RoomType" required>
+    <input type="hidden" name="createMenu" value="1">
+    <p><label>Name:</label><br><input type="text" name="Name" required></p>
+    <p><label>Type:</label><br>
+      <select name="Type" required>
       <option value="Standard">Standard</option>
       <option value="Deluxe">Deluxe</option>
       <option value="Suite">Suite</option>
       </select>
     </p>
-    <p><label>Room Per Hour:</label><br><input type="number" name="RoomPerHour" required></p>
-    <p><label>Room Status:</label><br>
-      <select name="RoomStatus" required>
-      <option value="Available">Available</option>
-      <option value="Occupied">Occupied</option>
+    <p><label>Description:</label><br><input type="text" name="Description" required></p>
+    <p><label>Selling Price:</label><br><input type="number" name="SellingPrice" required></p>
       <option value="Maintenance">Maintenance</option>
       <option value="Cleaning">Cleaning</option>
       </select>
     </p>
-    <p><label>Capacity:</label><br><input type="number" step="0.01" name="Capacity" required></p>
     <button type="submit">Create</button>
     </form>
   </div>
@@ -570,8 +544,8 @@ if (count($where) > 0) {
   <div id="deleteModal" class="modal">
   <div class="modal-content">
     <span class="close" id="closeDeleteModal">&times;</span>
-    <h2>Delete Room</h2>
-    <p>Are you sure you want to delete this room?</p>
+    <h2>Delete Menu</h2>
+    <p>Are you sure you want to delete this menu?</p>
     <div style="margin-top:1.5rem;">
     <button class="confirm-delete">Delete</button>
     <button class="cancel-delete">Cancel</button>
@@ -585,12 +559,11 @@ if (count($where) > 0) {
   document.querySelectorAll('.edit-btn').forEach(btn => {
   btn.onclick = function() {
     editModal.style.display = 'block';
-    document.getElementById('editRoomID').value = this.dataset.id;
-    document.getElementById('editRoomNumber').value = this.dataset.roomnumber;
-    document.getElementById('editRoomType').value = this.dataset.roomtype;
-    document.getElementById('editRoomPerHour').value = this.dataset.roomperhour;
-    document.getElementById('editRoomStatus').value = this.dataset.roomstatus;
-    document.getElementById('editCapacity').value = this.dataset.capacity;
+    document.getElementById('editMenuID').value = this.dataset.id;
+    document.getElementById('editName').value = this.dataset.name;
+    document.getElementById('editType').value = this.dataset.type;
+    document.getElementById('editDescription').value = this.dataset.description;
+    document.getElementById('editSellingPrice').value = this.dataset.sellingprice;
   }
   });
   closeEditModal.onclick = function() { editModal.style.display = 'none'; }
@@ -599,7 +572,7 @@ if (count($where) > 0) {
   editForm.onsubmit = function(e) {
   e.preventDefault();
   const formData = new FormData(editForm);
-  fetch('room.php', {
+  fetch('menu_service.php', {
     method: 'POST',
     body: formData
   })
@@ -619,12 +592,11 @@ if (count($where) > 0) {
   btn.onclick = function() {
     viewModal.style.display = 'block';
     document.getElementById('viewDetails').innerHTML = `
-    <p><label>Room ID:</label> <span>${this.dataset.id}</span></p>
-    <p><label>Room Number:</label> <span>${this.dataset.roomnumber}</span></p>
-    <p><label>Room Type:</label> <span>${this.dataset.roomtype}</span></p>
-    <p><label>Room Per Hour:</label> <span>${this.dataset.roomperhour}</span></p>
-    <p><label>Room Status:</label> <span>${this.dataset.roomstatus}</span></p>
-    <p><label>Capacity:</label> <span>${this.dataset.capacity}</span></p>
+    <p><label>Menu ID:</label> <span>${this.dataset.id}</span></p>
+    <p><label>Name:</label> <span>${this.dataset.name}</span></p>
+    <p><label>Type:</label> <span>${this.dataset.type}</span></p>
+    <p><label>Description:</label> <span>${this.dataset.description}</span></p>
+    <p><label>Selling Price:</label> <span>${this.dataset.sellingprice}</span></p>
     `;
   }
   });
@@ -656,10 +628,10 @@ if (count($where) > 0) {
   closeCreateModal.onclick = function() { createModal.style.display = 'none'; }
 
   // --- AJAX CREATE BOOKING ---
-  document.getElementById('createForm').onsubmit = function(e) {
+  document.getElementById('createMenu').onsubmit = function(e) {
   e.preventDefault();
   const formData = new FormData(this);
-  fetch('room.php', {
+  fetch('menu_service.php', {
     method: 'POST',
     body: formData,
     headers: { 'X-Requested-With': 'XMLHttpRequest' }
@@ -678,24 +650,24 @@ if (count($where) > 0) {
   // Delete Modal
   const deleteModal = document.getElementById('deleteModal');
   const closeDeleteModal = document.getElementById('closeDeleteModal');
-  let deleteBookingId = null;
+  let deleteMenuId = null;
   document.querySelectorAll('.delete-btn').forEach(btn => {
   btn.onclick = function() {
-    deleteBookingId = this.dataset.id;
+    deleteMenuId = this.dataset.id;
     deleteModal.style.display = 'block';
   }
   });
   closeDeleteModal.onclick = function() { deleteModal.style.display = 'none'; }
   document.querySelector('#deleteModal .cancel-delete').onclick = function() {
   deleteModal.style.display = 'none';
-  deleteBookingId = null;
+  deleteMenuId = null;
   }
   document.querySelector('#deleteModal .confirm-delete').onclick = function() {
-  if (!deleteBookingId) return;
+  if (!deleteMenuId) return;
   const formData = new FormData();
-  formData.append('deleteRoom', 1);
-  formData.append('RoomID', deleteBookingId);
-  fetch('room.php', {
+  formData.append('deleteMenu', 1);
+  formData.append('MenuID', deleteMenuId);
+  fetch('menu_service.php', {
     method: 'POST',
     body: formData
   })
@@ -722,7 +694,7 @@ if (count($where) > 0) {
   }
   });
   clearFilterBtn.onclick = function() {
-  window.location = 'room.php';
+  window.location = 'menu_service.php';
   }
   </script>
 </body>
