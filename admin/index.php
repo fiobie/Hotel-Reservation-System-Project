@@ -126,9 +126,10 @@ function getRecentBookings($limit = 5) {
                 b.CheckOutDate as check_out_date,
                 b.RoomNumber as room_id,
                 b.BookingStatus as status,
-                r.RoomNumber as room_number
+                r.RoomNumber as room_number,
+                r.RoomType as room_type
               FROM booking b
-              LEFT JOIN account s ON b.StudentID = s.ID
+              LEFT JOIN account s ON b.StudentID = s.StudentID
               JOIN room r ON b.RoomNumber = r.RoomNumber
               ORDER BY b.BookingDate DESC
               LIMIT ?";
