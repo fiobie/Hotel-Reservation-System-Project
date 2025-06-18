@@ -7,47 +7,72 @@ $params = [];
 
 // If filter form is submitted (GET)
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && (
-  isset($_GET['RoomID']) || isset($_GET['RoomNumber']) || isset($_GET['RoomType']) ||
-  isset($_GET['RoomPerHour']) || isset($_GET['RoomStatus']) || isset($_GET['Capacity'])
-)) {
-  if (!empty($_GET['RoomID'])) {
-    $where[] = "RoomID = ?";
-    $params[] = $_GET['RoomID'];
+  isset($_GET['StudentID']) || isset($_GET['FirstName']) || isset($_GET['LastName']) ||
+  isset($_GET['Gender']) || isset($_GET['PhoneNumber']) || isset($_GET['Address'])  ||
+  isset($_GET['Email']) || isset($_GET['Nationality']) || isset($_GET['Birthdate'])
+)) 
+{
+  if (!empty($_GET['StudentID'])) {
+    $where[] = "StudentID = ?";
+    $params[] = $_GET['StudentID'];
   }
-  if (!empty($_GET['RoomNumber'])) {
-    $where[] = "RoomNumber = ?";
-    $params[] = $_GET['RoomNumber'];
+  if (!empty($_GET['FirstName'])) {
+    $where[] = "FirstName = ?";
+    $params[] = $_GET['FirstName'];
   }
-  if (!empty($_GET['RoomPerHour'])) {
-    $where[] = "RoomPerHour = ?";
-    $params[] = $_GET['RoomPerHour'];
+  if (!empty($_GET['LastName'])) {
+    $where[] = "LastName = ?";
+    $params[] = $_GET['LastName'];
   }
-  if (!empty($_GET['RoomStatus'])) {
-    $where[] = "RoomStatus = ?";
-    $params[] = $_GET['RoomStatus'];
+  if (!empty($_GET['Gender'])) {
+    $where[] = "Gender = ?";
+    $params[] = $_GET['Gender'];
   }
-  if (!empty($_GET['Capacity'])) {
-    $where[] = "Capacity = ?";
-    $params[] = $_GET['Capacity'];
+  if (!empty($_GET['PhoneNumber'])) {
+    $where[] = "PhoneNumber = ?";
+    $params[] = $_GET['PhoneNumber'];
+  }
+  if (!empty($_GET['Address'])) {
+    $where[] = "Address = ?";
+    $params[] = $_GET['Address'];
+  }
+  if (!empty($_GET['Email'])) {
+    $where[] = "Email = ?";
+    $params[] = $_GET['Email'];
+  }
+  if (!empty($_GET['Nationality'])) {
+    $where[] = "Nationality = ?";
+    $params[] = $_GET['Nationality'];
+  }
+  if (!empty($_GET['Birthdate'])) {
+    $where[] = "Birthdate = ?";
+    $params[] = $_GET['Birthdate'];
   }
 }
 
 // --- AJAX UPDATE ---
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['RoomID']) && !isset($_POST['RoomNumber']) && !isset($_POST['RoomType'])) {
-  $roomid = intval($_POST['RoomID']);
-  $roomnumber = $conn->real_escape_string($_POST['RoomNumber']);
-  $roomtype = $conn->real_escape_string($_POST['RoomType']);
-  $roomperhour = $conn->real_escape_string($_POST['RoomPerHour']);
-  $roomstatus = $conn->real_escape_string($_POST['RoomStatus']);
-  $capacity = $conn->real_escape_string($_POST['Capacity']);
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['StudentID']) && !isset($_POST['FirstName']) && !isset($_POST['LastName'])) {
+  $studentid = intval($_POST['StudentID']);
+  $firstname = $conn->real_escape_string($_POST['FirstName']);
+  $lastname = $conn->real_escape_string($_POST['LastName']);
+  $gender = $conn->real_escape_string($_POST['Gender']);
+  $phonenumber = $conn->real_escape_string($_POST['PhoneNumber']);
+  $address = $conn->real_escape_string($_POST['Address']);
+  $email = $conn->real_escape_string($_POST['Email']);
+  $nationality = $conn->real_escape_string($_POST['Nationality']);
+  $birthdate = $conn->real_escape_string($_POST['Birthdate']);
 
-  $sql = "UPDATE room SET 
-    RoomNumber='$roomnumber',
-    RoomType='$roomtype',
-    RoomPerHour='$roomperhour',
-    RoomStatus='$roomstatus',
-    Capacity='$capacity'
-    WHERE RoomID=$roomid";
+  $sql = "UPDATE student SET 
+    FirstName='$firstname',
+    LastName='$lastname',
+    Gender='$gender',
+    PhoneNumber='$phonenumber',
+    Address='$address',
+    Email='$email',
+    Nationality='$nationality',
+    Birthdate='$birthdate'
+    WHERE StudentID=$studentid";
+
   $success = $conn->query($sql);
 
   header('Content-Type: application/json');
@@ -56,37 +81,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['RoomID']) && !isset($
 }
 
 // --- AJAX DELETE ---
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['deleteRoom']) && isset($_POST['RoomID'])) {
-  $roomid = intval($_POST['RoomID']);
-  $sql = "DELETE FROM room WHERE RoomID=$roomid";
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['deleteStudent']) && isset($_POST['StudentID'])) {
+  $studentid = intval($_POST['StudentID']);
+  $sql = "DELETE FROM student WHERE StudentID=$studentid";
   $success = $conn->query($sql);
   header('Content-Type: application/json');
   echo json_encode(['success' => $success]);
   exit;
 }
 
-// --- CREATE ROOM (AJAX/POST) ---
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['createRoom'])) {
-  $roomnumber = $conn->real_escape_string($_POST['RoomNumber']);
-  $roomtype = $conn->real_escape_string($_POST['RoomType']);
-  $roomperhour = $conn->real_escape_string($_POST['RoomPerHour']);
-  $roomstatus = $conn->real_escape_string($_POST['RoomStatus']);
-  $capacity = $conn->real_escape_string($_POST['Capacity']);
-  $sql = "INSERT INTO room (RoomNumber, RoomType, RoomPerHour, RoomStatus, Capacity) VALUES ('$roomnumber', '$roomtype', '$roomperhour', '$roomstatus', '$capacity')";
+// --- CREATE STUDENT (AJAX/POST) ---
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['addStudent'])) {
+  $firstname = $conn->real_escape_string($_POST['FirstName']);
+  $lastname = $conn->real_escape_string($_POST['LastName']);
+  $gender = $conn->real_escape_string($_POST['Gender']);
+  $phonenumber = $conn->real_escape_string($_POST['PhoneNumber']);
+  $address = $conn->real_escape_string($_POST['Address']);
+  $email = $conn->real_escape_string($_POST['Email']);
+  $nationality = $conn->real_escape_string($_POST['Nationality']);
+  $birthdate = $conn->real_escape_string($_POST['Birthdate']);
+  $sql = "INSERT INTO student (FirstName, LastName, Gender, PhoneNumber, Address, Email, Nationality, Birthdate) VALUES ('$firstname', '$lastname', '$gender', '$phonenumber', '$address', '$email', '$nationality', '$birthdate')";
   $success = $conn->query($sql);
   if (isset($_SERVER['HTTP_X_REQUESTED_WITH'])) {
     header('Content-Type: application/json');
     echo json_encode(['success' => $success]);
     exit;
   } else {
-    header('Location: room.php');
+    header('Location: student.php');
     exit;
   }
 }
 
-// --- FETCH ROOMS (with filter) ---
+// --- FETCH STUDENTS (with filter) ---
 if (count($where) > 0) {
-  $sql = "SELECT * FROM room WHERE " . implode(' AND ', $where) . " ORDER BY RoomID DESC";
+  $sql = "SELECT * FROM student WHERE " . implode(' AND ', $where) . " ORDER BY StudentID DESC";
   $stmt = $conn->prepare($sql);
   if ($params) {
     $types = str_repeat('s', count($params));
@@ -95,7 +123,7 @@ if (count($where) > 0) {
   $stmt->execute();
   $resResult = $stmt->get_result();
 } else {
-  $resQuery = "SELECT * FROM room ORDER BY RoomID DESC";
+  $resQuery = "SELECT * FROM student ORDER BY StudentID DESC";
   $resResult = $conn->query($resQuery);
 }
 ?>
@@ -103,7 +131,7 @@ if (count($where) > 0) {
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Room</title>
+  <title>Student</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   <style>
         :root {
@@ -375,6 +403,7 @@ if (count($where) > 0) {
 </head>
 <body>
   <div class="sidebar">
+    <div class="sidebar">
         <h4 class="sidebar-title">Villa Valore Hotel</h4>
         
         <div class="nav-section">
@@ -408,10 +437,11 @@ if (count($where) > 0) {
             <a class="nav-link" href="logout.php"><i class="fas fa-sign-out-alt"></i>Logout</a>
         </div>
     </div>
+  </div>
   <div class="main-content">
   <div class="reservation-section">
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
-    <h1 style="margin-bottom: 0; border-bottom: 4px solid rgb(255, 255, 255); display: inline-block; padding-bottom: 0.2rem;">Room</h1>
+    <h1 style="margin-bottom: 0; border-bottom: 4px solid rgb(255, 255, 255); display: inline-block; padding-bottom: 0.2rem;">Guests</h1>
     <div class="search-filter-bar">
       <div class="search-wrapper">
       <i class="fas fa-search search-icon"></i>
@@ -421,19 +451,22 @@ if (count($where) > 0) {
       <button class="filter-btn" id="filterBtn">Filter</button>
       <div class="filter-dropdown" id="filterDropdown">
         <form id="filterForm" method="GET">
-        <label>Room ID <input type="text" name="RoomID" value="<?php echo isset($_GET['RoomID']) ? htmlspecialchars($_GET['RoomID']) : ''; ?>"></label>
-        <label>Room Number <input type="text" name="RoomNumber" value="<?php echo isset($_GET['RoomNumber']) ? htmlspecialchars($_GET['RoomNumber']) : ''; ?>"></label>
-        <label>Room Type <input type="text" name="RoomType" value="<?php echo isset($_GET['RoomType']) ? htmlspecialchars($_GET['RoomType']) : ''; ?>"></label>
-        <label>Room Per Hour <input type="text" name="RoomPerHour" value="<?php echo isset($_GET['RoomPerHour']) ? htmlspecialchars($_GET['RoomPerHour']) : ''; ?>"></label>
-        <label>Room Status
-          <select name="RoomStatus">
+        <label>Student ID <input type="text" name="StudentID" value="<?php echo isset($_GET['StudentID']) ? htmlspecialchars($_GET['StudentID']) : ''; ?>"></label>
+        <label>First Name <input type="text" name="FirstName" value="<?php echo isset($_GET['FirstName']) ? htmlspecialchars($_GET['FirstName']) : ''; ?>"></label>
+        <label>Last Name <input type="text" name="LastName" value="<?php echo isset($_GET['LastName']) ? htmlspecialchars($_GET['LastName']) : ''; ?>"></label>
+        <label>Gender
+          <select name="Gender">
           <option value="">Any</option>
-          <option value="Available" <?php if(isset($_GET['RoomStatus']) && $_GET['RoomStatus']=='Available') echo 'selected'; ?>>Available</option>
-          <option value="Occupied" <?php if(isset($_GET['RoomStatus']) && $_GET['RoomStatus']=='Occupied') echo 'selected'; ?>>Occupied</option>
-          <option value="Maintenance" <?php if(isset($_GET['RoomStatus']) && $_GET['RoomStatus']=='Maintenance') echo 'selected'; ?>>Maintenance</option>
+          <option value="Male" <?php if(isset($_GET['Gender']) && $_GET['Gender']=='Male') echo 'selected'; ?>>Male</option>
+          <option value="Female" <?php if(isset($_GET['Gender']) && $_GET['Gender']=='Female') echo 'selected'; ?>>Female</option>
+          <option value="Prefer not to say" <?php if(isset($_GET['Gender']) && $_GET['Gender']=='Prefer not to say') echo 'selected'; ?>>Prefer not to say</option>
           </select>
         </label>
-        <label>Capacity <input type="number" name="Capacity" value="<?php echo isset($_GET['Capacity']) ? htmlspecialchars($_GET['Capacity']) : ''; ?>"></label>
+        <label>Phone Number <input type="number" name="PhoneNumber" value="<?php echo isset($_GET['PhoneNumber']) ? htmlspecialchars($_GET['PhoneNumber']) : ''; ?>"></label>
+        <label>Address <input type="text" name="Address" value="<?php echo isset($_GET['Address']) ? htmlspecialchars($_GET['Address']) : ''; ?>"></label>
+        <label>Email <input type="email" name="Email" value="<?php echo isset($_GET['Email']) ? htmlspecialchars($_GET['Email']) : ''; ?>"></label>
+        <label>Nationality <input type="text" name="Nationality" value="<?php echo isset($_GET['Nationality']) ? htmlspecialchars($_GET['Nationality']) : ''; ?>"></label>
+        <label>Birthdate <input type="date" name="Birthdate" value="<?php echo isset($_GET['Birthdate']) ? htmlspecialchars($_GET['Birthdate']) : ''; ?>"></label>
         <div class="filter-actions">
           <button type="submit" id="applyFilterBtn" class="filter-btn">Apply</button>
           <button type="button" id="clearFilterBtn" class="filter-btn">Clear</button>
@@ -447,54 +480,56 @@ if (count($where) > 0) {
     <table class="reservation-table">
     <thead>
       <tr>
-      <th>Room ID</th>
-      <th>Room Number</th>
-      <th>Room Type</th>
-      <th>Room Per Hour</th>
-      <th>Room Status</th>
-      <th>Capacity</th>
+      <th>Student ID</th>
+      <th>First Name</th>
+      <th>Last Name</th>
+      <th>Phone Number</th>
+      <th>Email</th>
       <th>Actions</th>
       </tr>
     </thead>
     <tbody>
     <?php if ($resResult && $resResult->num_rows > 0): ?>
       <?php while($row = $resResult->fetch_assoc()): ?>
-      <tr data-id="<?php echo $row['RoomID']; ?>">
-      <td><b><?php echo $row['RoomID']; ?></b></td>
-      <td><b><?php echo htmlspecialchars($row['RoomNumber']); ?></b></td>
-      <td><b><?php echo htmlspecialchars($row['RoomType']); ?></b></td>
-      <td><b><?php echo htmlspecialchars($row['RoomPerHour']); ?></b></td>
-      <td><?php echo $row['RoomStatus']; ?></td>
-      <td><b><?php echo $row['Capacity']; ?></b></td>
+      <tr data-id="<?php echo $row['StudentID']; ?>">
+      <td><b><?php echo $row['StudentID']; ?></b></td>
+      <td><b><?php echo htmlspecialchars($row['FirstName']); ?></b></td>
+      <td><b><?php echo htmlspecialchars($row['LastName']); ?></b></td>
+      <td><?php echo $row['PhoneNumber']; ?></td>
+      <td><?php echo $row['Email']; ?></td>
       <td>
         <div class="action-group">
         <button type="button" class="action-btn edit-btn"
-          data-id="<?php echo $row['RoomID']; ?>"
-          data-roomnumber="<?php echo htmlspecialchars($row['RoomNumber']); ?>"
-          data-roomtype="<?php echo htmlspecialchars($row['RoomType']); ?>"
-          data-roomperhour="<?php echo htmlspecialchars($row['RoomPerHour']); ?>"
-          data-roomstatus="<?php echo htmlspecialchars($row['RoomStatus']); ?>"
-          data-capacity="<?php echo htmlspecialchars($row['Capacity']); ?>"
-
-><i class="fas fa-edit"></i></button>
-<button type="button" class="action-btn view-btn"
-  data-id="<?php echo $row['RoomID']; ?>"
-  data-roomnumber="<?php echo htmlspecialchars($row['RoomNumber']); ?>"
-  data-roomtype="<?php echo htmlspecialchars($row['RoomType']); ?>"
-  data-roomperhour="<?php echo htmlspecialchars($row['RoomPerHour']); ?>"
-  data-roomstatus="<?php echo htmlspecialchars($row['RoomStatus']); ?>"
-  data-capacity="<?php echo htmlspecialchars($row['Capacity']); ?>"
-
-><i class="fas fa-eye"></i></button>
-<button type="button" class="action-btn delete-btn"
-  data-id="<?php echo $row['RoomID']; ?>"
-><i class="fas fa-trash"></i></button>
+          data-id="<?php echo $row['StudentID']; ?>"
+          data-firstname="<?php echo htmlspecialchars($row['FirstName']); ?>"
+          data-lastname="<?php echo htmlspecialchars($row['LastName']); ?>"
+          data-gender="<?php echo htmlspecialchars($row['Gender']); ?>"
+          data-phonenumber="<?php echo htmlspecialchars($row['PhoneNumber']); ?>"
+          data-address="<?php echo htmlspecialchars($row['Address']); ?>"
+          data-email="<?php echo htmlspecialchars($row['Email']); ?>"
+          data-nationality="<?php echo htmlspecialchars($row['Nationality']); ?>"
+          data-birthdate="<?php echo htmlspecialchars($row['Birthdate']); ?>"
+        ><i class="fas fa-edit"></i></button>
+        <button type="button" class="action-btn view-btn"
+          data-id="<?php echo $row['StudentID']; ?>"
+          data-firstname="<?php echo htmlspecialchars($row['FirstName']); ?>"
+          data-lastname="<?php echo htmlspecialchars($row['LastName']); ?>"
+          data-gender="<?php echo htmlspecialchars($row['Gender']); ?>"
+          data-phonenumber="<?php echo htmlspecialchars($row['PhoneNumber']); ?>"
+          data-address="<?php echo htmlspecialchars($row['Address']); ?>"
+          data-email="<?php echo htmlspecialchars($row['Email']); ?>"
+          data-nationality="<?php echo htmlspecialchars($row['Nationality']); ?>"
+          data-birthdate="<?php echo htmlspecialchars($row['Birthdate']); ?>"
+        ><i class="fas fa-eye"></i></button>
+        <button type="button" class="action-btn delete-btn"
+          data-id="<?php echo $row['StudentID']; ?>"
+        ><i class="fas fa-trash"></i></button>
         </div>
       </td>
       </tr>
       <?php endwhile; ?>
     <?php else: ?>
-      <tr><td colspan="11">No rooms found.</td></tr>
+      <tr><td colspan="6">No rooms found.</td></tr>
     <?php endif; ?>
     </tbody>
     </table>
@@ -504,27 +539,23 @@ if (count($where) > 0) {
   <div id="editModal" class="modal">
   <div class="modal-content">
     <span class="close" id="closeEditModal">&times;</span>
-    <h2>Edit Room</h2>
+    <h2>Edit Student</h2>
     <form id="editForm">
-    <input type="hidden" name="RoomID" id="editRoomID">
-    <p><label>Room Number:</label><br><input type="number" name="RoomNumber" id="editRoomNumber" required></p>
-    <p><label>Room Type:</label><br>
-      <select name="RoomType" id="editRoomType" required>
-      <option value="Standard">Standard</option>
-      <option value="Deluxe">Deluxe</option>
-      <option value="Suite">Suite</option>
+    <input type="hidden" name="StudentID" id="editStudentID">
+    <p><label>First Name:</label><br><input type="text" name="FirstName" id="editFirstName" required></p>
+    <p><label>Last Name:</label><br><input type="text" name="LastName" id="editLastName" required></p>
+    <p><label>Gender:</label><br>
+      <select name="Gender" id="editGender" required>
+      <option value="Male">Male</option>
+      <option value="Female">Female</option>
+      <option value="Prefer not to say">Prefer not to say</option>
       </select>
     </p>
-    <p><label>Room Per Hour:</label><br><input type="number" name="RoomPerHour" id="editRoomPerHour" required></p>
-    <p><label>Room Status:</label><br>
-      <select name="RoomStatus" id="editRoomStatus" required>
-      <option value="Available">Available</option>
-      <option value="Occupied">Occupied</option>
-      <option value="Maintenance">Maintenance</option>
-      <option value="Cleaning">Cleaning</option>
-      </select>
-    </p>
-    <p><label>Capacity:</label><br><input type="number" step="0.01" name="Capacity" id="editCapacity" required></p>
+    <p><label>Phone Number:</label><br><input type="text" name="PhoneNumber" id="editPhoneNumber" required></p>
+    <p><label>Address:</label><br><input type="text" name="Address" id="editAddress" required></p>
+    <p><label>Email:</label><br><input type="email" name="Email" id="editEmail" required></p>
+    <p><label>Nationality:</label><br><input type="text" name="Nationality" id="editNationality" required></p>
+    <p><label>Birthdate:</label><br><input type="date" name="Birthdate" id="editBirthdate" required></p>
     <button type="submit" style="margin-top:1rem;">Save</button>
     </form>
   </div>
@@ -533,7 +564,7 @@ if (count($where) > 0) {
   <div id="viewModal" class="modal">
   <div class="modal-content">
     <span class="close" id="closeViewModal">&times;</span>
-    <h2>View Room</h2>
+    <h2>View Student Info</h2>
     <div id="viewDetails"></div>
   </div>
   </div>
@@ -541,27 +572,23 @@ if (count($where) > 0) {
   <div id="createModal" class="modal">
   <div class="modal-content">
     <span class="close" id="closeCreateModal">&times;</span>
-    <h2>Create Room</h2>
+    <h2>Add Student</h2>
     <form id="createForm">
-    <input type="hidden" name="createRoom" value="1">
-    <p><label>Room Number:</label><br><input type="number" name="RoomNumber" required></p>
-    <p><label>Room Type:</label><br>
-      <select name="RoomType" required>
-      <option value="Standard">Standard</option>
-      <option value="Deluxe">Deluxe</option>
-      <option value="Suite">Suite</option>
+    <input type="hidden" name="createStudent" value="1">
+    <p><label>First Name:</label><br><input type="text" name="FirstName" required></p>
+    <p><label>Last Name:</label><br><input type="text" name="LastName" required></p>
+    <p><label>Gender:</label><br>
+      <select name="Gender" required>
+      <option value="Male">Male</option>
+      <option value="Female">Female</option>
+      <option value="Prefer not to say">Prefer not to say</option>
       </select>
     </p>
-    <p><label>Room Per Hour:</label><br><input type="number" name="RoomPerHour" required></p>
-    <p><label>Room Status:</label><br>
-      <select name="RoomStatus" required>
-      <option value="Available">Available</option>
-      <option value="Occupied">Occupied</option>
-      <option value="Maintenance">Maintenance</option>
-      <option value="Cleaning">Cleaning</option>
-      </select>
-    </p>
-    <p><label>Capacity:</label><br><input type="number" step="0.01" name="Capacity" required></p>
+    <p><label>Phone Number:</label><br><input type="text" name="PhoneNumber" required></p>
+    <p><label>Address:</label><br><input type="text" name="Address" required></p>
+    <p><label>Email:</label><br><input type="email" name="Email" required></p>
+    <p><label>Nationality:</label><br><input type="text" name="Nationality" required></p>
+    <p><label>Birthdate:</label><br><input type="date" name="Birthdate" required></p>
     <button type="submit">Create</button>
     </form>
   </div>
@@ -570,8 +597,8 @@ if (count($where) > 0) {
   <div id="deleteModal" class="modal">
   <div class="modal-content">
     <span class="close" id="closeDeleteModal">&times;</span>
-    <h2>Delete Room</h2>
-    <p>Are you sure you want to delete this room?</p>
+    <h2>Delete Student</h2>
+    <p>Are you sure you want to delete this student?</p>
     <div style="margin-top:1.5rem;">
     <button class="confirm-delete">Delete</button>
     <button class="cancel-delete">Cancel</button>
@@ -585,12 +612,15 @@ if (count($where) > 0) {
   document.querySelectorAll('.edit-btn').forEach(btn => {
   btn.onclick = function() {
     editModal.style.display = 'block';
-    document.getElementById('editRoomID').value = this.dataset.id;
-    document.getElementById('editRoomNumber').value = this.dataset.roomnumber;
-    document.getElementById('editRoomType').value = this.dataset.roomtype;
-    document.getElementById('editRoomPerHour').value = this.dataset.roomperhour;
-    document.getElementById('editRoomStatus').value = this.dataset.roomstatus;
-    document.getElementById('editCapacity').value = this.dataset.capacity;
+    document.getElementById('editStudentID').value = this.dataset.id;
+    document.getElementById('editFirstName').value = this.dataset.firstname;
+    document.getElementById('editLastName').value = this.dataset.lastname;
+    document.getElementById('editGender').value = this.dataset.gender;
+    document.getElementById('editPhoneNumber').value = this.dataset.phonenumber;
+    document.getElementById('editAddress').value = this.dataset.address;
+    document.getElementById('editEmail').value = this.dataset.email;
+    document.getElementById('editNationality').value = this.dataset.nationality;
+    document.getElementById('editBirthdate').value = this.dataset.birthdate;
   }
   });
   closeEditModal.onclick = function() { editModal.style.display = 'none'; }
@@ -599,7 +629,7 @@ if (count($where) > 0) {
   editForm.onsubmit = function(e) {
   e.preventDefault();
   const formData = new FormData(editForm);
-  fetch('room.php', {
+  fetch('student.php', {
     method: 'POST',
     body: formData
   })
@@ -619,12 +649,15 @@ if (count($where) > 0) {
   btn.onclick = function() {
     viewModal.style.display = 'block';
     document.getElementById('viewDetails').innerHTML = `
-    <p><label>Room ID:</label> <span>${this.dataset.id}</span></p>
-    <p><label>Room Number:</label> <span>${this.dataset.roomnumber}</span></p>
-    <p><label>Room Type:</label> <span>${this.dataset.roomtype}</span></p>
-    <p><label>Room Per Hour:</label> <span>${this.dataset.roomperhour}</span></p>
-    <p><label>Room Status:</label> <span>${this.dataset.roomstatus}</span></p>
-    <p><label>Capacity:</label> <span>${this.dataset.capacity}</span></p>
+    <p><label>Student ID:</label> <span>${this.dataset.id}</span></p>
+    <p><label>First Name:</label> <span>${this.dataset.firstname}</span></p>
+    <p><label>Last Name:</label> <span>${this.dataset.lastname}</span></p>
+    <p><label>Gender:</label> <span>${this.dataset.gender}</span></p>
+    <p><label>Phone Number:</label> <span>${this.dataset.phonenumber}</span></p>
+    <p><label>Address:</label> <span>${this.dataset.address}</span></p>
+    <p><label>Email:</label> <span>${this.dataset.email}</span></p>
+    <p><label>Nationality:</label> <span>${this.dataset.nationality}</span></p>
+    <p><label>Birthdate:</label> <span>${this.dataset.birthdate}</span></p>
     `;
   }
   });
@@ -693,9 +726,9 @@ if (count($where) > 0) {
   document.querySelector('#deleteModal .confirm-delete').onclick = function() {
   if (!deleteBookingId) return;
   const formData = new FormData();
-  formData.append('deleteRoom', 1);
-  formData.append('RoomID', deleteBookingId);
-  fetch('room.php', {
+  formData.append('deleteStudent', 1);
+  formData.append('StudentID', deleteBookingId);
+  fetch('student.php', {
     method: 'POST',
     body: formData
   })
@@ -722,7 +755,7 @@ if (count($where) > 0) {
   }
   });
   clearFilterBtn.onclick = function() {
-  window.location = 'room.php';
+  window.location = 'student.php';
   }
   </script>
 </body>
