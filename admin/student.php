@@ -441,7 +441,7 @@ if (count($where) > 0) {
   <div class="main-content">
   <div class="reservation-section">
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
-    <h1 style="margin-bottom: 0; border-bottom: 4px solid rgb(255, 255, 255); display: inline-block; padding-bottom: 0.2rem;">Guests</h1>
+    <h1 style="margin-bottom: 0; border-bottom: 4px solid rgb(255, 255, 255); display: inline-block; padding-bottom: 0.2rem;">Guest</h1>
     <div class="search-filter-bar">
       <div class="search-wrapper">
       <i class="fas fa-search search-icon"></i>
