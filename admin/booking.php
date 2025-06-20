@@ -7,7 +7,7 @@ $params = [];
 
 // If filter form is submitted (GET)
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && (
-  isset($_GET['BookingID']) || isset($_GET['PBookingDate']) || isset($_GET['PCheckInDate']) ||
+  isset($_GET['BookingID']) || isset($_GET['StudentID']) || isset($_GET['PBookingDate']) || isset($_GET['PCheckInDate']) ||
   isset($_GET['PCheckOutDate']) || isset($_GET['RoomNumber']) || isset($_GET['RoomType']) ||
   isset($_GET['Status']) || isset($_GET['RoomStatus'])
 )) {
@@ -15,6 +15,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (
     $where[] = "BookingID = ?";
     $params[] = $_GET['BookingID'];
   }
+
+  if (!empty($_GET['StudentID'])) {
+    $where[] = "StudentID = ?";
+    $params[] = $_GET['StudentID'];
+  }
+
   if (!empty($_GET['PBookingDate'])) {
     $where[] = "BookingDate = ?";
     $params[] = $_GET['PBookingDate'];
@@ -48,6 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (
 // --- AJAX UPDATE ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['BookingID']) && !isset($_POST['deleteBooking']) && !isset($_POST['createBooking'])) {
   $bookingid = intval($_POST['BookingID']);
+  $studentid = intval($_POST['StudentID']);
   $bookingdate = $conn->real_escape_string($_POST['BookingDate']);
   $checkin = $conn->real_escape_string($_POST['CheckInDate']);
   $checkout = $conn->real_escape_string($_POST['CheckOutDate']);
@@ -60,6 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['BookingID']) && !isse
 
   $sql = "UPDATE booking SET 
     BookingDate='$bookingdate',
+    StudentID=$studentid,
     CheckInDate='$checkin',
     CheckOutDate='$checkout',
     RoomNumber=$room,
@@ -97,7 +105,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['createBooking'])) {
   $roomstatus = $conn->real_escape_string($_POST['RoomStatus']);
   $notes = $conn->real_escape_string($_POST['Notes']);
   $price = $conn->real_escape_string($_POST['Price']);
-  $sql = "INSERT INTO booking (BookingDate, CheckInDate, CheckOutDate, RoomNumber, RoomType, BookingStatus, RoomStatus, Notes, Price) VALUES ('$bookingdate', '$checkin', '$checkout', $room, '$type', '$bookingstatus', '$roomstatus', '$notes', '$price')";
+  $studentid = intval($_POST['StudentID']);
+  $sql = "INSERT INTO booking (BookingDate, CheckInDate, CheckOutDate, RoomNumber, RoomType, BookingStatus, RoomStatus, Notes, Price, StudentID) VALUES ('$bookingdate', '$checkin', '$checkout', $room, '$type', '$bookingstatus', '$roomstatus', '$notes', '$price', $studentid)";
   $success = $conn->query($sql);
   if (isset($_SERVER['HTTP_X_REQUESTED_WITH'])) {
     header('Content-Type: application/json');
@@ -447,6 +456,7 @@ if (count($where) > 0) {
       <div class="filter-dropdown" id="filterDropdown">
         <form id="filterForm" method="GET">
         <label>Booking ID <input type="text" name="BookingID" value="<?php echo isset($_GET['BookingID']) ? htmlspecialchars($_GET['BookingID']) : ''; ?>"></label>
+        <label>Student ID <input type="text" name="StudentID" value="<?php echo isset($_GET['StudentID']) ? htmlspecialchars($_GET['StudentID']) : ''; ?>"></label>
         <label>Booking Date <input type="date" name="PBookingDate" value="<?php echo isset($_GET['PBookingDate']) ? htmlspecialchars($_GET['PBookingDate']) : ''; ?>"></label>
         <label>Check-in Date <input type="date" name="PCheckInDate" value="<?php echo isset($_GET['PCheckInDate']) ? htmlspecialchars($_GET['PCheckInDate']) : ''; ?>"></label>
         <label>Check-out Date <input type="date" name="PCheckOutDate" value="<?php echo isset($_GET['PCheckOutDate']) ? htmlspecialchars($_GET['PCheckOutDate']) : ''; ?>"></label>
@@ -489,6 +499,7 @@ if (count($where) > 0) {
     <thead>
       <tr>
       <th>Booking ID</th>
+      <th>Student ID</th>
       <th>Booking Date</th>
       <th>Check-in Date</th>
       <th>Check-out Date</th>
@@ -506,6 +517,7 @@ if (count($where) > 0) {
       <?php while($row = $resResult->fetch_assoc()): ?>
       <tr data-id="<?php echo $row['BookingID']; ?>">
       <td><b><?php echo $row['BookingID']; ?></b></td>
+      <td><b><?php echo $row['StudentID']; ?></b></td>
       <td><b><?php echo htmlspecialchars($row['BookingDate']); ?></b></td>
       <td><b><?php echo htmlspecialchars($row['CheckInDate']); ?></b></td>
       <td><b><?php echo htmlspecialchars($row['CheckOutDate']); ?></b></td>
@@ -520,6 +532,7 @@ if (count($where) > 0) {
         <button type="button" class="action-btn edit-btn"
   data-id="<?php echo $row['BookingID']; ?>"
   data-bookingdate="<?php echo htmlspecialchars($row['BookingDate']); ?>"
+  data-studentid="<?php echo $row['StudentID']; ?>"
   data-checkin="<?php echo $row['CheckInDate']; ?>"
   data-checkout="<?php echo $row['CheckOutDate']; ?>"
   data-room="<?php echo $row['RoomNumber']; ?>"
@@ -531,6 +544,7 @@ if (count($where) > 0) {
 ><i class="fas fa-edit"></i></button>
 <button type="button" class="action-btn view-btn"
   data-id="<?php echo $row['BookingID']; ?>"
+  data-studentid="<?php echo $row['StudentID']; ?>"
   data-bookingdate="<?php echo htmlspecialchars($row['BookingDate']); ?>"
   data-checkin="<?php echo $row['CheckInDate']; ?>"
   data-checkout="<?php echo $row['CheckOutDate']; ?>"
@@ -562,6 +576,7 @@ if (count($where) > 0) {
     <h2>Edit Booking</h2>
     <form id="editForm">
     <input type="hidden" name="BookingID" id="editBookingID">
+    <input type="hidden" name="StudentID" id="editStudentID">
     <p><label>Booking Date:</label><br><input type="date" name="BookingDate" id="editBookingDate" required></p>
     <p><label>Check-in Date:</label><br><input type="date" name="CheckInDate" id="editCheckIn" required></p>
     <p><label>Check-out Date:</label><br><input type="date" name="CheckOutDate" id="editCheckOut" required></p>
@@ -609,6 +624,7 @@ if (count($where) > 0) {
     <form id="createForm">
     <input type="hidden" name="createBooking" value="1">
     <p><label>Booking Date:</label><br><input type="date" name="BookingDate" required></p>
+    <p><label>Student ID:</label><br><input type="text" name="StudentID" required></p>
     <p><label>Check-in Date:</label><br><input type="date" name="CheckInDate" required></p>
     <p><label>Check-out Date:</label><br><input type="date" name="CheckOutDate" required></p>
     <p><label>Room Number:</label><br><input type="number" name="RoomNumber" required></p>
@@ -659,6 +675,7 @@ if (count($where) > 0) {
   btn.onclick = function() {
     editModal.style.display = 'block';
     document.getElementById('editBookingID').value = this.dataset.id;
+    document.getElementById('editStudentID').value = this.dataset.studentid;
     document.getElementById('editBookingDate').value = this.dataset.bookingdate;
     document.getElementById('editCheckIn').value = this.dataset.checkin;
     document.getElementById('editCheckOut').value = this.dataset.checkout;
@@ -696,7 +713,8 @@ if (count($where) > 0) {
   btn.onclick = function() {
     viewModal.style.display = 'block';
     document.getElementById('viewDetails').innerHTML = `
-    <p><label>Booking ID:</label> <span>${this.dataset.id}</span></p>
+    <p><label>Booking ID:</label> <span>${this.dataset.id}</span></p>\
+    <p><label>Student ID:</label> <span>${this.dataset.studentid}</span></p>
     <p><label>Booking Date:</label> <span>${this.dataset.bookingdate}</span></p>
     <p><label>Check-in Date:</label> <span>${this.dataset.checkin}</span></p>
     <p><label>Check-out Date:</label> <span>${this.dataset.checkout}</span></p>
