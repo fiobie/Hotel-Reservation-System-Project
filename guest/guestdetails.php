@@ -156,7 +156,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <button type="submit" class="btn">Submit</button>
-    <button type="button" class="btn" onclick="window.history.back();">Back</button>
+    <button type="button" class="btn" onclick="window.location.href='booking.php';">Back</button>
+
   </form>
 
   <?php echo $confirmation; ?>
