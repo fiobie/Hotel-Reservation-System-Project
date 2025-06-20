@@ -8,7 +8,7 @@
         $email = trim($_POST['email']);
         $password = $_POST['password'];
 
-        $stmt = $conn->prepare("SELECT * FROM account WHERE Email = ?");
+        $stmt = $conn->prepare("SELECT * FROM student WHERE Email = ?");
         $stmt->bind_param("s", $email);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -16,7 +16,7 @@
         if ($row = $result->fetch_assoc()) {
             if (password_verify($password, $row['Password'])) {
                 $_SESSION['email'] = $email;
-                header("Location: index.php");
+                header("Location: booknow.php");
                 exit;
             } else {
                 $error = "Invalid email or password.";

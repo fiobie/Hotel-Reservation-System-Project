@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
             $error = "Passwords do not match.";
         } else {
             // Check for duplicate student ID or email
-            $stmt = $conn->prepare("SELECT * FROM guest_accounts WHERE studentID = ? OR email = ?");
+            $stmt = $conn->prepare("SELECT * FROM student WHERE StudentID = ? OR Email = ?");
             $stmt->bind_param("ss", $student_id, $email);
             $stmt->execute();
             $result = $stmt->get_result();
@@ -28,19 +28,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
                 $error = "An account with this Student Number or Email already exists.";
             } else {
                 $hashed = password_hash($password, PASSWORD_DEFAULT);
-                $signup_time = date('Y-m-d H:i:s');
-                $stmt = $conn->prepare("INSERT INTO guest_accounts (studentID, firstName, lastName, email, password, confirmPassword, signup_time, otp, activation_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                $stmt->bind_param("sssssssss", $student_id, $first_name, $last_name, $email, $hashed, $confirm_password, $signup_time, $otp, $activation_code);
-                if ($stmt->execute()) {
-                    // Instead of redirecting to login, send verification email
-                    // Set variables for email sending
-                    $otp = $_POST['otp'] ?? $otp;
-                    $activation_code = $_POST['activation_code'] ?? $activation_code;
-                    // Set error to empty to trigger email sending block above
-                    $error = '';
-                } else {
-                    $error = "Registration failed. Please try again.";
-                }
+                $stmt = $conn->prepare("INSERT INTO student (StudentID, FirstName, LastName, Email, Password, ConfirmPassword) VALUES (?, ?, ?, ?, ?, ?)");
+                $stmt->bind_param("ssssss", $student_id, $first_name, $last_name, $email, $hashed, $confirm_password);
+                $stmt->execute();
             }
             $stmt->close();
         }
@@ -57,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     <!-- Font Awesome CDN for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
-        /* ... (same CSS as before, unchanged) ... */
+        
         :root {
             --primary-green: #008000;
             --primary-green-dark: #006400;
@@ -541,8 +531,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
 
         // Password match check (client-side)
         document.getElementById("registerForm").addEventListener("submit", function (e) {
-            const password = document.getElementById("password");
-            const confirm = document.getElementById("confirm_password");
+            const password = document.getElementById("Password");
+            const confirm = document.getElementById("ConfirmPassword");
             const existingError = document.getElementById("pass-error");
             if (existingError) existingError.remove();
             if (password.value !== confirm.value) {
