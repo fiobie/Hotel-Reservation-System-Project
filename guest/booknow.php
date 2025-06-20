@@ -16,8 +16,10 @@ if (isset($_GET['room']) && in_array(strtolower($_GET['room']), $valid_rooms)) {
   $room_type = strtolower($_SESSION['selected_room_type']);
 }
 
-// Generate Booking ID on page load if not submitting
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+// Always set Booking ID: use POST if available, else generate new
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['booking_id'])) {
+  $generatedBookingID = $_POST['booking_id'];
+} else {
   $date_code = date("Ymd");
   $result = $conn->query("SELECT COUNT(*) AS total FROM booking WHERE DATE(BookingDate) = CURDATE()");
   $row = $result->fetch_assoc();
@@ -31,12 +33,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $confirmation = "<p style='color: red;'>All fields are required.</p>";
   } else {
     $room_type = $conn->real_escape_string(strtolower($_POST['RoomType']));
-    $_SESSION['selected_room_type'] = $room_type; // Save to session on submit
+    $_SESSION['selected_room_type'] = $room_type;
     $check_in = $_POST['CheckInDate'];
     $check_out = $_POST['CheckOutDate'];
     $special_request = $conn->real_escape_string($_POST['Notes']);
-    $booking_id = $_POST['booking_id']; // Use the generated one from the form
-    $bookingDate = $_POST['BookingDate']; // Get from hidden field
+    $booking_id = $_POST['booking_id'];
+    $bookingDate = $_POST['BookingDate'];
 
     // Dummy price logic
     $price_map = [
@@ -46,28 +48,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ];
     $price = $price_map[$room_type];
 
-    // Insert INTO Database
-    $sql = "INSERT INTO booking (BookingID, BookingDate, RoomType, CheckInDate, CheckOutDate, Notes, Price)
-        VALUES ('$booking_id', '$bookingDate', '$room_type', '$check_in', '$check_out', '$special_request', '$price')";
+    // Save to database (booking table)
+    $stmt = $conn->prepare("INSERT INTO booking (BookingID, RoomType, CheckInDate, CheckOutDate, Notes, Price, BookingDate) VALUES (?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("sssssis", $booking_id, $room_type, $check_in, $check_out, $special_request, $price, $bookingDate);
 
-    if ($conn->query($sql)) {
-      $confirmation = "
-        <div class='confirmation'>
-          <h2>Booked Confirmed!</h2>
-          <p>Thank you for booking!</p>
-          <p>Your Booking ID is: <strong>$booking_id</strong></p>
-          <p>Room Type: <strong>" . ucfirst($room_type) . "</strong></p>
-          <p>Check-in: <strong>$check_in</strong> | Check-out: <strong>$check_out</strong></p>
-          <p>Booking Date: <strong>$bookingDate</strong></p>
-          <p>Total Price: <strong>₱$price</strong></p>
-          <p>Special Request: <em>$special_request</em></p>
-          <a href='guestdetails.php?BookingID=$booking_id' class='btn'>Next</a>
-        </div>";
+    if ($stmt->execute()) {
+      $_SESSION['BookingID'] = $booking_id;
+      header("Location: guestdetails.php?BookingID=" . urlencode($booking_id));
+      exit();
     } else {
-      $confirmation = "<p style='color: red;'>Error: " . $conn->error . "</p>";
+      $confirmation = "<p style='color: red;'>Booking failed: " . $stmt->error . "</p>";
     }
-
-    $conn->close();
   }
 }
 ?>
@@ -288,14 +279,14 @@ input, select {
     <label for="Price">Estimated Price:</label>
     <input type="text" id="Price" value="<?php
     if (isset($price)) {
-      echo '₱' . $price;
+      echo "₱{$price}";
     } elseif ($room_type) {
       $price_map = [
         'standard' => 2000,
         'deluxe' => 3000,
         'suite' => 5000
       ];
-      echo '₱' . $price_map[$room_type];
+      echo "₱{$price_map[$room_type]}";
     } else {
       echo '';
     }
