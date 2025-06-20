@@ -100,11 +100,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <!-- Guest Details Form -->
 <div class="container_booking">
   <h2>Guest Information</h2>
-  
-  <!-- Optional: Debug -->
-  <!-- <p>Debug Booking ID: <?php echo htmlspecialchars($generated_booking_id); ?></p> -->
 
   <form method="POST">
+    <input type="hidden" name="BookingID" value="<?php echo htmlspecialchars($generated_booking_id); ?>" />
+
     <div class="form-group">
       <label for="StudentID">Student ID:</label>
       <input type="text" id="StudentID" name="StudentID" required />
@@ -126,6 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <option value="">Select Gender</option>
         <option value="Male">Male</option>
         <option value="Female">Female</option>
+                <option value="Prefer not to say">Prefer not to say</option>
         <option value="Other">Other</option>
       </select>
     </div>
