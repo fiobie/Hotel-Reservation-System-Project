@@ -4,6 +4,14 @@ $confirmation = "";
 $generatedBookingID = "";
 $bookingDate = date("Y-m-d");
 
+// ✅ Check for pre-selected room type via GET
+$room_type_from_url = '';
+$valid_rooms = ['standard', 'deluxe', 'suite'];
+
+if (isset($_GET['room']) && in_array(strtolower($_GET['room']), $valid_rooms)) {
+    $room_type_from_url = strtolower($_GET['room']);
+}
+
 // Generate Booking ID on page load if not submitting
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     $date_code = date("Ymd");

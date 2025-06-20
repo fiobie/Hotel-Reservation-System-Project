@@ -91,18 +91,11 @@ session_start();
   </div>
 
   <!-- Room Cards -->
-  <?php
-    $rooms = [
-      ['type' => 'standard', 'name' => 'Standard Room', 'price' => '8000'],
-      ['type' => 'deluxe', 'name' => 'Deluxe Room', 'price' => '10000'],
-      ['type' => 'suite', 'name' => 'Suite Room', 'price' => '12000']
-    ];
-    foreach ($rooms as $room):
-  ?>
+  <!-- Standard Room -->
   <div class="room-card">
-    <img src="samplebedroom.png" alt="<?= $room['name'] ?>" class="room-img"/>
+    <img src="samplebedroom.png" alt="Standard Room" class="room-img"/>
     <div class="room-info">
-      <a href="#" class="room-title"><?= $room['name'] ?></a>
+      <a href="#" class="room-title">Standard Room</a>
       <p>1 King bed &nbsp; • &nbsp; Max Occupancy including children: 5 &nbsp; • &nbsp; 58 sq m</p>
       <p><strong>✔ Guaranteed with Credit Card</strong></p>
       <ul>
@@ -112,13 +105,54 @@ session_start();
       </ul>
     </div>
     <div class="room-price">
-      <p class="price">₱<?= number_format($room['price']) ?></p>
+      <p class="price">₱<?= number_format(8000) ?></p>
       <p class="per-night">Per Night<br><small>Including taxes and fees</small></p>
-      <button class="btn green" onclick="window.location.href='login.php?next=booknow.php&room=<?= $room['type'] ?>'">BOOK NOW</button>
-      <button class="btn green" onclick="window.location.href='login.php?next=reservenow.php&room=<?= $room['type'] ?>'">RESERVE NOW</button>
+      <button class="btn green" onclick="window.location.href='login.php?next=booknow.php&room=standard'">BOOK NOW</button>
+      <button class="btn green" onclick="window.location.href='login.php?next=booknow.php&room=standard'">RESERVE NOW</button>
     </div>
   </div>
-  <?php endforeach; ?>
+
+  <!-- Deluxe Room -->
+  <div class="room-card">
+    <img src="samplebedroom.png" alt="Deluxe Room" class="room-img"/>
+    <div class="room-info">
+      <a href="#" class="room-title">Deluxe Room</a>
+      <p>1 King bed &nbsp; • &nbsp; Max Occupancy including children: 5 &nbsp; • &nbsp; 58 sq m</p>
+      <p><strong>✔ Guaranteed with Credit Card</strong></p>
+      <ul>
+        <li>Non-Smoking</li>
+        <li>Complimentary Wi-Fi</li>
+        <li>Complimentary welcome amenity</li>
+      </ul>
+    </div>
+    <div class="room-price">
+      <p class="price">₱<?= number_format(10000) ?></p>
+      <p class="per-night">Per Night<br><small>Including taxes and fees</small></p>
+      <button class="btn green" onclick="window.location.href='login.php?next=booknow.php&room=deluxe'">BOOK NOW</button>
+      <button class="btn green" onclick="window.location.href='login.php?next=booknow.php&room=deluxe'">RESERVE NOW</button>
+    </div>
+  </div>
+
+  <!-- Suite Room -->
+  <div class="room-card">
+    <img src="samplebedroom.png" alt="Suite Room" class="room-img"/>
+    <div class="room-info">
+      <a href="#" class="room-title">Suite Room</a>
+      <p>1 King bed &nbsp; • &nbsp; Max Occupancy including children: 5 &nbsp; • &nbsp; 58 sq m</p>
+      <p><strong>✔ Guaranteed with Credit Card</strong></p>
+      <ul>
+        <li>Non-Smoking</li>
+        <li>Complimentary Wi-Fi</li>
+        <li>Complimentary welcome amenity</li>
+      </ul>
+    </div>
+    <div class="room-price">
+      <p class="price">₱<?= number_format(12000) ?></p>
+      <p class="per-night">Per Night<br><small>Including taxes and fees</small></p>
+      <button class="btn green" onclick="window.location.href='login.php?next=booknow.php&room=suite'">BOOK NOW</button>
+      <button class="btn green" onclick="window.location.href='login.php?next=booknow.php&room=suite'">RESERVE NOW</button>
+    </div>
+  </div>
 
   <div class="view-more">
     <a href="#">View More Rooms ▾</a>
