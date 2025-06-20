@@ -66,7 +66,160 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Villa Valore Hotel</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <link rel="stylesheet" href="styles/booknow.css">
+  <style>
+    /* Book Now Styles */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  background: #f8f8f8;
+}
+
+/* Header Bar */
+.top-bar {
+  background-color: #018000;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 20px;
+  font-size: 14px;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+}
+
+.cvsu-logo {
+  height: 40px;
+  margin-right: 10px;
+}
+
+.university-info strong {
+  display: block;
+}
+
+.top-icons {
+  display: flex;
+  gap: 15px;
+}
+
+.icon {
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.main-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 30px;
+  background-color: white;
+  border-bottom: 1px solid #ccc;
+  flex-wrap: wrap;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+}
+
+.villa-logo {
+  height: 60px;
+  margin-right: 15px;
+}
+
+.brand-text h1 {
+  color: #018000;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.brand-text small {
+  color: #666;
+  font-size: 12px;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+  position: relative;
+}
+
+    .nav-links a {
+      text-decoration: none;
+      color: #018000;
+      font-weight: bold;
+      font-size: 16px;
+      position: relative;
+    }
+    
+    .container_booking {
+      max-width: 550px;
+      margin: 30px auto;
+      background: white;
+      padding: 25px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      border-radius: 8px;
+    }
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+label {
+  font-weight: bold;
+  display: block;
+  margin-bottom: 5px;
+}
+
+input, select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.btn {
+  background-color: #0b3d2e;
+  color: white;
+  padding: 12px 25px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  display: inline-block;
+  margin-top: 10px;
+  text-decoration: none;
+}
+
+.btn:hover {
+  background-color: #096649;
+}
+
+.confirmation {
+  margin-top: 25px;
+  background-color: #e6f8ec;
+  padding: 20px;
+  border-left: 6px solid #34a56f;
+  border-radius: 6px;
+}
+
+.readonly-field {
+  background-color: #f2f2f2;
+  border: 1px solid #ccc;
+  color: #333;
+  cursor: not-allowed;
+}
+
+  </style>
 </head>
 <body>
 
@@ -157,7 +310,7 @@ function generateBookingID() {
   const now = new Date();
   const ymd = now.toISOString().slice(0,10).replace(/-/g, '');
   const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-  return `BK-${ymd}-${random}`;
+  return BK-${ymd}-${random};
 }
 
 function maybeGenerateID() {
