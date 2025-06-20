@@ -85,22 +85,22 @@ body {
   position: relative;
 }
 
-.nav-links a {
-  text-decoration: none;
-  color: #018000;
-  font-weight: bold;
-  font-size: 16px;
-  position: relative;
-}
-
-.container_booking {
-  max-width: 1400px; /* Increased from 1000px to 1400px */
-  margin: 30px auto;
-  background: white;
-  padding: 25px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  border-radius: 8px;
-}
+    .nav-links a {
+      text-decoration: none;
+      color: #018000;
+      font-weight: bold;
+      font-size: 16px;
+      position: relative;
+    }
+    
+    .container_booking {
+      max-width: 550px;
+      margin: 30px auto;
+      background: white;
+      padding: 25px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      border-radius: 8px;
+    }
 
 .form-group {
   margin-bottom: 15px;
