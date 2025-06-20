@@ -17,6 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ReservationID'])) {
     $room = intval($_POST['RoomNumber']);
     $type = $conn->real_escape_string($_POST['RoomType']);
     $status = $conn->real_escape_string($_POST['Status']);
+    $studentID = $conn->real_escape_string($_POST['StudentID']);
 
     $sql = "UPDATE reservations SET 
         GuestName='$guest',
@@ -24,7 +25,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ReservationID'])) {
         PCheckOutDate='$checkout',
         RoomNumber=$room,
         RoomType='$type',
-        Status='$status'
+        Status='$status',
+        StudentID='$studentID'
         WHERE ReservationID=$id";
     $success = $conn->query($sql);
 
@@ -40,7 +42,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['createReservation']))
     $room = intval($_POST['RoomNumber']);
     $type = $conn->real_escape_string($_POST['RoomType']);
     $status = $conn->real_escape_string($_POST['Status']);
-    $sql = "INSERT INTO reservations (GuestName, PCheckInDate, PCheckOutDate, RoomNumber, RoomType, Status) VALUES ('$guest', '$checkin', '$checkout', $room, '$type', '$status')";
+    $studentID = $conn->real_escape_string($_POST['StudentID']);
+    $sql = "INSERT INTO reservations (GuestName, PCheckInDate, PCheckOutDate, RoomNumber, RoomType, Status, StudentID) VALUES ('$guest', '$checkin', '$checkout', $room, '$type', '$status', '$studentID')";
     $conn->query($sql);
     header('Location: reservation.php');
     exit;
@@ -296,6 +299,7 @@ $resResult = $conn->query($resQuery);
                         <div class="filter-dropdown" id="filterDropdown">
                             <form id="filterForm">
                                 <label>Reservation ID <input type="text" name="ReservationID"></label>
+                                <label>Student ID <input type="text" name="StudentID"></label>
                                 <label>Guest Name <input type="text" name="GuestName"></label>
                                 <label>Check-in Date <input type="date" name="PCheckInDate"></label>
                                 <label>Check-out Date <input type="date" name="PCheckOutDate"></label>
@@ -330,6 +334,7 @@ $resResult = $conn->query($resQuery);
                 <thead>
                     <tr>
                         <th>Reservation ID</th>
+                        <th>Student ID</th>
                         <th>Guest Name</th>
                         <th>Check-in Date</th>
                         <th>Check-out Date</th>
@@ -344,6 +349,7 @@ $resResult = $conn->query($resQuery);
                     <?php while($row = $resResult->fetch_assoc()): ?>
                     <tr data-id="<?php echo $row['ReservationID']; ?>">
                         <td><b><?php echo $row['ReservationID']; ?></b></td>
+                        <td><b><?php echo $row['StudentID']; ?></b></td>
                         <td><b><?php echo htmlspecialchars($row['GuestName']); ?></b></td>
                         <td><b><?php echo date('m/d/Y', strtotime($row['PCheckInDate'])); ?></b></td>
                         <td><b><?php echo date('m/d/Y', strtotime($row['PCheckOutDate'])); ?></b></td>
@@ -353,6 +359,7 @@ $resResult = $conn->query($resQuery);
                         <td>
                             <span class="action-link edit-btn"
                                   data-id="<?php echo $row['ReservationID']; ?>"
+                                  data-student="<?php echo $row['StudentID']; ?>"
                                   data-guest="<?php echo htmlspecialchars($row['GuestName']); ?>"
                                   data-checkin="<?php echo $row['PCheckInDate']; ?>"
                                   data-checkout="<?php echo $row['PCheckOutDate']; ?>"
@@ -362,6 +369,7 @@ $resResult = $conn->query($resQuery);
                             >Edit</span>
                             <span class="action-link view-btn"
                                   data-id="<?php echo $row['ReservationID']; ?>"
+                                  data-student="<?php echo $row['StudentID']; ?>"
                                   data-guest="<?php echo htmlspecialchars($row['GuestName']); ?>"
                                   data-checkin="<?php echo $row['PCheckInDate']; ?>"
                                   data-checkout="<?php echo $row['PCheckOutDate']; ?>"
@@ -386,6 +394,7 @@ $resResult = $conn->query($resQuery);
             <h2>Edit Reservation</h2>
             <form id="editForm">
                 <input type="hidden" name="ReservationID" id="editReservationID">
+                <input type="hidden" name="StudentID" id="editStudentID">
                 <p><label>Guest Name:</label><br><input type="text" name="GuestName" id="editGuestName" required></p>
                 <p><label>Check-in Date:</label><br><input type="date" name="PCheckInDate" id="editCheckIn" required></p>
                 <p><label>Check-out Date:</label><br><input type="date" name="PCheckOutDate" id="editCheckOut" required></p>
@@ -479,6 +488,7 @@ $resResult = $conn->query($resQuery);
         btn.onclick = function() {
             editModal.style.display = 'block';
             document.getElementById('editReservationID').value = this.dataset.id;
+            document.getElementById('editStudentID').value = this.dataset.student;
             document.getElementById('editGuestName').value = this.dataset.guest;
             document.getElementById('editCheckIn').value = this.dataset.checkin.split('T')[0];
             document.getElementById('editCheckOut').value = this.dataset.checkout.split('T')[0];
@@ -502,12 +512,13 @@ $resResult = $conn->query($resQuery);
             if (data.success) {
                 // Update the table row in the UI
                 const row = document.querySelector('tr[data-id="' + formData.get('ReservationID') + '"]');
-                row.children[1].innerHTML = '<b>' + formData.get('GuestName') + '</b>';
-                row.children[2].innerHTML = '<b>' + new Date(formData.get('PCheckInDate')).toLocaleDateString() + '</b>';
-                row.children[3].innerHTML = '<b>' + new Date(formData.get('PCheckOutDate')).toLocaleDateString() + '</b>';
-                row.children[4].innerHTML = formData.get('RoomNumber');
-                row.children[5].innerHTML = '<b>' + formData.get('RoomType') + '</b>';
-                row.children[6].innerHTML = '<b>' + formData.get('Status') + '</b>';
+                row.children[1].innerHTML = '<b>' + formData.get('StudentID') + '</b>';
+                row.children[2].innerHTML = '<b>' + formData.get('GuestName') + '</b>';
+                row.children[3].innerHTML = '<b>' + new Date(formData.get('PCheckInDate')).toLocaleDateString() + '</b>';
+                row.children[4].innerHTML = '<b>' + new Date(formData.get('PCheckOutDate')).toLocaleDateString() + '</b>';
+                row.children[5].innerHTML = formData.get('RoomNumber');
+                row.children[6].innerHTML = '<b>' + formData.get('RoomType') + '</b>';
+                row.children[7].innerHTML = '<b>' + formData.get('Status') + '</b>';
                 editModal.style.display = 'none';
             } else {
                 alert('Update failed.');
@@ -522,6 +533,7 @@ $resResult = $conn->query($resQuery);
             viewModal.style.display = 'block';
             document.getElementById('viewDetails').innerHTML = `
                 <p><label>Reservation ID:</label> <span>${this.dataset.id}</span></p>
+                <p><label>Student ID:</label> <span>${this.dataset.student}</span></p>
                 <p><label>Guest Name:</label> <span>${this.dataset.guest}</span></p>
                 <p><label>Check-in Date:</label> <span>${this.dataset.checkin.split('T')[0]}</span></p>
                 <p><label>Check-out Date:</label> <span>${this.dataset.checkout.split('T')[0]}</span></p>
@@ -558,6 +570,7 @@ $resResult = $conn->query($resQuery);
         const cells = row.querySelectorAll('td');
         // ReservationID, GuestName, Check-in, Check-out, RoomNumber, RoomType, Status
         if (filters.ReservationID && !cells[0].innerText.toLowerCase().includes(filters.ReservationID.toLowerCase())) return false;
+        if (filters.StudentID && !cells[1].innerText.toLowerCase().includes(filters.StudentID.toLowerCase())) return false;
         if (filters.GuestName && !cells[1].innerText.toLowerCase().includes(filters.GuestName.toLowerCase())) return false;
         if (filters.PCheckInDate && !cells[2].innerText.includes(filters.PCheckInDate)) return false;
         if (filters.PCheckOutDate && !cells[3].innerText.includes(filters.PCheckOutDate)) return false;
