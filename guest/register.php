@@ -30,7 +30,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
                 $hashed = password_hash($password, PASSWORD_DEFAULT);
                 $stmt = $conn->prepare("INSERT INTO student (StudentID, FirstName, LastName, Email, Password, ConfirmPassword) VALUES (?, ?, ?, ?, ?, ?)");
                 $stmt->bind_param("ssssss", $student_id, $first_name, $last_name, $email, $hashed, $confirm_password);
-                $stmt->execute();
+                if ($stmt->execute()) {
+                    // Save user info to session after successful registration
+                    $_SESSION['student_id'] = $student_id;
+                    $_SESSION['first_name'] = $first_name;
+                    $_SESSION['last_name'] = $last_name;
+                    $_SESSION['email'] = $email;
+                    // Optionally, redirect to dashboard or another page
+                    header("Location: dashboard.php");
+                    exit;
+                } else {
+                    $error = "Registration failed. Please try again.";
+                }
             }
             $stmt->close();
         }
@@ -47,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     <!-- Font Awesome CDN for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
-        
+        /* ... (styles unchanged) ... */
         :root {
             --primary-green: #008000;
             --primary-green-dark: #006400;
@@ -438,8 +449,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
             <h1>Villa Valore Hotel</h1>
             <form method="POST" action="register.php" id="registerForm" autocomplete="off">
 
-                <input type="hidden" name="otp" value="<?= htmlspecialchars($otp) ?>">
-                <input type="hidden" name="activation_code" value="<?= htmlspecialchars($activation_code) ?>">
+                <input type="hidden" name="otp" value="<?= isset($otp) ? htmlspecialchars($otp) : '' ?>">
+                <input type="hidden" name="activation_code" value="<?= isset($activation_code) ? htmlspecialchars($activation_code) : '' ?>">
 
                 <div class="form-row single">
                     <div class="form-group">
@@ -531,8 +542,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
 
         // Password match check (client-side)
         document.getElementById("registerForm").addEventListener("submit", function (e) {
-            const password = document.getElementById("Password");
-            const confirm = document.getElementById("ConfirmPassword");
+            const password = document.getElementById("password");
+            const confirm = document.getElementById("confirm_password");
             const existingError = document.getElementById("pass-error");
             if (existingError) existingError.remove();
             if (password.value !== confirm.value) {

@@ -27,47 +27,62 @@ if (!empty($booking_id_param)) {
   }
 }
 
+// Auto-fill form with session values if available
+$form_values = [
+  'StudentID'   => $_SESSION['student_id']   ?? $_SESSION['StudentID']   ?? '',
+  'FirstName'   => $_SESSION['first_name']   ?? $_SESSION['FirstName']   ?? '',
+  'LastName'    => $_SESSION['last_name']    ?? $_SESSION['LastName']    ?? '',
+  'Gender'      => $_SESSION['Gender']       ?? '',
+  'PhoneNumber' => $_SESSION['PhoneNumber']  ?? '',
+  'Address'     => $_SESSION['Address']      ?? '',
+  'Email'       => $_SESSION['email']        ?? $_SESSION['Email']       ?? '',
+  'Nationality' => $_SESSION['Nationality']  ?? '',
+  'Birthdate'   => $_SESSION['Birthdate']    ?? '',
+];
+
 // Form Submission Handling
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  // Do NOT overwrite existing session values on POST
-  if (!isset($_SESSION['StudentID'])) $_SESSION['StudentID'] = $_POST['StudentID'] ?? '';
-  if (!isset($_SESSION['FirstName'])) $_SESSION['FirstName'] = $_POST['FirstName'] ?? '';
-  if (!isset($_SESSION['LastName'])) $_SESSION['LastName'] = $_POST['LastName'] ?? '';
-  if (!isset($_SESSION['Email'])) $_SESSION['Email'] = $_POST['Email'] ?? '';
+  // Update session values from POST
+  $_SESSION['StudentID']   = $_POST['StudentID']   ?? $form_values['StudentID'];
+  $_SESSION['FirstName']   = $_POST['FirstName']   ?? $form_values['FirstName'];
+  $_SESSION['LastName']    = $_POST['LastName']    ?? $form_values['LastName'];
+  $_SESSION['Gender']      = $_POST['Gender']      ?? $form_values['Gender'];
+  $_SESSION['PhoneNumber'] = $_POST['PhoneNumber'] ?? $form_values['PhoneNumber'];
+  $_SESSION['Address']     = $_POST['Address']     ?? $form_values['Address'];
+  $_SESSION['Email']       = $_POST['Email']       ?? $form_values['Email'];
+  $_SESSION['Nationality'] = $_POST['Nationality'] ?? $form_values['Nationality'];
+  $_SESSION['Birthdate']   = $_POST['Birthdate']   ?? $form_values['Birthdate'];
 
-  $_SESSION['Gender'] = $_POST['Gender'];
-  $_SESSION['PhoneNumber'] = $_POST['PhoneNumber'];
-  $_SESSION['Address'] = $_POST['Address'];
-  $_SESSION['Nationality'] = $_POST['Nationality'];
-  $_SESSION['Birthdate'] = $_POST['Birthdate'];
-
-  // Always use session values for these fields
-  $student_id = isset($_SESSION['StudentID']) ? $conn->real_escape_string($_SESSION['StudentID']) : '';
-  $first_name = isset($_SESSION['FirstName']) ? $conn->real_escape_string($_SESSION['FirstName']) : '';
-  $last_name = isset($_SESSION['LastName']) ? $conn->real_escape_string($_SESSION['LastName']) : '';
-  $email = isset($_SESSION['Email']) ? $conn->real_escape_string($_SESSION['Email']) : '';
-
-  $booking_id = $conn->real_escape_string($_POST['BookingID']);
-  $gender = $conn->real_escape_string($_POST['Gender']);
-  $phone_number = $conn->real_escape_string($_POST['PhoneNumber']);
-  $address = $conn->real_escape_string($_POST['Address']);
-  $nationality = $conn->real_escape_string($_POST['Nationality']);
-  $birthdate = $_POST['Birthdate'];
+  // Update $form_values for re-rendering the form
+  foreach ($form_values as $key => $val) {
+    $form_values[$key] = $_SESSION[$key] ?? '';
+  }
 
   if (
-    empty($student_id) ||
-    empty($booking_id) ||
-    empty($first_name) ||
-    empty($last_name) ||
-    empty($gender) ||
-    empty($phone_number) ||
-    empty($address) ||
-    empty($email) ||
-    empty($nationality) ||
-    empty($birthdate)
+    empty($_SESSION['StudentID']) ||
+    empty($_POST['BookingID']) ||
+    empty($_SESSION['FirstName']) ||
+    empty($_SESSION['LastName']) ||
+    empty($_SESSION['Gender']) ||
+    empty($_SESSION['PhoneNumber']) ||
+    empty($_SESSION['Address']) ||
+    empty($_SESSION['Email']) ||
+    empty($_SESSION['Nationality']) ||
+    empty($_SESSION['Birthdate'])
   ) {
     $confirmation = "<p style='color: red;'>All fields are required.</p>";
   } else {
+    $student_id   = $conn->real_escape_string($_SESSION['StudentID']);
+    $booking_id   = $conn->real_escape_string($_POST['BookingID']);
+    $first_name   = $conn->real_escape_string($_SESSION['FirstName']);
+    $last_name    = $conn->real_escape_string($_SESSION['LastName']);
+    $gender       = $conn->real_escape_string($_SESSION['Gender']);
+    $phone_number = $conn->real_escape_string($_SESSION['PhoneNumber']);
+    $address      = $conn->real_escape_string($_SESSION['Address']);
+    $email        = $conn->real_escape_string($_SESSION['Email']);
+    $nationality  = $conn->real_escape_string($_SESSION['Nationality']);
+    $birthdate    = $_SESSION['Birthdate'];
+
     $sql = "INSERT INTO student (StudentID, BookingID, FirstName, LastName, Gender, PhoneNumber, Address, Email, Nationality, Birthdate)
         VALUES ('$student_id', '$booking_id', '$first_name', '$last_name', '$gender', '$phone_number', '$address', '$email', '$nationality', '$birthdate')";
 
@@ -123,60 +138,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <div class="form-group">
     <label for="StudentID">Student ID:</label>
     <input type="text" id="StudentID" name="StudentID" required 
-      value="<?php echo isset($_SESSION['StudentID']) ? htmlspecialchars($_SESSION['StudentID']) : ''; ?>" />
+    value="<?php echo htmlspecialchars($form_values['StudentID']); ?>" />
   </div>
 
   <div class="form-group">
     <label for="FirstName">First Name:</label>
     <input type="text" id="FirstName" name="FirstName" required 
-      value="<?php echo isset($_SESSION['FirstName']) ? htmlspecialchars($_SESSION['FirstName']) : ''; ?>" />
+    value="<?php echo htmlspecialchars($form_values['FirstName']); ?>" />
   </div>
 
   <div class="form-group">
     <label for="LastName">Last Name:</label>
     <input type="text" id="LastName" name="LastName" required 
-      value="<?php echo isset($_SESSION['LastName']) ? htmlspecialchars($_SESSION['LastName']) : ''; ?>" />
+    value="<?php echo htmlspecialchars($form_values['LastName']); ?>" />
   </div>
 
   <div class="form-group">
     <label for="Gender">Gender:</label>
     <select id="Gender" name="Gender" required>
     <option value="">Select Gender</option>
-    <option value="Male" <?php if (isset($_SESSION['Gender']) && $_SESSION['Gender'] == 'Male') echo 'selected'; ?>>Male</option>
-    <option value="Female" <?php if (isset($_SESSION['Gender']) && $_SESSION['Gender'] == 'Female') echo 'selected'; ?>>Female</option>
-    <option value="Prefer not to say" <?php if (isset($_SESSION['Gender']) && $_SESSION['Gender'] == 'Prefer not to say') echo 'selected'; ?>>Prefer not to say</option>
-    <option value="Other" <?php if (isset($_SESSION['Gender']) && $_SESSION['Gender'] == 'Other') echo 'selected'; ?>>Other</option>
+    <option value="Male" <?php if ($form_values['Gender'] == 'Male') echo 'selected'; ?>>Male</option>
+    <option value="Female" <?php if ($form_values['Gender'] == 'Female') echo 'selected'; ?>>Female</option>
+    <option value="Prefer not to say" <?php if ($form_values['Gender'] == 'Prefer not to say') echo 'selected'; ?>>Prefer not to say</option>
+    <option value="Other" <?php if ($form_values['Gender'] == 'Other') echo 'selected'; ?>>Other</option>
     </select>
   </div>
 
   <div class="form-group">
     <label for="PhoneNumber">Phone Number:</label>
     <input type="text" id="PhoneNumber" name="PhoneNumber" required 
-      value="<?php echo isset($_SESSION['PhoneNumber']) ? htmlspecialchars($_SESSION['PhoneNumber']) : ''; ?>" />
+    value="<?php echo htmlspecialchars($form_values['PhoneNumber']); ?>" />
   </div>
 
   <div class="form-group">
     <label for="Address">Address:</label>
     <input type="text" id="Address" name="Address" required 
-      value="<?php echo isset($_SESSION['Address']) ? htmlspecialchars($_SESSION['Address']) : ''; ?>" />
+    value="<?php echo htmlspecialchars($form_values['Address']); ?>" />
   </div>
 
   <div class="form-group">
     <label for="Email">Email:</label>
     <input type="email" id="Email" name="Email" required 
-      value="<?php echo isset($_SESSION['Email']) ? htmlspecialchars($_SESSION['Email']) : ''; ?>" />
+    value="<?php echo htmlspecialchars($form_values['Email']); ?>" />
   </div>
 
   <div class="form-group">
     <label for="Nationality">Nationality:</label>
     <input type="text" id="Nationality" name="Nationality" required 
-      value="<?php echo isset($_SESSION['Nationality']) ? htmlspecialchars($_SESSION['Nationality']) : ''; ?>" />
+    value="<?php echo htmlspecialchars($form_values['Nationality']); ?>" />
   </div>
 
   <div class="form-group">
     <label for="Birthdate">Birthdate:</label>
     <input type="date" id="Birthdate" name="Birthdate" required 
-      value="<?php echo isset($_SESSION['Birthdate']) ? htmlspecialchars($_SESSION['Birthdate']) : ''; ?>" />
+    value="<?php echo htmlspecialchars($form_values['Birthdate']); ?>" />
   </div>
 
   <button type="submit" class="btn">Submit</button>
