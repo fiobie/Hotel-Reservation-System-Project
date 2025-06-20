@@ -89,11 +89,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($conn->query($sql)) {
       // Clear session values after successful insert
       unset($_SESSION['StudentID'], $_SESSION['FirstName'], $_SESSION['LastName'], $_SESSION['Gender'], $_SESSION['PhoneNumber'], $_SESSION['Address'], $_SESSION['Email'], $_SESSION['Nationality'], $_SESSION['Birthdate']);
+
+      // Fetch booking details to show confirmation
+      $booking_query = "SELECT * FROM booking WHERE BookingID = '$booking_id' LIMIT 1";
+      $result_booking = $conn->query($booking_query);
+
+      if ($result_booking && $result_booking->num_rows > 0) {
+        $row = $result_booking->fetch_assoc();
+        $room_type = $row['RoomType'];
+        $check_in = $row['CheckInDate'];
+        $check_out = $row['CheckOutDate'];
+        $special_request = $row['Notes'];
+        $price = $row['Price'];
+        $bookingDate = $row['BookingDate'];
+
+        $confirmation = "
+          <div class='confirmation'>
+            <h2>Booked Confirmed!</h2>
+            <p>Thank you for booking!</p>
+            <p>Your Booking ID is: <strong>{$booking_id}</strong></p>
+            <p>Room Type: <strong>" . ucfirst($room_type) . "</strong></p>
+            <p>Check-in: <strong>{$check_in}</strong> | Check-out: <strong>{$check_out}</strong></p>
+            <p>Booking Date: <strong>{$bookingDate}</strong></p>
+            <p>Total Price: <strong>₱{$price}</strong></p>
+            <p>Special Request: <em>{$special_request}</em></p>
+            <a href='paymentdetails.php?BookingID={$booking_id}' class='btn'>Next</a>
+          </div>";
+      } else {
+        $confirmation = "<p style='color: red;'>Booking record not found.</p>";
+      }
+
       $conn->close();
-      header("Location: paymentdetails.php?BookingID=$booking_id");
-      exit();
     } else {
-      $confirmation = "<p style='color: red;'>Error: " . $conn->error . "</p>";
+      $confirmation = "<p style='color: red;'>Error: {$conn->error}</p>";
     }
   }
 }
