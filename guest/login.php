@@ -1,5 +1,20 @@
     <?php
     session_start();
+
+    // ✅ Save room type from URL to session if it exists
+    if (isset($_GET['room'])) {
+        $room = strtolower(trim($_GET['room']));
+        $valid_rooms = ['standard', 'deluxe', 'suite'];
+        if (in_array($room, $valid_rooms)) {
+            $_SESSION['selected_room_type'] = $room;
+        }
+    }
+
+    // ✅ Optional: Save next page (for redirect after login)
+    if (isset($_GET['next'])) {
+        $_SESSION['next_page'] = $_GET['next'];
+    }
+
     include 'connections.php';
 
     $error = '';
@@ -16,8 +31,17 @@
         if ($row = $result->fetch_assoc()) {
             if (password_verify($password, $row['Password'])) {
                 $_SESSION['email'] = $email;
-                header("Location: booknow.php");
-                exit;
+                // After successful login
+                if (isset($_SESSION['next_page'])) {
+                    $next = $_SESSION['next_page'];
+                    $room = $_SESSION['selected_room_type'] ?? '';
+                    unset($_SESSION['next_page']);
+                    header("Location: $next?room=$room");
+                    exit();
+                } else {
+                    header("Location: booknow.php");
+                    exit();
+                }
             } else {
                 $error = "Invalid email or password.";
             }
@@ -35,6 +59,7 @@
         <title>Hotel Login | Villa Valore Hotel</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
+            /* ... (CSS unchanged) ... */
             :root {
                 --primary-green: #008000;
                 --primary-green-dark: #006400;
@@ -68,12 +93,12 @@
                 border-radius: var(--border-radius);
                 box-shadow: 0 8px 32px rgba(44, 204, 64, 0.10), 0 1.5px 8px rgba(44, 204, 64, 0.06);
                 overflow: hidden;
-                max-width: 1200px; /* Increased from 900px */
+                max-width: 1200px;
                 width: 100%;
-                margin: 48px 0; /* Slightly more margin */
+                margin: 48px 0;
                 border: 1.5px solid #e0e0e0;
                 animation: fadeInMain 1.2s cubic-bezier(.77,0,.18,1) both;
-                min-height: 650px; /* Added for more height */
+                min-height: 650px;
             }
             @keyframes fadeInMain {
                 from { opacity: 0; transform: translateY(40px);}
@@ -81,9 +106,9 @@
             }
             .left-portrait {
                 position: relative;
-                min-width: 420px; /* Increased from 340px */
-                max-width: 520px; /* Increased from 400px */
-                width: 45vw;      /* Increased from 38vw */
+                min-width: 420px;
+                max-width: 520px;
+                width: 45vw;
                 background: url('images/samplebedroom.png') center center/cover no-repeat;
                 display: flex;
                 flex-direction: column;
@@ -111,7 +136,7 @@
                 position: relative;
                 z-index: 2;
                 width: 100%;
-                padding: 60px 48px 48px 48px; /* Increased padding */
+                padding: 60px 48px 48px 48px;
                 display: flex;
                 flex-direction: column;
                 align-items: flex-start;
@@ -122,7 +147,7 @@
                 to { opacity: 1; transform: none;}
             }
             .logo {
-                width: 110px; /* Increased from 90px */
+                width: 110px;
                 height: 110px;
                 border-radius: 14px;
                 object-fit: contain;
@@ -137,7 +162,7 @@
             }
             .hotel-name {
                 color: #fff;
-                font-size: 2.5rem; /* Increased from 2.1rem */
+                font-size: 2.5rem;
                 font-weight: 700;
                 letter-spacing: 1.5px;
                 margin-bottom: 0;
@@ -146,7 +171,7 @@
             }
             .tagline {
                 color: #fff;
-                font-size: 1.35rem; /* Increased from 1.22rem */
+                font-size: 1.35rem;
                 font-weight: 500;
                 margin-top: 22px;
                 text-align: left;
@@ -161,10 +186,10 @@
             }
             .login-container {
                 background: #fff;
-                padding: 70px 64px 64px 64px; /* Increased padding */
+                padding: 70px 64px 64px 64px;
                 border-radius: 0 var(--border-radius) var(--border-radius) 0;
                 width: 100%;
-                max-width: 540px; /* Increased from 410px */
+                max-width: 540px;
                 text-align: center;
                 display: flex;
                 flex-direction: column;
@@ -424,11 +449,11 @@
             </div>
             <div class="login-container">
                 <div class="tab-nav">
-                        <button class="tab-btn active" id="signInTab" type="button">Sign In</button>
-                        <button class="tab-btn" id="signUpTab" type="button" onclick="window.location.href='register.php'">Sign Up</button>
-                    </div>
+                    <button class="tab-btn active" id="signInTab" type="button">Sign In</button>
+                    <button class="tab-btn" id="signUpTab" type="button" onclick="window.location.href='register.php'">Sign Up</button>
+                </div>
                 <h1>Villa Valore Hotel</h1>
-                <form method="POST" action="login.php" autocomplete="off">
+                <form method="POST" action="login.php" autocomplete="off" id="signInForm">
                     <div class="form-group">
                         <label for="email">Email Address</label>
                         <input type="email" id="email" name="email" placeholder="Enter your email address" required autofocus>
@@ -460,16 +485,15 @@
             </div>
         </div>
         <script>
-                // Tab navigation logic
-                document.getElementById('signInTab').addEventListener('click', function() {
-                    this.classList.add('active');
-                    document.getElementById('signUpTab').classList.remove('active');
-                    document.getElementById('signInForm').style.display = 'block';
-                });
-                document.getElementById('signUpTab').addEventListener('click', function() {
-                    // Redirect to registration page
-                    window.location.href = 'register.php';
-                });
-            </script>
+            // Tab navigation logic
+            document.getElementById('signInTab').addEventListener('click', function() {
+                this.classList.add('active');
+                document.getElementById('signUpTab').classList.remove('active');
+                document.getElementById('signInForm').style.display = 'block';
+            });
+            document.getElementById('signUpTab').addEventListener('click', function() {
+                window.location.href = 'register.php';
+            });
+        </script>
     </body>
     </html>
