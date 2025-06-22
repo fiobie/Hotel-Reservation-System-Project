@@ -1,5 +1,49 @@
 <?php
 // ============================================================================
+// HANDLE AJAX ROOM STATUS UPDATE
+// ============================================================================
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'updateStatus') {
+    // Database connection for AJAX request
+    $host = "localhost";
+    $user = "root";
+    $password = "";
+    $dbname = "hotel_reservation_systemdb";
+    $conn = new mysqli($host, $user, $password, $dbname);
+    
+    if ($conn->connect_error) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => 'Database connection failed']);
+        exit;
+    }
+    
+    $roomNumber = isset($_POST['roomNumber']) ? intval($_POST['roomNumber']) : 0;
+    $newStatus = isset($_POST['status']) ? $_POST['status'] : '';
+    
+    // Validate inputs
+    $validStatuses = ['Available', 'Booked', 'Reserved', 'Maintenance', 'Cleaning'];
+    if ($roomNumber <= 0 || !in_array($newStatus, $validStatuses)) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Invalid room number or status']);
+        exit;
+    }
+    
+    // Update room status in database
+    $updateQuery = $conn->prepare("UPDATE room SET RoomStatus = ? WHERE RoomNumber = ?");
+    $updateQuery->bind_param('si', $newStatus, $roomNumber);
+    
+    if ($updateQuery->execute()) {
+        echo json_encode(['success' => true, 'message' => 'Room status updated successfully']);
+    } else {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => 'Failed to update room status']);
+    }
+    
+    $updateQuery->close();
+    $conn->close();
+    exit; // Stop execution here for AJAX requests
+}
+
+// ============================================================================
 // DATABASE CONNECTION
 // ============================================================================
 $host = "localhost";
@@ -90,9 +134,15 @@ while ($room = $roomResult->fetch_assoc()) {
         /* SIDEBAR */
         .sidebar { width: 200px; background: #008000; min-height: 100vh; padding: 0.5rem; color: white; position: fixed; left: 0; top: 0; bottom: 0; transition: left 0.3s, box-shadow 0.3s; z-index: 1000; }
         .sidebar-title { color: white; font-size: 1.4rem; font-weight: 500; margin-bottom: 1.5rem; padding: 1rem; }
+        .sidebar-logo {
+            display: block;
+            margin: 1.5rem auto;
+            width: 80px;
+            height: auto;
+        }
         .nav-section { margin-bottom: 1rem; }
         .nav-link { display: flex; align-items: center; padding: 0.5rem 1rem; color: white; text-decoration: none; font-size: 0.9rem; margin-bottom: 0.25rem; transition: background-color 0.2s; }
-        .nav-link:hover { background-color: rgba(255, 255, 255, 0.1); }
+        .nav-link:hover, .nav-link.active { background-color: rgba(255, 255, 255, 0.1); }
         .nav-link i { margin-right: 0.75rem; width: 20px; text-align: center; opacity: 0.9; }
         /* MAIN CONTENT */
         .main-content { flex: 1; /* Ensure it takes full available width */ padding: 2rem; margin-left: 200px; }
@@ -208,12 +258,13 @@ while ($room = $roomResult->fetch_assoc()) {
         <span></span>
     </button>
     <div class="sidebar">
-        <h4 class="sidebar-title">Villa Valore Hotel</h4>
+        <img src="images/villavalorelogo.png" alt="Villa Valore Logo" class="sidebar-logo">
+        <h4 class="sidebar-title">Villa Valore</h4>
         <div class="nav-section">
             <a class="nav-link" href="staff_dashboard.php"><i class="fas fa-th-large"></i>Dashboard</a>
             <a class="nav-link" href="reservation.php"><i class="fas fa-calendar-check"></i>Reservation</a>
             <a class="nav-link" href="booking.php"><i class="fas fa-book"></i>Booking</a>
-            <a class="nav-link" href="room.php"><i class="fas fa-door-open"></i>Room</a>
+            <a class="nav-link active" href="room.php"><i class="fas fa-door-open"></i>Room</a>
             <a class="nav-link" href="guest_request.php"><i class="fas fa-comment-dots"></i>Guest Request</a>
             <a class="nav-link" href="staff_inventory.php"><i class="fas fa-box"></i>Inventory</a>
         </div>
@@ -367,12 +418,64 @@ while ($room = $roomResult->fetch_assoc()) {
         // Save room status (static update for now)
         function saveRoomStatus() {
             const newStatus = document.getElementById('editRoomStatus').value;
+            const roomNumber = document.getElementById('editRoomNumber').value;
             const card = document.querySelector('.room-card[data-room="' + currentRoom + '"]');
+            
+            // Show loading state
+            const saveBtn = document.querySelector('.btn-primary');
+            const originalText = saveBtn.textContent;
+            saveBtn.textContent = 'Saving...';
+            saveBtn.disabled = true;
+            
+            // Make AJAX call to update database
+            const formData = new FormData();
+            formData.append('action', 'updateStatus');
+            formData.append('roomNumber', roomNumber);
+            formData.append('status', newStatus);
+            
+            fetch('room.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update the card's data attribute
             if (card) {
                 card.setAttribute('data-status', newStatus);
-                // Optionally, you could update the card's appearance here
-            }
+                        
+                        // Update the displayed status text
+                        const statusLabel = card.querySelector('.room-status-label');
+                        if (statusLabel) {
+                            statusLabel.textContent = newStatus;
+                        }
+                        
+                        // Update the card's background color based on new status
+                        card.className = card.className.replace(/room-card\[data-status="[^"]*"\]/g, '');
+                        card.classList.add('room-card');
+                        
+                        // Add visual feedback
+                        card.classList.add('highlight-room');
+                        setTimeout(() => card.classList.remove('highlight-room'), 2000);
+                    }
+                    
             closeEditModal();
+                    
+                    // Show success message
+                    alert('Room status updated successfully!');
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error updating room status. Please try again.');
+            })
+            .finally(() => {
+                // Reset button state
+                saveBtn.textContent = originalText;
+                saveBtn.disabled = false;
+            });
         }
         // Close modal when clicking outside
         window.onclick = function(event) {
