@@ -126,8 +126,7 @@ function getRecentBookings($limit = 5) {
                 b.CheckOutDate as check_out_date,
                 b.RoomNumber as room_id,
                 b.BookingStatus as status,
-                r.RoomNumber as room_number,
-                r.RoomType as room_type
+                r.RoomNumber as room_number
               FROM booking b
               LEFT JOIN account s ON b.StudentID = s.accountID
               JOIN room r ON b.RoomNumber = r.RoomNumber
@@ -205,7 +204,6 @@ $recentBookings = getRecentBookings(5);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hotel Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <!-- Professional font for sidebar title -->
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet">
     <style>
         * {
@@ -863,17 +861,17 @@ $recentBookings = getRecentBookings(5);
                                     <h4>Average Stay</h4>
                                     <p><?php echo $stats['average_stay']; ?> days</p>
                                 </div>
-                                <div class="stat-item"></div>
+                                <div class="stat-item">
                                     <h4>Occupancy Rate</h4>
                                     <p><?php echo $stats['occupancy_rate']; ?>%</p>
                                 </div>
                             </div>
-                        
+                         </div>
 
                         <div class="housekeeping">
                             <h2>Housekeeping</h2>
-                            <div class="housekeeping-content"></div>
-                                <div class="housekeeping-item"></div>
+                            <div class="housekeeping-content">
+                                <div class="housekeeping-item">
                                     <h4>Rooms to Clean</h4>
                                     <p><?php echo $stats['rooms_to_clean']; ?></p>
                                 </div>
@@ -886,6 +884,7 @@ $recentBookings = getRecentBookings(5);
                                     <p><?php echo $stats['maintenance_required']; ?></p>
                                 </div>
                             </div>
+                        </div>
                         </div>
                     </div>
                 </div>

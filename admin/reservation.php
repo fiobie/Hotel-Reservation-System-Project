@@ -1,15 +1,52 @@
 <?php
-// Database Connection
-$host = "localhost";
-$user = "root";
-$password = "";
-$dbname = "hotel_reservation_systemdb";
-$conn = new mysqli($host, $user, $password, $dbname);
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+include 'connections.php';
+
+// --- FILTER HANDLING ---
+$where = [];
+$params = [];
+
+// If filter form is submitted (GET)
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && (
+    isset($_GET['ReservationID']) || isset($_GET['StudentID']) || isset($_GET['GuestName']) || isset($_GET['PCheckInDate']) ||
+    isset($_GET['PCheckOutDate']) || isset($_GET['RoomNumber']) || isset($_GET['RoomType']) ||
+    isset($_GET['Status'])
+)) {
+    if (!empty($_GET['ReservationID'])) {
+        $where[] = "ReservationID = ?";
+        $params[] = $_GET['ReservationID'];
+    }
+    if (!empty($_GET['StudentID'])) {
+        $where[] = "StudentID = ?";
+        $params[] = $_GET['StudentID'];
+    }
+    if (!empty($_GET['GuestName'])) {
+        $where[] = "GuestName LIKE ?";
+        $params[] = '%' . $_GET['GuestName'] . '%';
+    }
+    if (!empty($_GET['PCheckInDate'])) {
+        $where[] = "PCheckInDate = ?";
+        $params[] = $_GET['PCheckInDate'];
+    }
+    if (!empty($_GET['PCheckOutDate'])) {
+        $where[] = "PCheckOutDate = ?";
+        $params[] = $_GET['PCheckOutDate'];
+    }
+    if (!empty($_GET['RoomNumber'])) {
+        $where[] = "RoomNumber = ?";
+        $params[] = $_GET['RoomNumber'];
+    }
+    if (!empty($_GET['RoomType'])) {
+        $where[] = "RoomType = ?";
+        $params[] = $_GET['RoomType'];
+    }
+    if (!empty($_GET['Status'])) {
+        $where[] = "Status = ?";
+        $params[] = $_GET['Status'];
+    }
 }
-// Handle AJAX update request
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ReservationID'])) {
+
+// --- AJAX UPDATE ---
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ReservationID']) && !isset($_POST['deleteReservation']) && !isset($_POST['createReservation'])) {
     $id = intval($_POST['ReservationID']);
     $guest = $conn->real_escape_string($_POST['GuestName']);
     $checkin = $conn->real_escape_string($_POST['PCheckInDate']);
@@ -34,23 +71,68 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ReservationID'])) {
     echo json_encode(['success' => $success]);
     exit;
 }
-// Handle create reservation POST
+
+// --- AJAX DELETE ---
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['deleteReservation']) && isset($_POST['ReservationID'])) {
+    $id = intval($_POST['ReservationID']);
+    $sql = "DELETE FROM reservations WHERE ReservationID=$id";
+    $success = $conn->query($sql);
+    header('Content-Type: application/json');
+    echo json_encode(['success' => $success]);
+    exit;
+}
+
+// --- CREATE RESERVATION (AJAX/POST) ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['createReservation'])) {
+    // --- Automated Reservation ID Generation ---
+    // Format: RS-mmddyyyy-XX
+    $today = date('mdY');
+    // Count today's reservations
+    $sqlCount = "SELECT COUNT(*) as cnt FROM reservations WHERE ReservationID LIKE ?";
+    $likePattern = "RS-$today-%";
+    $stmt = $conn->prepare($sqlCount);
+    $stmt->bind_param('s', $likePattern);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+    $count = isset($row['cnt']) ? intval($row['cnt']) : 0;
+    $nextNumber = str_pad($count + 1, 2, '0', STR_PAD_LEFT);
+    $reservationID = "RS-$today-$nextNumber";
+
     $guest = $conn->real_escape_string($_POST['GuestName']);
     $checkin = $conn->real_escape_string($_POST['PCheckInDate']);
     $checkout = $conn->real_escape_string($_POST['PCheckOutDate']);
-    $room = intval($_POST['RoomNumber']);
+    $room = $conn->real_escape_string($_POST['RoomNumber']);
     $type = $conn->real_escape_string($_POST['RoomType']);
     $status = $conn->real_escape_string($_POST['Status']);
     $studentID = $conn->real_escape_string($_POST['StudentID']);
-    $sql = "INSERT INTO reservations (GuestName, PCheckInDate, PCheckOutDate, RoomNumber, RoomType, Status, StudentID) VALUES ('$guest', '$checkin', '$checkout', $room, '$type', '$status', '$studentID')";
-    $conn->query($sql);
-    header('Location: reservation.php');
-    exit;
+    // Insert with auto ReservationID
+    $sql = "INSERT INTO reservations (ReservationID, GuestName, PCheckInDate, PCheckOutDate, RoomNumber, RoomType, Status, StudentID) VALUES ('$reservationID', '$guest', '$checkin', '$checkout', $room, '$type', '$status', '$studentID')";
+    $success = $conn->query($sql);
+    if (isset($_SERVER['HTTP_X_REQUESTED_WITH'])) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => $success]);
+        exit;
+    } else {
+        header('Location: reservation.php');
+        exit;
+    }
 }
-// Fetch reservations
-$resQuery = "SELECT * FROM reservations"; // Adjust table name/fields as needed
-$resResult = $conn->query($resQuery);
+
+// --- FETCH RESERVATIONS (with filter) ---
+if (count($where) > 0) {
+    $sql = "SELECT * FROM reservations WHERE " . implode(' AND ', $where) . " ORDER BY ReservationID DESC";
+    $stmt = $conn->prepare($sql);
+    if ($params) {
+        $types = str_repeat('s', count($params));
+        $stmt->bind_param($types, ...$params);
+    }
+    $stmt->execute();
+    $resResult = $stmt->get_result();
+} else {
+    $resQuery = "SELECT * FROM reservations ORDER BY ReservationID DESC";
+    $resResult = $conn->query($resQuery);
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -58,16 +140,24 @@ $resResult = $conn->query($resQuery);
     <meta charset="UTF-8">
     <title>Reservation</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <style>
+<style>
+        :root {
+            --theme-green: #008000;
+            --theme-green-dark: #005c00;
+            --theme-green-light: #90ee90;
+            --action-edit: #008000;
+            --action-view: #00b894;
+            --action-delete: #e74c3c;
+        }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
         body { background-color: #f5f6fa; display: flex; }
-        .sidebar { width: 200px; background: #008000; min-height: 100vh; padding: 0.5rem; color: white; position: fixed; left: 0; top: 0; bottom: 0; transition: left 0.3s, box-shadow 0.3s; z-index: 1000; }
+        .sidebar { width: 200px; background: var(--theme-green); min-height: 100vh; padding: 0.5rem; color: white; position: fixed; left: 0; top: 0; bottom: 0; transition: left 0.3s, box-shadow 0.3s; z-index: 1000; }
         .sidebar-title { color: white; font-size: 1.4rem; font-weight: 500; margin-bottom: 1.5rem; padding: 1rem; }
         .nav-section { margin-bottom: 1rem; }
         .nav-link { display: flex; align-items: center; padding: 0.5rem 1rem; color: white; text-decoration: none; font-size: 0.9rem; margin-bottom: 0.25rem; transition: background-color 0.2s; }
         .nav-link:hover { background-color: rgba(255, 255, 255, 0.1); }
         .nav-link i { margin-right: 0.75rem; width: 20px; text-align: center; opacity: 0.9; }
-        .management-label { color: #90EE90; font-size: 0.8em; margin: 1rem 0 0.5rem 1rem; }
+        .management-label { color: var(--theme-green-light); font-size: 0.8em; margin: 1rem 0 0.5rem 1rem; }
         .toggle-btn { display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
         .toggle-btn::after { content: '▼'; font-size: 0.7rem; margin-left: 0.5rem; }
         .submenu { margin-left: 1.5rem; display: none; }
@@ -79,7 +169,58 @@ $resResult = $conn->query($resQuery);
         .reservation-table th, .reservation-table td { padding: 1rem; border-bottom: 1px solid #f0f2f5; text-align: left; }
         .reservation-table th { background: #f8f9fa; color: #666; font-weight: 600; }
         .reservation-table td { color: #222; font-weight: 500; }
-        .action-link { color: #008000; cursor: pointer; margin-right: 1rem; text-decoration: underline; }
+         /* Action Buttons */
+        .action-group {
+            display: flex;
+            gap: 0.3rem;
+            justify-content: center;
+            align-items: center;
+        }
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            outline: none;
+            border-radius: 50%;
+            padding: 0.3rem;
+            font-size: 1.1rem;
+            background: none;
+            cursor: pointer;
+            transition: background 0.18s, color 0.18s;
+            box-shadow: none;
+        }
+        .action-btn.edit-btn i {
+            color: var(--action-edit);
+        }
+        .action-btn.edit-btn:hover, .action-btn.edit-btn:focus {
+            background: #e6f5ea;
+        }
+        .action-btn.edit-btn:hover i, .action-btn.edit-btn:focus i {
+            color: var(--theme-green-dark);
+        }
+        .action-btn.view-btn i {
+            color: var(--action-view);
+        }
+        .action-btn.view-btn:hover, .action-btn.view-btn:focus {
+            background: #e6f5ea;
+        }
+        .action-btn.view-btn:hover i, .action-btn.view-btn:focus i {
+            color: #00916e;
+        }
+        .action-btn.delete-btn i {
+            color: var(--action-delete);
+        }
+        .action-btn.delete-btn:hover, .action-btn.delete-btn:focus {
+            background: #fbeaea;
+        }
+        .action-btn.delete-btn:hover i, .action-btn.delete-btn:focus i {
+            color: #c0392b;
+        }
+        .action-btn i {
+            font-size: 1em;
+            margin: 0;
+        }
         /* Modal styles */
         .modal { display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background: rgba(0,0,0,0.3); }
         .modal-content { background: #fff; margin: 5% auto; padding: 2rem; border-radius: 10px; width: 400px; position: relative; }
@@ -96,7 +237,7 @@ $resResult = $conn->query($resQuery);
             z-index: 1100;
             width: 36px;
             height: 36px;
-            background: #008000;
+            background: var(--theme-green);
             border: none;
             border-radius: 6px;
             align-items: center;
@@ -142,6 +283,7 @@ $resResult = $conn->query($resQuery);
                 left: 1rem;
                 top: 50%;
                 transform: translateY(-50%);
+
                 font-weight: bold;
                 color: #666;
                 content: attr(data-label);
@@ -234,24 +376,82 @@ $resResult = $conn->query($resQuery);
             padding: 0.7rem;
             border-radius: 0.7rem;
             border: none;
-            background: #008000;
+            background: var(--theme-green);
             color: #fff;
             font-size: 1.1rem;
             font-weight: bold;
             cursor: pointer;
         }
         .modal-content form button[type="submit"]:hover {
-            background: #005c00;
+            background: var(--theme-green-dark);
         }
+        /* Delete Modal Buttons */
+        .confirm-delete {
+            background: var(--action-delete);
+            color: #fff;
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.6rem 1.3rem;
+            font-size: 1rem;
+            font-weight: 600;
+            margin-right: 0.7rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .confirm-delete:hover {
+            background: #c0392b;
+        }
+        .cancel-delete {
+            background: #f5f6fa;
+            color: #222;
+            border: 1px solid #ccc;
+            border-radius: 0.5rem;
+            padding: 0.6rem 1.3rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+        .cancel-delete:hover {
+            background: #ededed;
+            color: var(--theme-green);
+        }
+         /* Download icon button in table cell */
+        .download-table-btn {
+            background: none;
+            border: none;
+            color: #008000;
+            border-radius: 50%;
+            padding: 0.3rem;
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s, color 0.2s;
+            margin: 0 auto; /* Center horizontally */
+        }
+        .download-table-btn i {
+            font-size: 1.05em;
+            color: #008000;
+            transition: color 0.2s;
+        }
+        .download-table-btn:hover, .download-table-btn:focus {
+            background: #e6f5ea;
+        }
+        .download-table-btn:hover i, .download-table-btn:focus i {
+            color: #005c00;
+        }
+        /* Center the download button in the table cell */
+        .reservation-table td:last-child {
+            text-align: center;
+            vertical-align: middle;
+        }
+        
     </style>
 </head>
 <body>
-    <button class="hamburger" id="sidebarToggle" aria-label="Open sidebar">
-        <span></span>
-        <span></span>
-        <span></span>
-    </button>
-    <div class="sidebar">
+  <div class="sidebar">
         <h4 class="sidebar-title">Villa Valore Hotel</h4>
         
         <div class="nav-section">
@@ -288,7 +488,7 @@ $resResult = $conn->query($resQuery);
     <div class="main-content">
         <div class="reservation-section">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
-                <h1 style="margin-bottom: 0; border-bottom: 4px solidrgb(255, 255, 255); display: inline-block; padding-bottom: 0.2rem;">Reservation</h1>
+                <h1 style="margin-bottom: 0; border-bottom: 4px solid rgb(255, 255, 255); display: inline-block; padding-bottom: 0.2rem;">Reservation</h1>
                 <div class="search-filter-bar">
                     <div class="search-wrapper">
                         <i class="fas fa-search search-icon"></i>
@@ -297,31 +497,31 @@ $resResult = $conn->query($resQuery);
                     <div style="position: relative;">
                         <button class="filter-btn" id="filterBtn">Filter</button>
                         <div class="filter-dropdown" id="filterDropdown">
-                            <form id="filterForm">
-                                <label>Reservation ID <input type="text" name="ReservationID"></label>
-                                <label>Student ID <input type="text" name="StudentID"></label>
-                                <label>Guest Name <input type="text" name="GuestName"></label>
-                                <label>Check-in Date <input type="date" name="PCheckInDate"></label>
-                                <label>Check-out Date <input type="date" name="PCheckOutDate"></label>
-                                <label>Room Number <input type="text" name="RoomNumber"></label>
+                            <form id="filterForm" method="GET">
+                                <label>Reservation ID <input type="text" name="ReservationID" value="<?php echo isset($_GET['ReservationID']) ? htmlspecialchars($_GET['ReservationID']) : ''; ?>"></label>
+                                <label>Student ID <input type="text" name="StudentID" value="<?php echo isset($_GET['StudentID']) ? htmlspecialchars($_GET['StudentID']) : ''; ?>"></label>
+                                <label>Guest Name <input type="text" name="GuestName" value="<?php echo isset($_GET['GuestName']) ? htmlspecialchars($_GET['GuestName']) : ''; ?>"></label>
+                                <label>Check-in Date <input type="date" name="PCheckInDate" value="<?php echo isset($_GET['PCheckInDate']) ? htmlspecialchars($_GET['PCheckInDate']) : ''; ?>"></label>
+                                <label>Check-out Date <input type="date" name="PCheckOutDate" value="<?php echo isset($_GET['PCheckOutDate']) ? htmlspecialchars($_GET['PCheckOutDate']) : ''; ?>"></label>
+                                <label>Room Number <input type="text" name="RoomNumber" value="<?php echo isset($_GET['RoomNumber']) ? htmlspecialchars($_GET['RoomNumber']) : ''; ?>"></label>
                                 <label>Room Type
                                     <select name="RoomType">
                                         <option value="">Any</option>
-                                        <option value="Standard">Standard</option>
-                                        <option value="Deluxe">Deluxe</option>
-                                        <option value="Suite">Suite</option>
+                                        <option value="Standard" <?php if(isset($_GET['RoomType']) && $_GET['RoomType']=='Standard') echo 'selected'; ?>>Standard</option>
+                                        <option value="Deluxe" <?php if(isset($_GET['RoomType']) && $_GET['RoomType']=='Deluxe') echo 'selected'; ?>>Deluxe</option>
+                                        <option value="Suite" <?php if(isset($_GET['RoomType']) && $_GET['RoomType']=='Suite') echo 'selected'; ?>>Suite</option>
                                     </select>
                                 </label>
                                 <label>Status
                                     <select name="Status">
                                         <option value="">Any</option>
-                                        <option value="Pending">Pending</option>
-                                        <option value="Confirmed">Confirmed</option>
-                                        <option value="Cancelled">Cancelled</option>
+                                        <option value="Pending" <?php if(isset($_GET['Status']) && $_GET['Status']=='Pending') echo 'selected'; ?>>Pending</option>
+                                        <option value="Confirmed" <?php if(isset($_GET['Status']) && $_GET['Status']=='Confirmed') echo 'selected'; ?>>Confirmed</option>
+                                        <option value="Cancelled" <?php if(isset($_GET['Status']) && $_GET['Status']=='Cancelled') echo 'selected'; ?>>Cancelled</option>
                                     </select>
                                 </label>
                                 <div class="filter-actions">
-                                    <button type="button" id="applyFilterBtn" class="filter-btn">Apply</button>
+                                    <button type="submit" id="applyFilterBtn" class="filter-btn">Apply</button>
                                     <button type="button" id="clearFilterBtn" class="filter-btn">Clear</button>
                                 </div>
                             </form>
@@ -342,46 +542,57 @@ $resResult = $conn->query($resQuery);
                         <th>Room Type</th>
                         <th>Status</th>
                         <th>Actions</th>
+                        <th>Download</th>
                     </tr>
                 </thead>
                 <tbody>
                 <?php if ($resResult && $resResult->num_rows > 0): ?>
                     <?php while($row = $resResult->fetch_assoc()): ?>
-                    <tr data-id="<?php echo $row['ReservationID']; ?>">
-                        <td><b><?php echo $row['ReservationID']; ?></b></td>
-                        <td><b><?php echo $row['StudentID']; ?></b></td>
-                        <td><b><?php echo htmlspecialchars($row['GuestName']); ?></b></td>
-                        <td><b><?php echo date('m/d/Y', strtotime($row['PCheckInDate'])); ?></b></td>
-                        <td><b><?php echo date('m/d/Y', strtotime($row['PCheckOutDate'])); ?></b></td>
-                        <td><?php echo $row['RoomNumber']; ?></td>
-                        <td><b><?php echo $row['RoomType']; ?></b></td>
-                        <td><b><?php echo $row['Status']; ?></b></td>
-                        <td>
-                            <span class="action-link edit-btn"
-                                  data-id="<?php echo $row['ReservationID']; ?>"
-                                  data-student="<?php echo $row['StudentID']; ?>"
-                                  data-guest="<?php echo htmlspecialchars($row['GuestName']); ?>"
-                                  data-checkin="<?php echo $row['PCheckInDate']; ?>"
-                                  data-checkout="<?php echo $row['PCheckOutDate']; ?>"
-                                  data-room="<?php echo $row['RoomNumber']; ?>"
-                                  data-type="<?php echo $row['RoomType']; ?>"
-                                  data-status="<?php echo $row['Status']; ?>"
-                            >Edit</span>
-                            <span class="action-link view-btn"
-                                  data-id="<?php echo $row['ReservationID']; ?>"
-                                  data-student="<?php echo $row['StudentID']; ?>"
-                                  data-guest="<?php echo htmlspecialchars($row['GuestName']); ?>"
-                                  data-checkin="<?php echo $row['PCheckInDate']; ?>"
-                                  data-checkout="<?php echo $row['PCheckOutDate']; ?>"
-                                  data-room="<?php echo $row['RoomNumber']; ?>"
-                                  data-type="<?php echo $row['RoomType']; ?>"
-                                  data-status="<?php echo $row['Status']; ?>"
-                            >View</span>
-                        </td>
-                    </tr>
+                        <tr data-id="<?php echo $row['ReservationID']; ?>">
+                            <td><?php echo htmlspecialchars($row['ReservationID']); ?></td>
+                            <td><?php echo htmlspecialchars($row['StudentID']); ?></td>
+                            <td><?php echo htmlspecialchars($row['GuestName']); ?></td>
+                            <td><?php echo htmlspecialchars($row['PCheckInDate']); ?></td>
+                            <td><?php echo htmlspecialchars($row['PCheckOutDate']); ?></td>
+                            <td><?php echo htmlspecialchars($row['RoomNumber']); ?></td>
+                            <td><?php echo htmlspecialchars($row['RoomType']); ?></td>
+                            <td><?php echo htmlspecialchars($row['Status']); ?></td>
+                            <td>
+                                <div class="action-group">
+                                    <button type="button" class="action-btn edit-btn"
+                                        data-id="<?php echo $row['ReservationID']; ?>"
+                                        data-student="<?php echo htmlspecialchars($row['StudentID']); ?>"
+                                        data-guest="<?php echo htmlspecialchars($row['GuestName']); ?>"
+                                        data-checkin="<?php echo htmlspecialchars($row['PCheckInDate']); ?>"
+                                        data-checkout="<?php echo htmlspecialchars($row['PCheckOutDate']); ?>"
+                                        data-room="<?php echo htmlspecialchars($row['RoomNumber']); ?>"
+                                        data-type="<?php echo htmlspecialchars($row['RoomType']); ?>"
+                                        data-status="<?php echo htmlspecialchars($row['Status']); ?>"
+                                    ><i class="fas fa-edit"></i></button>
+                                    <button type="button" class="action-btn view-btn"
+                                        data-id="<?php echo $row['ReservationID']; ?>"
+                                        data-student="<?php echo htmlspecialchars($row['StudentID']); ?>"
+                                        data-guest="<?php echo htmlspecialchars($row['GuestName']); ?>"
+                                        data-checkin="<?php echo htmlspecialchars($row['PCheckInDate']); ?>"
+                                        data-checkout="<?php echo htmlspecialchars($row['PCheckOutDate']); ?>"
+                                        data-room="<?php echo htmlspecialchars($row['RoomNumber']); ?>"
+                                        data-type="<?php echo htmlspecialchars($row['RoomType']); ?>"
+                                        data-status="<?php echo htmlspecialchars($row['Status']); ?>"
+                                    ><i class="fas fa-eye"></i></button>
+                                    <button type="button" class="action-btn delete-btn"
+                                        data-id="<?php echo $row['ReservationID']; ?>"
+                                    ><i class="fas fa-trash"></i></button>
+                                </div>
+                            </td>
+                            <td>
+                                <button class="download-table-btn" title="Download Table" onclick="showDownloadModal(event)">
+                                    <i class="fas fa-download"></i>
+                                </button>
+                            </td>
+                        </tr>
                     <?php endwhile; ?>
                 <?php else: ?>
-                    <tr><td colspan="8">No reservations found.</td></tr>
+                    <tr><td colspan="10">No reservations found.</td></tr>
                 <?php endif; ?>
                 </tbody>
             </table>
@@ -393,12 +604,25 @@ $resResult = $conn->query($resQuery);
             <span class="close" id="closeEditModal">&times;</span>
             <h2>Edit Reservation</h2>
             <form id="editForm">
-                <input type="hidden" name="ReservationID" id="editReservationID">
-                <input type="hidden" name="StudentID" id="editStudentID">
+                <p><label>Reservation ID:</label><br>
+                    <input type="text" name="ReservationID" id="editReservationID" required readonly placeholder="Auto-generated"></p>
+                <p><label>Student ID:</label><br>
+                    <input type="text" name="StudentID" id="editStudentID" required readonly></p>
                 <p><label>Guest Name:</label><br><input type="text" name="GuestName" id="editGuestName" required></p>
                 <p><label>Check-in Date:</label><br><input type="date" name="PCheckInDate" id="editCheckIn" required></p>
                 <p><label>Check-out Date:</label><br><input type="date" name="PCheckOutDate" id="editCheckOut" required></p>
-                <p><label>Room Number:</label><br><input type="number" name="RoomNumber" id="editRoomNumber" required></p>
+                <p><label>Room Number:</label><br>
+                <select name="RoomNumber" required>
+                    <option value="1101">1101</option>
+                    <option value="1102">1102</option>
+                    <option value="1103">1103</option>
+                    <option value="1104">1104</option>
+                    <option value="1105">1105</option>
+                    <option value="1106">1106</option>
+                    <option value="1107">1107</option>
+                    <option value="1108">1108</option>
+                    <option value="1109">1109</option>
+                </select>
                 <p><label>Room Type:</label><br>
                     <select name="RoomType" id="editRoomType" required>
                         <option value="Standard">Standard</option>
@@ -422,197 +646,357 @@ $resResult = $conn->query($resQuery);
         <div class="modal-content">
             <span class="close" id="closeViewModal">&times;</span>
             <h2>View Reservation</h2>
-            <div id="viewDetails">
-                <!-- Details will be filled by JS -->
+            <div id="viewDetails"></div>
+        </div>
+    </div>
+    <!-- Download Modal -->
+  <div id="downloadModal" class="modal">
+    <div class="modal-content" style="width: 350px;">
+      <span class="close" id="closeDownloadModal">&times;</span>
+      <h2>Download Table</h2>
+      <div style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1.5rem;">
+        <button class="filter-btn" id="copyTableBtn"><i class="fas fa-copy"></i> Copy </button>
+        <button class="filter-btn" id="csvTableBtn"><i class="fas fa-file-csv"></i> CSV File</button>
+        <button class="filter-btn" id="excelTableBtn"><i class="fas fa-file-excel"></i> Excel File</button>
+        <button class="filter-btn" id="pdfTableBtn"><i class="fas fa-file-pdf"></i> PDF File</button>
+        <button class="filter-btn" id="printTableBtn"><i class="fas fa-file-pdf"></i> Print File</button>
+      </div>
+    </div>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script>
+    // Download Modal logic
+    const downloadModal = document.getElementById('downloadModal');
+    const closeDownloadModal = document.getElementById('closeDownloadModal');
+
+    // Show modal from table cell download icon
+    function showDownloadModal(e) {
+      e.preventDefault();
+      downloadModal.style.display = 'block';
+    }
+
+    closeDownloadModal.onclick = function() {
+      downloadModal.style.display = 'none';
+    };
+    window.addEventListener('click', function(e) {
+      if (e.target == downloadModal) downloadModal.style.display = 'none';
+    });
+
+    // Helper: get table data as array (optionally exclude actions/download columns)
+    function getTableData(excludeActions = false) {
+      const rows = Array.from(document.querySelectorAll('.reservation-table tbody tr'))
+        .filter(row => row.style.display !== 'none');
+      let headers = Array.from(document.querySelectorAll('.reservation-table thead th'));
+      let colCount = headers.length;
+      if (excludeActions) {
+        // Remove last two columns: Actions and Download
+        headers = headers.slice(0, -2);
+        colCount = headers.length;
+      } else {
+        // Remove only Download column
+        headers = headers.slice(0, -1);
+        colCount = headers.length;
+      }
+      headers = headers.map(th => th.innerText.trim());
+      const data = rows.map(row =>
+        Array.from(row.querySelectorAll('td')).slice(0, colCount).map(td => td.innerText.trim())
+      );
+      return { headers, data };
+    }
+
+    // Copy Table
+    document.getElementById('copyTableBtn').onclick = function() {
+      const { headers, data } = getTableData();
+      const text = [headers.join('\t'), ...data.map(row => row.join('\t'))].join('\n');
+      navigator.clipboard.writeText(text).then(() => {
+        alert('Table copied to clipboard!');
+        downloadModal.style.display = 'none';
+      });
+    };
+
+    // Download CSV
+    document.getElementById('csvTableBtn').onclick = function() {
+      const { headers, data } = getTableData();
+      const csv = [headers.join(','), ...data.map(row => row.map(cell => `"${cell.replace(/"/g, '""')}"`).join(','))].join('\r\n');
+      const blob = new Blob([csv], {type: 'text/csv'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'students.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      downloadModal.style.display = 'none';
+    };
+
+    // Download Excel
+    document.getElementById('excelTableBtn').onclick = function() {
+      const { headers, data } = getTableData();
+      const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Students");
+      XLSX.writeFile(wb, "students.xlsx");
+      downloadModal.style.display = 'none';
+    };
+
+    // Download PDF
+    document.getElementById('pdfTableBtn').onclick = function() {
+      const { headers, data } = getTableData();
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.autoTable({
+        head: [headers],
+        body: data,
+        styles: { fontSize: 9 },
+        headStyles: { fillColor: [0,128,0] }
+      });
+      doc.save('students.pdf');
+      downloadModal.style.display = 'none';
+    };
+
+    // Print Table (exclude actions/download columns)
+    document.getElementById('printTableBtn').onclick = function() {
+      const { headers, data } = getTableData(true);
+      let html = '<table border="1" cellpadding="8" cellspacing="0" style="border-collapse:collapse;width:100%">';
+      html += '<thead><tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr></thead>';
+      html += '<tbody>' + data.map(row => '<tr>' + row.map(cell => `<td>${cell}</td>`).join('') + '</tr>').join('') + '</tbody></table>';
+      const win = window.open('', '', 'width=900,height=700');
+      win.document.write('<html><head><title>Print Students</title></head><body>' + html + '</body></html>');
+      win.document.close();
+      win.print();
+      downloadModal.style.display = 'none';
+    };
+  </script>
+  <!-- jsPDF autotable plugin -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+<!-- Create Reservation Modal -->
+<div id="createModal" class="modal">
+    <div class="modal-content">
+        <span class="close" id="closeCreateModal">&times;</span>
+        <h2>Create Reservation</h2>
+        <form id="createForm">
+            <input type="hidden" name="createReservation" value="1">
+            <p>
+                <label>Reservation ID:</label><br>
+                <input type="text" name="ReservationID" id="manualReservationID" placeholder="Auto-generated" readonly disabled>
+            </p>
+            <p><label>Student ID:</label><br><input type="text" name="StudentID" required></p>
+            <p><label>Guest Name:</label><br><input type="text" name="GuestName" required></p>
+            <p><label>Check-in Date:</label><br><input type="date" name="PCheckInDate" required></p>
+            <p><label>Check-out Date:</label><br><input type="date" name="PCheckOutDate" required></p>
+            <p><label>Room Number:</label><br>
+                <select name="RoomNumber" required>
+                    <option value="1101">1101</option>
+                    <option value="1102">1102</option>
+                    <option value="1103">1103</option>
+                    <option value="1104">1104</option>
+                    <option value="1105">1105</option>
+                    <option value="1106">1106</option>
+                    <option value="1107">1107</option>
+                    <option value="1108">1108</option>
+                    <option value="1109">1109</option>
+                </select>
+            <p><label>Room Type:</label><br>
+                <select name="RoomType" required>
+                    <option value="Standard">Standard</option>
+                    <option value="Deluxe">Deluxe</option>
+                    <option value="Suite">Suite</option>
+                </select>
+            </p>
+            <p><label>Status:</label><br>
+                <select name="Status" required>
+                    <option value="Pending">Pending</option>
+                    <option value="Confirmed">Confirmed</option>
+                    <option value="Cancelled">Cancelled</option>
+                </select>
+            </p>
+            <button type="submit">Create</button>
+        </form>
+    </div>
+</div>
+    <!-- Delete Modal -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="closeDeleteModal">&times;</span>
+            <h2>Delete Reservation</h2>
+            <p>Are you sure you want to delete this reservation?</p>
+            <div style="margin-top:1.5rem;">
+                <button class="confirm-delete">Delete</button>
+                <button class="cancel-delete">Cancel</button>
             </div>
         </div>
     </div>
-    <!-- Create Reservation Modal -->
-    <div id="createModal" class="modal">
-        <div class="modal-content">
-            <span class="close" id="closeCreateModal">&times;</span>
-            <h2>Create Reservation</h2>
-            <form id="createForm" method="POST">
-                <input type="hidden" name="createReservation" value="1">
-                <p><label>Guest Name:</label><br><input type="text" name="GuestName" required></p>
-                <p><label>Check-in Date:</label><br><input type="date" name="PCheckInDate" required></p>
-                <p><label>Check-out Date:</label><br><input type="date" name="PCheckOutDate" required></p>
-                <p><label>Room Number:</label><br><input type="number" name="RoomNumber" required></p>
-                <p><label>Room Type:</label><br>
-                    <select name="RoomType" required>
-                        <option value="Standard">Standard</option>
-                        <option value="Deluxe">Deluxe</option>
-                        <option value="Suite">Suite</option>
-                    </select>
-                </p>
-                <p><label>Status:</label><br>
-                    <select name="Status" required>
-                        <option value="Pending">Pending</option>
-                        <option value="Confirmed">Confirmed</option>
-                        <option value="Cancelled">Cancelled</option>
-                    </select>
-                </p>
-                <button type="submit">Create</button>
-            </form>
-        </div>
-    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
     <script>
-    // Sidebar toggle menu functionality
-    function toggleMenu(menuId) {
-        const submenu = document.getElementById(menuId);
-        submenu.classList.toggle('active');
-    }
-    // Hamburger menu for sidebar
-    const sidebar = document.querySelector('.sidebar');
-    const hamburger = document.getElementById('sidebarToggle');
-    function closeSidebarOnOverlayClick(e) {
-        if (window.innerWidth <= 900 && sidebar.classList.contains('active')) {
-            if (!sidebar.contains(e.target) && !hamburger.contains(e.target)) {
-                sidebar.classList.remove('active');
+        // Download Modal logic (same as your original)
+        // ... (keep your original download modal JS here) ...
+
+        // Edit Modal
+        const editModal = document.getElementById('editModal');
+        const closeEditModal = document.getElementById('closeEditModal');
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+            btn.onclick = function() {
+                editModal.style.display = 'block';
+                document.getElementById('editReservationID').value = this.dataset.id;
+                document.getElementById('editStudentID').value = this.dataset.student;
+                document.getElementById('editGuestName').value = this.dataset.guest;
+                document.getElementById('editCheckIn').value = this.dataset.checkin.split('T')[0];
+                document.getElementById('editCheckOut').value = this.dataset.checkout.split('T')[0];
+                document.getElementById('editRoomNumber').value = this.dataset.room;
+                document.getElementById('editRoomType').value = this.dataset.type;
+                document.getElementById('editStatus').value = this.dataset.status;
             }
+        });
+        closeEditModal.onclick = function() { editModal.style.display = 'none'; }
+        // Save Edit
+        const editForm = document.getElementById('editForm');
+        editForm.onsubmit = function(e) {
+            e.preventDefault();
+            const formData = new FormData(editForm);
+            fetch('reservation.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Update failed.');
+                }
+            });
         }
-    }
-    hamburger.addEventListener('click', function() {
-        sidebar.classList.toggle('active');
-    });
-    document.addEventListener('click', closeSidebarOnOverlayClick);
-    window.addEventListener('resize', function() {
-        if (window.innerWidth > 900) {
-            sidebar.classList.remove('active');
+        // View Modal
+        const viewModal = document.getElementById('viewModal');
+        const closeViewModal = document.getElementById('closeViewModal');
+        document.querySelectorAll('.view-btn').forEach(btn => {
+            btn.onclick = function() {
+                viewModal.style.display = 'block';
+                document.getElementById('viewDetails').innerHTML = `
+                    <p><label>Reservation ID:</label> <span>${this.dataset.id}</span></p>
+                    <p><label>Student ID:</label> <span>${this.dataset.student}</span></p>
+                    <p><label>Guest Name:</label> <span>${this.dataset.guest}</span></p>
+                    <p><label>Check-in Date:</label> <span>${this.dataset.checkin.split('T')[0]}</span></p>
+                    <p><label>Check-out Date:</label> <span>${this.dataset.checkout.split('T')[0]}</span></p>
+                    <p><label>Room Number:</label> <span>${this.dataset.room}</span></p>
+                    <p><label>Room Type:</label> <span>${this.dataset.type}</span></p>
+                    <p><label>Status:</label> <span>${this.dataset.status}</span></p>
+                `;
+            }
+        });
+        closeViewModal.onclick = function() { viewModal.style.display = 'none'; }
+        window.onclick = function(event) {
+            if (event.target == editModal) editModal.style.display = 'none';
+            if (event.target == viewModal) viewModal.style.display = 'none';
+            if (event.target == createModal) createModal.style.display = 'none';
+            if (event.target == deleteModal) deleteModal.style.display = 'none';
         }
-    });
-    // Edit Modal
-    const editModal = document.getElementById('editModal');
-    const closeEditModal = document.getElementById('closeEditModal');
-    document.querySelectorAll('.edit-btn').forEach(btn => {
-        btn.onclick = function() {
-            editModal.style.display = 'block';
-            document.getElementById('editReservationID').value = this.dataset.id;
-            document.getElementById('editStudentID').value = this.dataset.student;
-            document.getElementById('editGuestName').value = this.dataset.guest;
-            document.getElementById('editCheckIn').value = this.dataset.checkin.split('T')[0];
-            document.getElementById('editCheckOut').value = this.dataset.checkout.split('T')[0];
-            document.getElementById('editRoomNumber').value = this.dataset.room;
-            document.getElementById('editRoomType').value = this.dataset.type;
-            document.getElementById('editStatus').value = this.dataset.status;
+        // Search logic
+        const searchInput = document.getElementById('searchInput');
+        const tableRows = document.querySelectorAll('.reservation-table tbody tr');
+        searchInput.oninput = function() {
+            const val = searchInput.value.toLowerCase();
+            tableRows.forEach(row => {
+                let match = false;
+                row.querySelectorAll('td').forEach(cell => {
+                    if (cell.innerText.toLowerCase().includes(val)) match = true;
+                });
+                row.style.display = match ? '' : 'none';
+            });
         }
-    });
-    closeEditModal.onclick = function() { editModal.style.display = 'none'; }
-    // Save Edit
-    const editForm = document.getElementById('editForm');
-    editForm.onsubmit = function(e) {
-        e.preventDefault();
-        const formData = new FormData(editForm);
-        fetch('update_reservation.php', {
+        // Create Reservation Modal
+        const createModal = document.getElementById('createModal');
+        const createBtn = document.getElementById('createBtn');
+        const closeCreateModal = document.getElementById('closeCreateModal');
+        createBtn.onclick = function() { createModal.style.display = 'block'; }
+        closeCreateModal.onclick = function() { createModal.style.display = 'none'; }
+
+        // --- AJAX CREATE RESERVATION ---
+        document.getElementById('createForm').onsubmit = function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            // ReservationID is now auto-generated on the server, so do not send it
+            formData.delete('ReservationID');
+            fetch('reservation.php', {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    createModal.style.display = 'none';
+                    location.reload();
+                } else {
+                    alert('Create failed.');
+                }
+            });
+        };
+
+        // Delete Modal
+        const deleteModal = document.getElementById('deleteModal');
+        const closeDeleteModal = document.getElementById('closeDeleteModal');
+        let deleteReservationId = null;
+        let deleteRow = null;
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.onclick = function() {
+            deleteReservationId = this.dataset.id;
+            // Find the row to delete
+            deleteRow = this.closest('tr');
+            deleteModal.style.display = 'block';
+            }
+        });
+        closeDeleteModal.onclick = function() { 
+            deleteModal.style.display = 'none'; 
+            deleteReservationId = null;
+            deleteRow = null;
+        }
+        document.querySelector('#deleteModal .cancel-delete').onclick = function() {
+            deleteModal.style.display = 'none';
+            deleteReservationId = null;
+            deleteRow = null;
+        }
+        document.querySelector('#deleteModal .confirm-delete').onclick = function() {
+            if (!deleteReservationId) return;
+            const formData = new FormData();
+            formData.append('deleteReservation', 1);
+            formData.append('ReservationID', deleteReservationId);
+            fetch('reservation.php', {
             method: 'POST',
             body: formData
-        })
-        .then(res => res.json())
-        .then(data => {
+            })
+            .then(res => res.json())
+            .then(data => {
             if (data.success) {
-                // Update the table row in the UI
-                const row = document.querySelector('tr[data-id="' + formData.get('ReservationID') + '"]');
-                row.children[1].innerHTML = '<b>' + formData.get('StudentID') + '</b>';
-                row.children[2].innerHTML = '<b>' + formData.get('GuestName') + '</b>';
-                row.children[3].innerHTML = '<b>' + new Date(formData.get('PCheckInDate')).toLocaleDateString() + '</b>';
-                row.children[4].innerHTML = '<b>' + new Date(formData.get('PCheckOutDate')).toLocaleDateString() + '</b>';
-                row.children[5].innerHTML = formData.get('RoomNumber');
-                row.children[6].innerHTML = '<b>' + formData.get('RoomType') + '</b>';
-                row.children[7].innerHTML = '<b>' + formData.get('Status') + '</b>';
-                editModal.style.display = 'none';
+                // Remove only the deleted row from the table
+                if (deleteRow) deleteRow.remove();
+                deleteModal.style.display = 'none';
             } else {
-                alert('Update failed.');
+                alert('Delete failed.');
+            }
+            deleteReservationId = null;
+            deleteRow = null;
+            });
+        }
+
+        // --- FILTER LOGIC ---
+        const filterBtn = document.getElementById('filterBtn');
+        const filterDropdown = document.getElementById('filterDropdown');
+        const clearFilterBtn = document.getElementById('clearFilterBtn');
+        filterBtn.onclick = function() {
+            filterDropdown.classList.toggle('active');
+        }
+        document.addEventListener('click', function(e) {
+            if (!filterDropdown.contains(e.target) && e.target !== filterBtn) {
+                filterDropdown.classList.remove('active');
             }
         });
-    }
-    // View Modal
-    const viewModal = document.getElementById('viewModal');
-    const closeViewModal = document.getElementById('closeViewModal');
-    document.querySelectorAll('.view-btn').forEach(btn => {
-        btn.onclick = function() {
-            viewModal.style.display = 'block';
-            document.getElementById('viewDetails').innerHTML = `
-                <p><label>Reservation ID:</label> <span>${this.dataset.id}</span></p>
-                <p><label>Student ID:</label> <span>${this.dataset.student}</span></p>
-                <p><label>Guest Name:</label> <span>${this.dataset.guest}</span></p>
-                <p><label>Check-in Date:</label> <span>${this.dataset.checkin.split('T')[0]}</span></p>
-                <p><label>Check-out Date:</label> <span>${this.dataset.checkout.split('T')[0]}</span></p>
-                <p><label>Room Number:</label> <span>${this.dataset.room}</span></p>
-                <p><label>Room Type:</label> <span>${this.dataset.type}</span></p>
-                <p><label>Status:</label> <span>${this.dataset.status}</span></p>
-            `;
+        clearFilterBtn.onclick = function() {
+            window.location = 'reservation.php';
         }
-    });
-    closeViewModal.onclick = function() { viewModal.style.display = 'none'; }
-    window.onclick = function(event) {
-        if (event.target == editModal) editModal.style.display = 'none';
-        if (event.target == viewModal) viewModal.style.display = 'none';
-    }
-    // Search and filter logic
-    const searchInput = document.getElementById('searchInput');
-    const filterBtn = document.getElementById('filterBtn');
-    const filterDropdown = document.getElementById('filterDropdown');
-    const applyFilterBtn = document.getElementById('applyFilterBtn');
-    const clearFilterBtn = document.getElementById('clearFilterBtn');
-    const filterForm = document.getElementById('filterForm');
-    const tableRows = document.querySelectorAll('.reservation-table tbody tr');
-
-    filterBtn.onclick = function() {
-        filterDropdown.classList.toggle('active');
-    }
-    document.addEventListener('click', function(e) {
-        if (!filterDropdown.contains(e.target) && e.target !== filterBtn) {
-            filterDropdown.classList.remove('active');
-        }
-    });
-
-    function rowMatches(row, filters) {
-        const cells = row.querySelectorAll('td');
-        // ReservationID, GuestName, Check-in, Check-out, RoomNumber, RoomType, Status
-        if (filters.ReservationID && !cells[0].innerText.toLowerCase().includes(filters.ReservationID.toLowerCase())) return false;
-        if (filters.StudentID && !cells[1].innerText.toLowerCase().includes(filters.StudentID.toLowerCase())) return false;
-        if (filters.GuestName && !cells[1].innerText.toLowerCase().includes(filters.GuestName.toLowerCase())) return false;
-        if (filters.PCheckInDate && !cells[2].innerText.includes(filters.PCheckInDate)) return false;
-        if (filters.PCheckOutDate && !cells[3].innerText.includes(filters.PCheckOutDate)) return false;
-        if (filters.RoomNumber && !cells[4].innerText.toLowerCase().includes(filters.RoomNumber.toLowerCase())) return false;
-        if (filters.RoomType && !cells[5].innerText.toLowerCase().includes(filters.RoomType.toLowerCase())) return false;
-        if (filters.Status && !cells[6].innerText.toLowerCase().includes(filters.Status.toLowerCase())) return false;
-        return true;
-    }
-
-    applyFilterBtn.onclick = function() {
-        const formData = new FormData(filterForm);
-        const filters = Object.fromEntries(formData.entries());
-        tableRows.forEach(row => {
-            row.style.display = rowMatches(row, filters) ? '' : 'none';
-        });
-        filterDropdown.classList.remove('active');
-    }
-    clearFilterBtn.onclick = function() {
-        filterForm.reset();
-        tableRows.forEach(row => { row.style.display = ''; });
-    }
-    searchInput.oninput = function() {
-        const val = searchInput.value.toLowerCase();
-        tableRows.forEach(row => {
-            let match = false;
-            row.querySelectorAll('td').forEach(cell => {
-                if (cell.innerText.toLowerCase().includes(val)) match = true;
-            });
-            row.style.display = match ? '' : 'none';
-        });
-    }
-    // Create Reservation Modal
-    const createModal = document.getElementById('createModal');
-    const createBtn = document.getElementById('createBtn');
-    const closeCreateModal = document.getElementById('closeCreateModal');
-    createBtn.onclick = function() { createModal.style.display = 'block'; }
-    closeCreateModal.onclick = function() { createModal.style.display = 'none'; }
-    window.onclick = function(event) {
-        if (event.target == createModal) createModal.style.display = 'none';
-        if (event.target == editModal) editModal.style.display = 'none';
-        if (event.target == viewModal) viewModal.style.display = 'none';
-    }
     </script>
 </body>
-</html> 
+</html>

@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (
 }
 
 // --- AJAX UPDATE ---
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ItemID']) && !isset($_POST['ItemName']) && !isset($_POST['Quantity'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ItemID']) && isset($_POST['ItemName']) && isset($_POST['Quantity'])) {
   $itemid = intval($_POST['ItemID']);
   $itemname = $conn->real_escape_string($_POST['ItemName']);
   $quantity = $conn->real_escape_string($_POST['Quantity']);
@@ -64,12 +64,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['deleteItem']) && isse
 }
 
 // --- CREATE ITEM (AJAX/POST) ---
+// FIX: Check for all required fields and use correct POST keys
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['createItem'])) {
+  // Validate required fields
+  $required = ['ItemName','DateReceived','DateExpiry','Quantity','CurrentStocks','RequestStocks','Price','Status'];
+  $missing = false;
+  foreach ($required as $field) {
+    if (!isset($_POST[$field]) || $_POST[$field] === '') {
+      $missing = true;
+      break;
+    }
+  }
+  if ($missing) {
+    if (isset($_SERVER['HTTP_X_REQUESTED_WITH'])) {
+      header('Content-Type: application/json');
+      echo json_encode(['success' => false, 'error' => 'Missing fields']);
+      exit;
+    } else {
+      header('Location: inventory.php?error=missing_fields');
+      exit;
+    }
+  }
   $itemname = $conn->real_escape_string($_POST['ItemName']);
+  $datereceived = $conn->real_escape_string($_POST['DateReceived']);
+  $dateexpiry = $conn->real_escape_string($_POST['DateExpiry']);
   $quantity = $conn->real_escape_string($_POST['Quantity']);
   $currentstocks = $conn->real_escape_string($_POST['CurrentStocks']);
+  $requeststocks = $conn->real_escape_string($_POST['RequestStocks']);
+  $price = $conn->real_escape_string($_POST['Price']);
   $status = $conn->real_escape_string($_POST['Status']);
-  $sql = "INSERT INTO inventory (ItemName, Quantity, CurrentStocks, Status) VALUES ('$itemname', '$quantity', '$currentstocks', '$status')";
+  $sql = "INSERT INTO inventory (ItemName, DateReceived, DateExpiry, Quantity, CurrentStocks, RequestStocks, Price, Status) VALUES ('$itemname', '$datereceived', '$dateexpiry', '$quantity', '$currentstocks', '$requeststocks', '$price', '$status')";
   $success = $conn->query($sql);
   if (isset($_SERVER['HTTP_X_REQUESTED_WITH'])) {
     header('Content-Type: application/json');
@@ -131,10 +155,12 @@ if (count($where) > 0) {
         .reservation-table th, .reservation-table td { padding: 1rem; border-bottom: 1px solid #f0f2f5; text-align: left; }
         .reservation-table th { background: #f8f9fa; color: #666; font-weight: 600; }
         .reservation-table td { color: #222; font-weight: 500; }
-        /* Action Buttons */
+       /* Action Buttons */
         .action-group {
             display: flex;
-            gap: 0.5rem;
+            gap: 0.3rem;
+            justify-content: center;
+            align-items: center;
         }
         .action-btn {
             display: inline-flex;
@@ -142,36 +168,49 @@ if (count($where) > 0) {
             justify-content: center;
             border: none;
             outline: none;
-            border-radius: 0.5rem;
-            padding: 0.5rem 0.9rem;
-            font-size: 1rem;
-            font-weight: 600;
-            color: #fff;
+            border-radius: 50%;
+            padding: 0.3rem;
+            font-size: 1.1rem;
+            background: none;
             cursor: pointer;
-            transition: background 0.2s, box-shadow 0.2s, color 0.2s;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.07);
-            gap: 0.4rem;
+            transition: background 0.18s, color 0.18s;
+            box-shadow: none;
         }
-        .action-btn.edit-btn {
-            background: var(--action-edit);
+        .action-btn.edit-btn i {
+            color: var(--action-edit);
         }
-        .action-btn.edit-btn:hover {
-            background: var(--theme-green-dark);
+        .action-btn.edit-btn:hover, .action-btn.edit-btn:focus {
+            background: #e6f5ea;
         }
-        .action-btn.view-btn {
-            background: var(--action-view);
+        .action-btn.edit-btn:hover i, .action-btn.edit-btn:focus i {
+            color: var(--theme-green-dark);
         }
-        .action-btn.view-btn:hover {
-            background: #00916e;
+        .action-btn.view-btn i {
+            color: var(--action-view);
         }
-        .action-btn.delete-btn {
-            background: var(--action-delete);
+        .action-btn.view-btn:hover, .action-btn.view-btn:focus {
+            background: #e6f5ea;
         }
-        .action-btn.delete-btn:hover {
-            background: #c0392b;
+        .action-btn.view-btn:hover i, .action-btn.view-btn:focus i {
+            color: #00916e;
+        }
+        .action-btn.delete-btn i {
+            color: var(--action-delete);
+        }
+        .action-btn.delete-btn:hover, .action-btn.delete-btn:focus {
+            background: #fbeaea;
+        }
+        .action-btn.delete-btn:hover i, .action-btn.delete-btn:focus i {
+            color: #c0392b;
         }
         .action-btn i {
-            font-size: 1.1em;
+            font-size: 1em;
+            margin: 0;
+        }
+        /* Center the Actions column */
+        .reservation-table td:nth-child(6) {
+            text-align: center;
+            vertical-align: middle;
         }
         /* Modal styles */
         .modal { display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background: rgba(0,0,0,0.3); }
@@ -368,6 +407,37 @@ if (count($where) > 0) {
             background: #ededed;
             color: var(--theme-green);
         }
+        /* Download icon button in table cell */
+        .download-table-btn {
+            background: none;
+            border: none;
+            color: #008000;
+            border-radius: 50%;
+            padding: 0.3rem;
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s, color 0.2s;
+            margin: 0 auto; /* Center horizontally */
+        }
+        .download-table-btn i {
+            font-size: 1.05em;
+            color: #008000;
+            transition: color 0.2s;
+        }
+        .download-table-btn:hover, .download-table-btn:focus {
+            background: #e6f5ea;
+        }
+        .download-table-btn:hover i, .download-table-btn:focus i {
+            color: #005c00;
+        }
+        /* Center the download button in the table cell */
+        .reservation-table td:last-child {
+            text-align: center;
+            vertical-align: middle;
+        }
     </style>
 </head>
 <body>
@@ -449,6 +519,7 @@ if (count($where) > 0) {
       <th>Current Stocks</th>
       <th>Status</th>
       <th>Actions</th>
+      <th>Download</th>
       </tr>
     </thead>
     <tbody>
@@ -468,21 +539,26 @@ if (count($where) > 0) {
           data-quantity="<?php echo htmlspecialchars($row['Quantity']); ?>"
           data-currentstocks="<?php echo htmlspecialchars($row['CurrentStocks']); ?>"
           data-status="<?php echo htmlspecialchars($row['Status']); ?>"
-
-><i class="fas fa-edit"></i></button>
-<button type="button" class="action-btn view-btn"
-  data-id="<?php echo $row['ItemID']; ?>"
-  data-itemname="<?php echo htmlspecialchars($row['ItemName']); ?>"
-  data-quantity="<?php echo htmlspecialchars($row['Quantity']); ?>"
-  data-currentstocks="<?php echo htmlspecialchars($row['CurrentStocks']); ?>"
-  data-status="<?php echo htmlspecialchars($row['Status']); ?>"
-
-><i class="fas fa-eye"></i></button>
-<button type="button" class="action-btn delete-btn"
-  data-id="<?php echo $row['ItemID']; ?>"
-><i class="fas fa-trash"></i></button>
+        ><i class="fas fa-edit"></i></button>
+        <button type="button" class="action-btn view-btn"
+          data-id="<?php echo $row['ItemID']; ?>"
+          data-itemname="<?php echo htmlspecialchars($row['ItemName']); ?>"
+          data-quantity="<?php echo htmlspecialchars($row['Quantity']); ?>"
+          data-currentstocks="<?php echo htmlspecialchars($row['CurrentStocks']); ?>"
+          data-requeststocks="<?php echo isset($row['RequestStocks']) ? htmlspecialchars($row['RequestStocks']) : ''; ?>"
+          data-price="<?php echo isset($row['Price']) ? htmlspecialchars($row['Price']) : ''; ?>"
+          data-status="<?php echo htmlspecialchars($row['Status']); ?>"
+        ><i class="fas fa-eye"></i></button>
+        <button type="button" class="action-btn delete-btn"
+          data-id="<?php echo $row['ItemID']; ?>"
+        ><i class="fas fa-trash"></i></button>
         </div>
       </td>
+      <td>
+              <button class="download-table-btn" title="Download Table" onclick="showDownloadModal(event)">
+                <i class="fas fa-download"></i>
+              </button>
+            </td>
       </tr>
       <?php endwhile; ?>
     <?php else: ?>
@@ -520,6 +596,132 @@ if (count($where) > 0) {
     <div id="viewDetails"></div>
   </div>
   </div>
+  <!-- Download Modal -->
+  <div id="downloadModal" class="modal">
+    <div class="modal-content" style="width: 350px;">
+      <span class="close" id="closeDownloadModal">&times;</span>
+      <h2>Download Table</h2>
+      <div style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1.5rem;">
+        <button class="filter-btn" id="copyTableBtn"><i class="fas fa-copy"></i> Copy </button>
+        <button class="filter-btn" id="csvTableBtn"><i class="fas fa-file-csv"></i> CSV File</button>
+        <button class="filter-btn" id="excelTableBtn"><i class="fas fa-file-excel"></i> Excel File</button>
+        <button class="filter-btn" id="pdfTableBtn"><i class="fas fa-file-pdf"></i> PDF File</button>
+        <button class="filter-btn" id="printTableBtn"><i class="fas fa-file-pdf"></i> Print File</button>
+      </div>
+    </div>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script>
+    // Fix: Add missing toggleMenu function to prevent JS errors
+    function toggleMenu(id) {
+      var submenu = document.getElementById(id);
+      if (submenu) submenu.classList.toggle('active');
+    }
+    // Download Modal logic
+    const downloadModal = document.getElementById('downloadModal');
+    const closeDownloadModal = document.getElementById('closeDownloadModal');
+
+    // Show modal from table cell download icon
+    function showDownloadModal(e) {
+      e.preventDefault();
+      downloadModal.style.display = 'block';
+    }
+
+    closeDownloadModal.onclick = function() {
+      downloadModal.style.display = 'none';
+    };
+    window.addEventListener('click', function(e) {
+      if (e.target == downloadModal) downloadModal.style.display = 'none';
+    });
+
+    // Helper: get table data as array (optionally exclude actions/download columns)
+    function getTableData(excludeActions = false) {
+      const rows = Array.from(document.querySelectorAll('.reservation-table tbody tr'))
+        .filter(row => row.style.display !== 'none');
+      let headers = Array.from(document.querySelectorAll('.reservation-table thead th'));
+      let colCount = headers.length;
+      if (excludeActions) {
+        // Remove last two columns: Actions and Download
+        headers = headers.slice(0, -2);
+        colCount = headers.length;
+      } else {
+        // Remove only Download column
+        headers = headers.slice(0, -1);
+        colCount = headers.length;
+      }
+      headers = headers.map(th => th.innerText.trim());
+      const data = rows.map(row =>
+        Array.from(row.querySelectorAll('td')).slice(0, colCount).map(td => td.innerText.trim())
+      );
+      return { headers, data };
+    }
+
+    // Copy Table
+    document.getElementById('copyTableBtn').onclick = function() {
+      const { headers, data } = getTableData();
+      const text = [headers.join('\t'), ...data.map(row => row.join('\t'))].join('\n');
+      navigator.clipboard.writeText(text).then(() => {
+        alert('Table copied to clipboard!');
+        downloadModal.style.display = 'none';
+      });
+    };
+
+    // Download CSV
+    document.getElementById('csvTableBtn').onclick = function() {
+      const { headers, data } = getTableData();
+      const csv = [headers.join(','), ...data.map(row => row.map(cell => `"${cell.replace(/"/g, '""')}"`).join(','))].join('\r\n');
+      const blob = new Blob([csv], {type: 'text/csv'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'students.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      downloadModal.style.display = 'none';
+    };
+
+    // Download Excel
+    document.getElementById('excelTableBtn').onclick = function() {
+      const { headers, data } = getTableData();
+      const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Students");
+      XLSX.writeFile(wb, "students.xlsx");
+      downloadModal.style.display = 'none';
+    };
+
+    // Download PDF
+    document.getElementById('pdfTableBtn').onclick = function() {
+      const { headers, data } = getTableData();
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.autoTable({
+        head: [headers],
+        body: data,
+        styles: { fontSize: 9 },
+        headStyles: { fillColor: [0,128,0] }
+      });
+      doc.save('students.pdf');
+      downloadModal.style.display = 'none';
+    };
+
+    // Print Table (exclude actions/download columns)
+    document.getElementById('printTableBtn').onclick = function() {
+      const { headers, data } = getTableData(true);
+      let html = '<table border="1" cellpadding="8" cellspacing="0" style="border-collapse:collapse;width:100%">';
+      html += '<thead><tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr></thead>';
+      html += '<tbody>' + data.map(row => '<tr>' + row.map(cell => `<td>${cell}</td>`).join('') + '</tr>').join('') + '</tbody></table>';
+      const win = window.open('', '', 'width=900,height=700');
+      win.document.write('<html><head><title>Print Students</title></head><body>' + html + '</body></html>');
+      win.document.close();
+      win.print();
+      downloadModal.style.display = 'none';
+    };
+  </script>
+  <!-- jsPDF autotable plugin -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
   <!-- Create Booking Modal -->
   <div id="createModal" class="modal">
   <div class="modal-content">
@@ -540,8 +742,14 @@ if (count($where) > 0) {
       <option value="Denied">Denied</option>
       </select>
     </p>
-        <button type="submit">Create</button>
+        <button type="submit" id="createSubmitBtn">Create</button>
     </form>
+    <div id="createSuccessMsg" style="display:none; color:green; margin-top:1rem; text-align:center;">
+      Item created successfully!
+    </div>
+    <div id="createErrorMsg" style="display:none; color:red; margin-top:1rem; text-align:center;">
+      Failed to create item. Please try again.
+    </div>
   </div>
   </div>
   <!-- Delete Modal -->
@@ -630,27 +838,45 @@ if (count($where) > 0) {
   const createModal = document.getElementById('createModal');
   const createBtn = document.getElementById('createBtn');
   const closeCreateModal = document.getElementById('closeCreateModal');
-  createBtn.onclick = function() { createModal.style.display = 'block'; }
+  createBtn.onclick = function() { 
+    document.getElementById('createForm').reset();
+    document.getElementById('createSuccessMsg').style.display = 'none';
+    document.getElementById('createErrorMsg').style.display = 'none';
+    document.getElementById('createSubmitBtn').disabled = false;
+    createModal.style.display = 'block'; 
+  }
   closeCreateModal.onclick = function() { createModal.style.display = 'none'; }
 
   // --- AJAX CREATE BOOKING ---
   document.getElementById('createForm').onsubmit = function(e) {
-  e.preventDefault();
-  const formData = new FormData(this);
-  fetch('inventory.php', {
-    method: 'POST',
-    body: formData,
-    headers: { 'X-Requested-With': 'XMLHttpRequest' }
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (data.success) {
-    createModal.style.display = 'none';
-    location.reload();
-    } else {
-    alert('Create failed.');
-    }
-  });
+    e.preventDefault();
+    const formData = new FormData(this);
+    const submitBtn = document.getElementById('createSubmitBtn');
+    submitBtn.disabled = true;
+    document.getElementById('createSuccessMsg').style.display = 'none';
+    document.getElementById('createErrorMsg').style.display = 'none';
+    fetch('inventory.php', {
+      method: 'POST',
+      body: formData,
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        document.getElementById('createSuccessMsg').style.display = 'block';
+        setTimeout(() => {
+          createModal.style.display = 'none';
+          location.reload();
+        }, 900);
+      } else {
+        document.getElementById('createErrorMsg').style.display = 'block';
+        submitBtn.disabled = false;
+      }
+    })
+    .catch(() => {
+      document.getElementById('createErrorMsg').style.display = 'block';
+      submitBtn.disabled = false;
+    });
   };
 
   // Delete Modal

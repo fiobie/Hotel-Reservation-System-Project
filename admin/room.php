@@ -18,6 +18,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (
     $where[] = "RoomNumber = ?";
     $params[] = $_GET['RoomNumber'];
   }
+  if (!empty($_GET['RoomType'])) {
+    $where[] = "RoomType = ?";
+    $params[] = $_GET['RoomType'];
+  }
   if (!empty($_GET['RoomPerHour'])) {
     $where[] = "RoomPerHour = ?";
     $params[] = $_GET['RoomPerHour'];
@@ -33,22 +37,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (
 }
 
 // --- AJAX UPDATE ---
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['RoomID']) && !isset($_POST['RoomNumber']) && !isset($_POST['RoomType'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['RoomID']) && !isset($_POST['deleteRoom']) && !isset($_POST['createRoom'])) {
   $roomid = intval($_POST['RoomID']);
-  $roomnumber = $conn->real_escape_string($_POST['RoomNumber']);
-  $roomtype = $conn->real_escape_string($_POST['RoomType']);
-  $roomperhour = $conn->real_escape_string($_POST['RoomPerHour']);
-  $roomstatus = $conn->real_escape_string($_POST['RoomStatus']);
-  $capacity = $conn->real_escape_string($_POST['Capacity']);
+  $roomnumber = $_POST['RoomNumber'];
+  $roomtype = $_POST['RoomType'];
+  $roomperhour = floatval($_POST['RoomPerHour']);
+  $roomstatus = $_POST['RoomStatus'];
+  $capacity = intval($_POST['Capacity']);
 
-  $sql = "UPDATE room SET 
-    RoomNumber='$roomnumber',
-    RoomType='$roomtype',
-    RoomPerHour='$roomperhour',
-    RoomStatus='$roomstatus',
-    Capacity='$capacity'
-    WHERE RoomID=$roomid";
-  $success = $conn->query($sql);
+  // Use correct types: RoomNumber (string/int), RoomType (string), RoomPerHour (float), RoomStatus (string), Capacity (int), RoomID (int)
+  $stmt = $conn->prepare("UPDATE room SET RoomNumber=?, RoomType=?, RoomPerHour=?, RoomStatus=?, Capacity=? WHERE RoomID=?");
+  $stmt->bind_param("ssdssi", $roomnumber, $roomtype, $roomperhour, $roomstatus, $capacity, $roomid);
+  $success = $stmt->execute();
 
   header('Content-Type: application/json');
   echo json_encode(['success' => $success]);
@@ -137,44 +137,55 @@ if (count($where) > 0) {
         /* Action Buttons */
         .action-group {
             display: flex;
-            gap: 0.5rem;
+            gap: 0.3rem;
+            justify-content: center;
+            align-items: center;
         }
         .action-btn {
-            display: inline-flex;
+            display: flex;
             align-items: center;
             justify-content: center;
             border: none;
             outline: none;
-            border-radius: 0.5rem;
-            padding: 0.5rem 0.9rem;
-            font-size: 1rem;
-            font-weight: 600;
-            color: #fff;
+            border-radius: 50%;
+            width: 34px;
+            height: 34px;
+            font-size: 1.05rem;
+            color: #008000;
+            background: none;
             cursor: pointer;
-            transition: background 0.2s, box-shadow 0.2s, color 0.2s;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.07);
-            gap: 0.4rem;
+            transition: background 0.2s, color 0.2s;
+            box-shadow: none;
+            padding: 0;
         }
         .action-btn.edit-btn {
-            background: var(--action-edit);
+            color: var(--action-edit);
         }
         .action-btn.edit-btn:hover {
-            background: var(--theme-green-dark);
+            background: #e6f5ea;
+            color: var(--theme-green-dark);
         }
         .action-btn.view-btn {
-            background: var(--action-view);
+            color: var(--action-view);
         }
         .action-btn.view-btn:hover {
-            background: #00916e;
+            background: #e6f5ea;
+            color: #00916e;
         }
         .action-btn.delete-btn {
-            background: var(--action-delete);
+            color: var(--action-delete);
         }
         .action-btn.delete-btn:hover {
-            background: #c0392b;
+            background: #fbeaea;
+            color: #c0392b;
         }
         .action-btn i {
             font-size: 1.1em;
+        }
+        /* Center the action group in the table cell */
+        .reservation-table td:nth-child(7) {
+            text-align: center;
+            vertical-align: middle;
         }
         /* Modal styles */
         .modal { display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background: rgba(0,0,0,0.3); }
@@ -371,6 +382,37 @@ if (count($where) > 0) {
             background: #ededed;
             color: var(--theme-green);
         }
+         /* Download icon button in table cell */
+        .download-table-btn {
+            background: none;
+            border: none;
+            color: #008000;
+            border-radius: 50%;
+            padding: 0.3rem;
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s, color 0.2s;
+            margin: 0 auto; /* Center horizontally */
+        }
+        .download-table-btn i {
+            font-size: 1.05em;
+            color: #008000;
+            transition: color 0.2s;
+        }
+        .download-table-btn:hover, .download-table-btn:focus {
+            background: #e6f5ea;
+        }
+        .download-table-btn:hover i, .download-table-btn:focus i {
+            color: #005c00;
+        }
+        /* Center the download button in the table cell */
+        .reservation-table td:last-child {
+            text-align: center;
+            vertical-align: middle;
+        }
     </style>
 </head>
 <body>
@@ -408,6 +450,18 @@ if (count($where) > 0) {
             <a class="nav-link" href="logout.php"><i class="fas fa-sign-out-alt"></i>Logout</a>
         </div>
     </div>
+
+  <!-- Top Bar -->
+        <div class="top-bar" id="topBar">
+            <button class="top-bar-toggle" id="sidebarToggle" aria-label="Toggle Sidebar"><i class="fas fa-bars"></i></button>
+            <div class="top-bar-right">
+                <div class="top-bar-icon" title="Email"><i class="fas fa-envelope"></i></div>
+                <div class="top-bar-icon" title="Notifications"><i class="fas fa-bell"></i></div>
+                <div class="top-bar-account" title="Account">PB</div>
+            </div>
+        </div>
+  
+  <!-- Main Content -->
   <div class="main-content">
   <div class="reservation-section">
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
@@ -441,7 +495,7 @@ if (count($where) > 0) {
         </form>
       </div>
       </div>
-      <button class="create-btn" id="createBtn">Create Booking</button>
+      <button class="create-btn" id="createBtn">Create Room</button>
     </div>
     </div>
     <table class="reservation-table">
@@ -454,6 +508,7 @@ if (count($where) > 0) {
       <th>Room Status</th>
       <th>Capacity</th>
       <th>Actions</th>
+      <th>Download</th>
       </tr>
     </thead>
     <tbody>
@@ -491,6 +546,11 @@ if (count($where) > 0) {
 ><i class="fas fa-trash"></i></button>
         </div>
       </td>
+      <td>
+              <button class="download-table-btn" title="Download Table" onclick="showDownloadModal(event)">
+                <i class="fas fa-download"></i>
+              </button>
+            </td>
       </tr>
       <?php endwhile; ?>
     <?php else: ?>
@@ -537,6 +597,127 @@ if (count($where) > 0) {
     <div id="viewDetails"></div>
   </div>
   </div>
+  <!-- Download Modal -->
+  <div id="downloadModal" class="modal">
+    <div class="modal-content" style="width: 350px;">
+      <span class="close" id="closeDownloadModal">&times;</span>
+      <h2>Download Table</h2>
+      <div style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1.5rem;">
+        <button class="filter-btn" id="copyTableBtn"><i class="fas fa-copy"></i> Copy </button>
+        <button class="filter-btn" id="csvTableBtn"><i class="fas fa-file-csv"></i> CSV File</button>
+        <button class="filter-btn" id="excelTableBtn"><i class="fas fa-file-excel"></i> Excel File</button>
+        <button class="filter-btn" id="pdfTableBtn"><i class="fas fa-file-pdf"></i> PDF File</button>
+        <button class="filter-btn" id="printTableBtn"><i class="fas fa-file-pdf"></i> Print File</button>
+      </div>
+    </div>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script>
+    // Download Modal logic
+    const downloadModal = document.getElementById('downloadModal');
+    const closeDownloadModal = document.getElementById('closeDownloadModal');
+
+    // Show modal from table cell download icon
+    function showDownloadModal(e) {
+      e.preventDefault();
+      downloadModal.style.display = 'block';
+    }
+
+    closeDownloadModal.onclick = function() {
+      downloadModal.style.display = 'none';
+    };
+    window.addEventListener('click', function(e) {
+      if (e.target == downloadModal) downloadModal.style.display = 'none';
+    });
+
+    // Helper: get table data as array (optionally exclude actions/download columns)
+    function getTableData(excludeActions = false) {
+      const rows = Array.from(document.querySelectorAll('.reservation-table tbody tr'))
+        .filter(row => row.style.display !== 'none');
+      let headers = Array.from(document.querySelectorAll('.reservation-table thead th'));
+      let colCount = headers.length;
+      if (excludeActions) {
+        // Remove last two columns: Actions and Download
+        headers = headers.slice(0, -2);
+        colCount = headers.length;
+      } else {
+        // Remove only Download column
+        headers = headers.slice(0, -1);
+        colCount = headers.length;
+      }
+      headers = headers.map(th => th.innerText.trim());
+      const data = rows.map(row =>
+        Array.from(row.querySelectorAll('td')).slice(0, colCount).map(td => td.innerText.trim())
+      );
+      return { headers, data };
+    }
+
+    // Copy Table
+    document.getElementById('copyTableBtn').onclick = function() {
+      const { headers, data } = getTableData();
+      const text = [headers.join('\t'), ...data.map(row => row.join('\t'))].join('\n');
+      navigator.clipboard.writeText(text).then(() => {
+        alert('Table copied to clipboard!');
+        downloadModal.style.display = 'none';
+      });
+    };
+
+    // Download CSV
+    document.getElementById('csvTableBtn').onclick = function() {
+      const { headers, data } = getTableData();
+      const csv = [headers.join(','), ...data.map(row => row.map(cell => `"${cell.replace(/"/g, '""')}"`).join(','))].join('\r\n');
+      const blob = new Blob([csv], {type: 'text/csv'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'students.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      downloadModal.style.display = 'none';
+    };
+
+    // Download Excel
+    document.getElementById('excelTableBtn').onclick = function() {
+      const { headers, data } = getTableData();
+      const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Students");
+      XLSX.writeFile(wb, "students.xlsx");
+      downloadModal.style.display = 'none';
+    };
+
+    // Download PDF
+    document.getElementById('pdfTableBtn').onclick = function() {
+      const { headers, data } = getTableData();
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.autoTable({
+        head: [headers],
+        body: data,
+        styles: { fontSize: 9 },
+        headStyles: { fillColor: [0,128,0] }
+      });
+      doc.save('students.pdf');
+      downloadModal.style.display = 'none';
+    };
+
+    // Print Table (exclude actions/download columns)
+    document.getElementById('printTableBtn').onclick = function() {
+      const { headers, data } = getTableData(true);
+      let html = '<table border="1" cellpadding="8" cellspacing="0" style="border-collapse:collapse;width:100%">';
+      html += '<thead><tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr></thead>';
+      html += '<tbody>' + data.map(row => '<tr>' + row.map(cell => `<td>${cell}</td>`).join('') + '</tr>').join('') + '</tbody></table>';
+      const win = window.open('', '', 'width=900,height=700');
+      win.document.write('<html><head><title>Print Students</title></head><body>' + html + '</body></html>');
+      win.document.close();
+      win.print();
+      downloadModal.style.display = 'none';
+    };
+  </script>
+  <!-- jsPDF autotable plugin -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
   <!-- Create Booking Modal -->
   <div id="createModal" class="modal">
   <div class="modal-content">
@@ -579,74 +760,87 @@ if (count($where) > 0) {
   </div>
   </div>
   <script>
+  // Sidebar submenu toggle
+  function toggleMenu(id) {
+    var submenu = document.getElementById(id);
+    submenu.classList.toggle('active');
+  }
+
   // Edit Modal
   const editModal = document.getElementById('editModal');
   const closeEditModal = document.getElementById('closeEditModal');
-  document.querySelectorAll('.edit-btn').forEach(btn => {
-  btn.onclick = function() {
-    editModal.style.display = 'block';
-    document.getElementById('editRoomID').value = this.dataset.id;
-    document.getElementById('editRoomNumber').value = this.dataset.roomnumber;
-    document.getElementById('editRoomType').value = this.dataset.roomtype;
-    document.getElementById('editRoomPerHour').value = this.dataset.roomperhour;
-    document.getElementById('editRoomStatus').value = this.dataset.roomstatus;
-    document.getElementById('editCapacity').value = this.dataset.capacity;
+  function bindEditBtns() {
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+      btn.onclick = function() {
+        editModal.style.display = 'block';
+        document.getElementById('editRoomID').value = this.dataset.id;
+        document.getElementById('editRoomNumber').value = this.dataset.roomnumber;
+        document.getElementById('editRoomType').value = this.dataset.roomtype;
+        document.getElementById('editRoomPerHour').value = this.dataset.roomperhour;
+        document.getElementById('editRoomStatus').value = this.dataset.roomstatus;
+        document.getElementById('editCapacity').value = this.dataset.capacity;
+      }
+    });
   }
-  });
+  bindEditBtns();
   closeEditModal.onclick = function() { editModal.style.display = 'none'; }
   // Save Edit
   const editForm = document.getElementById('editForm');
   editForm.onsubmit = function(e) {
-  e.preventDefault();
-  const formData = new FormData(editForm);
-  fetch('room.php', {
-    method: 'POST',
-    body: formData
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (data.success) {
-    location.reload();
-    } else {
-    alert('Update failed.');
-    }
-  });
+    e.preventDefault();
+    const formData = new FormData(editForm);
+    fetch('room.php', {
+      method: 'POST',
+      body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        editModal.style.display = 'none';
+        setTimeout(() => location.reload(), 200);
+      } else {
+        alert('Update failed.');
+      }
+    });
   }
   // View Modal
   const viewModal = document.getElementById('viewModal');
   const closeViewModal = document.getElementById('closeViewModal');
-  document.querySelectorAll('.view-btn').forEach(btn => {
-  btn.onclick = function() {
-    viewModal.style.display = 'block';
-    document.getElementById('viewDetails').innerHTML = `
-    <p><label>Room ID:</label> <span>${this.dataset.id}</span></p>
-    <p><label>Room Number:</label> <span>${this.dataset.roomnumber}</span></p>
-    <p><label>Room Type:</label> <span>${this.dataset.roomtype}</span></p>
-    <p><label>Room Per Hour:</label> <span>${this.dataset.roomperhour}</span></p>
-    <p><label>Room Status:</label> <span>${this.dataset.roomstatus}</span></p>
-    <p><label>Capacity:</label> <span>${this.dataset.capacity}</span></p>
-    `;
+  function bindViewBtns() {
+    document.querySelectorAll('.view-btn').forEach(btn => {
+      btn.onclick = function() {
+        viewModal.style.display = 'block';
+        document.getElementById('viewDetails').innerHTML = `
+        <p><label>Room ID:</label> <span>${this.dataset.id}</span></p>
+        <p><label>Room Number:</label> <span>${this.dataset.roomnumber}</span></p>
+        <p><label>Room Type:</label> <span>${this.dataset.roomtype}</span></p>
+        <p><label>Room Per Hour:</label> <span>${this.dataset.roomperhour}</span></p>
+        <p><label>Room Status:</label> <span>${this.dataset.roomstatus}</span></p>
+        <p><label>Capacity:</label> <span>${this.dataset.capacity}</span></p>
+        `;
+      }
+    });
   }
-  });
+  bindViewBtns();
   closeViewModal.onclick = function() { viewModal.style.display = 'none'; }
   window.onclick = function(event) {
-  if (event.target == editModal) editModal.style.display = 'none';
-  if (event.target == viewModal) viewModal.style.display = 'none';
-  if (event.target == createModal) createModal.style.display = 'none';
-  if (event.target == deleteModal) deleteModal.style.display = 'none';
+    if (event.target == editModal) editModal.style.display = 'none';
+    if (event.target == viewModal) viewModal.style.display = 'none';
+    if (event.target == createModal) createModal.style.display = 'none';
+    if (event.target == deleteModal) deleteModal.style.display = 'none';
   }
   // Search logic
   const searchInput = document.getElementById('searchInput');
   const tableRows = document.querySelectorAll('.reservation-table tbody tr');
   searchInput.oninput = function() {
-  const val = searchInput.value.toLowerCase();
-  tableRows.forEach(row => {
-    let match = false;
-    row.querySelectorAll('td').forEach(cell => {
-    if (cell.innerText.toLowerCase().includes(val)) match = true;
+    const val = searchInput.value.toLowerCase();
+    tableRows.forEach(row => {
+      let match = false;
+      row.querySelectorAll('td').forEach(cell => {
+        if (cell.innerText.toLowerCase().includes(val)) match = true;
+      });
+      row.style.display = match ? '' : 'none';
     });
-    row.style.display = match ? '' : 'none';
-  });
   }
   // Create Booking Modal
   const createModal = document.getElementById('createModal');
@@ -657,56 +851,60 @@ if (count($where) > 0) {
 
   // --- AJAX CREATE BOOKING ---
   document.getElementById('createForm').onsubmit = function(e) {
-  e.preventDefault();
-  const formData = new FormData(this);
-  fetch('room.php', {
-    method: 'POST',
-    body: formData,
-    headers: { 'X-Requested-With': 'XMLHttpRequest' }
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (data.success) {
-    createModal.style.display = 'none';
-    location.reload();
-    } else {
-    alert('Create failed.');
-    }
-  });
+    e.preventDefault();
+    const formData = new FormData(this);
+    fetch('room.php', {
+      method: 'POST',
+      body: formData,
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        createModal.style.display = 'none';
+        setTimeout(() => location.reload(), 200);
+      } else {
+        alert('Create failed.');
+      }
+    });
   };
 
   // Delete Modal
   const deleteModal = document.getElementById('deleteModal');
   const closeDeleteModal = document.getElementById('closeDeleteModal');
   let deleteBookingId = null;
-  document.querySelectorAll('.delete-btn').forEach(btn => {
-  btn.onclick = function() {
-    deleteBookingId = this.dataset.id;
-    deleteModal.style.display = 'block';
+  function bindDeleteBtns() {
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+      btn.onclick = function() {
+        deleteBookingId = this.dataset.id;
+        deleteModal.style.display = 'block';
+      }
+    });
   }
-  });
+  bindDeleteBtns();
   closeDeleteModal.onclick = function() { deleteModal.style.display = 'none'; }
   document.querySelector('#deleteModal .cancel-delete').onclick = function() {
-  deleteModal.style.display = 'none';
-  deleteBookingId = null;
+    deleteModal.style.display = 'none';
+    deleteBookingId = null;
   }
   document.querySelector('#deleteModal .confirm-delete').onclick = function() {
-  if (!deleteBookingId) return;
-  const formData = new FormData();
-  formData.append('deleteRoom', 1);
-  formData.append('RoomID', deleteBookingId);
-  fetch('room.php', {
-    method: 'POST',
-    body: formData
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (data.success) {
-    location.reload();
-    } else {
-    alert('Delete failed.');
-    }
-  });
+    if (!deleteBookingId) return;
+    const formData = new FormData();
+    formData.append('deleteRoom', 1);
+    formData.append('RoomID', deleteBookingId);
+    fetch('room.php', {
+      method: 'POST',
+      body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        deleteModal.style.display = 'none';
+        setTimeout(() => location.reload(), 200);
+      } else {
+        alert('Delete failed.');
+      }
+    });
   }
 
   // --- FILTER LOGIC ---
@@ -714,16 +912,23 @@ if (count($where) > 0) {
   const filterDropdown = document.getElementById('filterDropdown');
   const clearFilterBtn = document.getElementById('clearFilterBtn');
   filterBtn.onclick = function() {
-  filterDropdown.classList.toggle('active');
+    filterDropdown.classList.toggle('active');
   }
   document.addEventListener('click', function(e) {
-  if (!filterDropdown.contains(e.target) && e.target !== filterBtn) {
-    filterDropdown.classList.remove('active');
-  }
+    if (!filterDropdown.contains(e.target) && e.target !== filterBtn) {
+      filterDropdown.classList.remove('active');
+    }
   });
   clearFilterBtn.onclick = function() {
-  window.location = 'room.php';
+    window.location = 'room.php';
   }
+
+  // Re-bind buttons after AJAX reload (if using partial reload in future)
+  // function rebindAllBtns() {
+  //   bindEditBtns();
+  //   bindViewBtns();
+  //   bindDeleteBtns();
+  // }
   </script>
 </body>
 </html>
