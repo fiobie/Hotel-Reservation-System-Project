@@ -7,7 +7,7 @@ $params = [];
 
 // If filter form is submitted (GET)
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && (
-  isset($_GET['RoomID']) || isset($_GET['RoomNumber']) || isset($_GET['RoomType']) ||
+  isset($_GET['RoomID']) || isset($_GET['RoomNumber'])|| isset($_GET['RoomName']) || isset($_GET['RoomType']) ||
   isset($_GET['RoomPerHour']) || isset($_GET['RoomStatus']) || isset($_GET['Capacity'])
 )) {
   if (!empty($_GET['RoomID'])) {
@@ -17,6 +17,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (
   if (!empty($_GET['RoomNumber'])) {
     $where[] = "RoomNumber = ?";
     $params[] = $_GET['RoomNumber'];
+  }
+  if (!empty($_GET['RoomName'])) {
+    $where[] = "RoomName = ?";
+    $params[] = $_GET['RoomName'];
   }
   if (!empty($_GET['RoomType'])) {
     $where[] = "RoomType = ?";
@@ -40,14 +44,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['RoomID']) && !isset($_POST['deleteRoom']) && !isset($_POST['createRoom'])) {
   $roomid = intval($_POST['RoomID']);
   $roomnumber = $_POST['RoomNumber'];
+  $roomname = $_POST['RoomName'];
   $roomtype = $_POST['RoomType'];
   $roomperhour = floatval($_POST['RoomPerHour']);
   $roomstatus = $_POST['RoomStatus'];
   $capacity = intval($_POST['Capacity']);
 
   // Use correct types: RoomNumber (string/int), RoomType (string), RoomPerHour (float), RoomStatus (string), Capacity (int), RoomID (int)
-  $stmt = $conn->prepare("UPDATE room SET RoomNumber=?, RoomType=?, RoomPerHour=?, RoomStatus=?, Capacity=? WHERE RoomID=?");
-  $stmt->bind_param("ssdssi", $roomnumber, $roomtype, $roomperhour, $roomstatus, $capacity, $roomid);
+  $stmt = $conn->prepare("UPDATE room SET RoomNumber=?, RoomName=?, RoomType=?, RoomPerHour=?, RoomStatus=?, Capacity=? WHERE RoomID=?");
+  $stmt->bind_param("ssdssi", $roomnumber, $roomname, $roomtype, $roomperhour, $roomstatus, $capacity, $roomid);
   $success = $stmt->execute();
 
   header('Content-Type: application/json');
@@ -68,11 +73,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['deleteRoom']) && isse
 // --- CREATE ROOM (AJAX/POST) ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['createRoom'])) {
   $roomnumber = $conn->real_escape_string($_POST['RoomNumber']);
+  $roomname = $conn->real_escape_string($_POST['RoomName']);
   $roomtype = $conn->real_escape_string($_POST['RoomType']);
   $roomperhour = $conn->real_escape_string($_POST['RoomPerHour']);
   $roomstatus = $conn->real_escape_string($_POST['RoomStatus']);
   $capacity = $conn->real_escape_string($_POST['Capacity']);
-  $sql = "INSERT INTO room (RoomNumber, RoomType, RoomPerHour, RoomStatus, Capacity) VALUES ('$roomnumber', '$roomtype', '$roomperhour', '$roomstatus', '$capacity')";
+  $sql = "INSERT INTO room (RoomNumber, RoomName, RoomType, RoomPerHour, RoomStatus, Capacity) VALUES ('$roomnumber', '$roomtype', '$roomperhour', '$roomstatus', '$capacity')";
   $success = $conn->query($sql);
   if (isset($_SERVER['HTTP_X_REQUESTED_WITH'])) {
     header('Content-Type: application/json');
@@ -503,6 +509,7 @@ if (count($where) > 0) {
       <tr>
       <th>Room ID</th>
       <th>Room Number</th>
+      <th>Room Name</th>
       <th>Room Type</th>
       <th>Room Per Hour</th>
       <th>Room Status</th>
@@ -517,6 +524,7 @@ if (count($where) > 0) {
       <tr data-id="<?php echo $row['RoomID']; ?>">
       <td><b><?php echo $row['RoomID']; ?></b></td>
       <td><b><?php echo htmlspecialchars($row['RoomNumber']); ?></b></td>
+      <td><b><?php echo htmlspecialchars($row['RoomName']); ?></b></td>
       <td><b><?php echo htmlspecialchars($row['RoomType']); ?></b></td>
       <td><b><?php echo htmlspecialchars($row['RoomPerHour']); ?></b></td>
       <td><?php echo $row['RoomStatus']; ?></td>
@@ -526,6 +534,7 @@ if (count($where) > 0) {
         <button type="button" class="action-btn edit-btn"
           data-id="<?php echo $row['RoomID']; ?>"
           data-roomnumber="<?php echo htmlspecialchars($row['RoomNumber']); ?>"
+          data-roomname="<?php echo htmlspecialchars($row['RoomName']); ?>"
           data-roomtype="<?php echo htmlspecialchars($row['RoomType']); ?>"
           data-roomperhour="<?php echo htmlspecialchars($row['RoomPerHour']); ?>"
           data-roomstatus="<?php echo htmlspecialchars($row['RoomStatus']); ?>"
@@ -535,6 +544,7 @@ if (count($where) > 0) {
 <button type="button" class="action-btn view-btn"
   data-id="<?php echo $row['RoomID']; ?>"
   data-roomnumber="<?php echo htmlspecialchars($row['RoomNumber']); ?>"
+  data-roomname="<?php echo htmlspecialchars($row['RoomName']); ?>"
   data-roomtype="<?php echo htmlspecialchars($row['RoomType']); ?>"
   data-roomperhour="<?php echo htmlspecialchars($row['RoomPerHour']); ?>"
   data-roomstatus="<?php echo htmlspecialchars($row['RoomStatus']); ?>"
@@ -568,6 +578,7 @@ if (count($where) > 0) {
     <form id="editForm">
     <input type="hidden" name="RoomID" id="editRoomID">
     <p><label>Room Number:</label><br><input type="number" name="RoomNumber" id="editRoomNumber" required></p>
+    <p><label>Room Name:</label><br><input type="text" name="RoomName" id="editRoomName" required></p>
     <p><label>Room Type:</label><br>
       <select name="RoomType" id="editRoomType" required>
       <option value="Standard">Standard</option>
@@ -726,6 +737,7 @@ if (count($where) > 0) {
     <form id="createForm">
     <input type="hidden" name="createRoom" value="1">
     <p><label>Room Number:</label><br><input type="number" name="RoomNumber" required></p>
+    <p><label>Room Name:</label><br><input type="text" name="RoomName" required></p>
     <p><label>Room Type:</label><br>
       <select name="RoomType" required>
       <option value="Standard">Standard</option>
@@ -775,6 +787,7 @@ if (count($where) > 0) {
         editModal.style.display = 'block';
         document.getElementById('editRoomID').value = this.dataset.id;
         document.getElementById('editRoomNumber').value = this.dataset.roomnumber;
+        document.getElementById('editRoomName').value = this.dataset.roomname;
         document.getElementById('editRoomType').value = this.dataset.roomtype;
         document.getElementById('editRoomPerHour').value = this.dataset.roomperhour;
         document.getElementById('editRoomStatus').value = this.dataset.roomstatus;
@@ -813,6 +826,7 @@ if (count($where) > 0) {
         document.getElementById('viewDetails').innerHTML = `
         <p><label>Room ID:</label> <span>${this.dataset.id}</span></p>
         <p><label>Room Number:</label> <span>${this.dataset.roomnumber}</span></p>
+        <p><label>Room Name:</label> <span>${this.dataset.roomname}</span></p>
         <p><label>Room Type:</label> <span>${this.dataset.roomtype}</span></p>
         <p><label>Room Per Hour:</label> <span>${this.dataset.roomperhour}</span></p>
         <p><label>Room Status:</label> <span>${this.dataset.roomstatus}</span></p>
