@@ -678,6 +678,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 grid-template-columns: 1fr;
             }
         }
+        .enhanced-calendar-nav {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5rem;
+        }
+        .calendar-picker {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-left: 1.5rem;
+        }
+        .calendar-picker select,
+        .calendar-picker input[type="number"] {
+            padding: 0.4rem 0.7rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 1rem;
+            background: #fff;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+            transition: border 0.2s;
+        }
+        .calendar-picker select:focus,
+        .calendar-picker input[type="number"]:focus {
+            border-color: #008000;
+            outline: none;
+        }
+        .calendar-go-btn {
+            padding: 0.4rem 1.1rem;
+            background: #008000;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s, box-shadow 0.2s;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+        }
+        .calendar-go-btn:hover {
+            background: #006400;
+        }
     </style>
 </head>
 <body>
@@ -706,10 +748,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             </div>
             <div class="calendar-header">
                 <h1>Booking Schedule</h1>
-                <div class="calendar-nav">
+                <div class="calendar-nav enhanced-calendar-nav">
                     <a href="?month=<?php echo $month == 1 ? 12 : $month - 1; ?>&year=<?php echo $month == 1 ? $year - 1 : $year; ?>" class="calendar-nav-btn"><i class="fas fa-chevron-left"></i></a>
                     <span class="calendar-month-year"><?php echo date('F Y', $firstDay); ?></span>
                     <a href="?month=<?php echo $month == 12 ? 1 : $month + 1; ?>&year=<?php echo $month == 12 ? $year + 1 : $year; ?>" class="calendar-nav-btn"><i class="fas fa-chevron-right"></i></a>
+                    <div class="calendar-picker">
+                        <select id="monthSelect">
+                            <?php
+                            for ($m = 1; $m <= 12; $m++) {
+                                $selected = $m == $month ? 'selected' : '';
+                                echo "<option value=\"$m\" $selected>" . date('F', mktime(0,0,0,$m,1)) . "</option>";
+                            }
+                            ?>
+                        </select>
+                        <input type="number" id="yearInput" value="<?php echo $year; ?>" min="2000" max="2100">
+                        <button id="goToDateBtn" class="calendar-go-btn">Go</button>
+                    </div>
                 </div>
             </div>
 
@@ -1326,6 +1380,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     dropdown.innerHTML += `<option value="${room}">${room}</option>`;
                 });
                 if (selectedRoom) dropdown.value = selectedRoom;
+            }
+
+            // ============================================================================
+            // DATE PICKER LOGIC
+            // ============================================================================
+            var goBtn = document.getElementById('goToDateBtn');
+            if(goBtn) {
+                goBtn.addEventListener('click', function() {
+                    var month = document.getElementById('monthSelect').value;
+                    var year = document.getElementById('yearInput').value;
+                    window.location.href = '?month=' + month + '&year=' + year;
+                });
             }
         });
     </script>
