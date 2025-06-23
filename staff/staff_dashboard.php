@@ -833,7 +833,7 @@ $reservation = $conn->query("SELECT COUNT(*) as count FROM booking WHERE Booking
 
         document.addEventListener('DOMContentLoaded', function() {
             fetchLiveData(); // Initial fetch
-            setInterval(fetchLiveData, 30000); // Fetch every 30 seconds
+            setInterval(fetchLiveData, 1000); // Fetch every 1 second
             var refreshBtn = document.getElementById('manual-refresh-btn');
             if (refreshBtn) {
                 refreshBtn.addEventListener('click', function() {
