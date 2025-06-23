@@ -28,9 +28,25 @@ $bookings = [];
 $firstDateOfMonth = "$year-$month-01";
 $lastDateOfMonth = "$year-$month-$daysInMonth";
 
+// 1. Auto-update room status to 'Available' for finished stays
+$today = date('Y-m-d');
+$autoUpdateSql = "UPDATE room r
+    JOIN booking b ON r.RoomNumber = b.RoomNumber
+    SET r.RoomStatus = 'Available'
+    WHERE b.CheckOutDate < '$today' AND (b.BookingStatus = 'Confirmed' OR b.BookingStatus = 'Completed') AND r.RoomStatus != 'Available'";
+$conn->query($autoUpdateSql);
+
 $sql = "SELECT 
             b.*, 
-            s.FirstName, s.LastName, s.Gender, s.PhoneNumber, s.Address, s.Email, s.Nationality, s.BirthDate, s.StudentID as StudentIDNum
+            s.FirstName AS FirstName, 
+            s.LastName AS LastName, 
+            s.Gender AS Gender, 
+            s.PhoneNumber AS PhoneNumber, 
+            s.Address AS Address, 
+            s.Email AS Email, 
+            s.Nationality AS Nationality, 
+            s.BirthDate AS BirthDate, 
+            s.StudentID AS StudentIDNum
         FROM booking b
         LEFT JOIN student s ON b.StudentID = s.StudentID
         WHERE 
@@ -41,6 +57,36 @@ $result = $conn->query($sql);
 if ($result) {
     while($row = $result->fetch_assoc()) {
         $bookings[] = $row;
+    }
+}
+
+// Fetch reservation data and merge with bookings for calendar display
+$reservationSql = "SELECT * FROM reservation WHERE Status != 'Cancelled'";
+$reservationResult = $conn->query($reservationSql);
+if ($reservationResult) {
+    while ($row = $reservationResult->fetch_assoc()) {
+        // Map reservation fields to booking-like structure
+        $bookings[] = [
+            'BookingID' => 'R' . $row['ReservationID'], // Prefix to avoid collision
+            'StudentID' => null,
+            'RoomNumber' => $row['RoomNumber'],
+            'RoomType' => $row['RoomType'],
+            'CheckInDate' => $row['PCheckInDate'],
+            'CheckOutDate' => $row['PCheckOutDate'],
+            'BookingDate' => null,
+            'BookingStatus' => $row['Status'],
+            'Notes' => '',
+            'RoomStatus' => 'Reserved', // Always yellow for reservations
+            'FirstName' => $row['GuestName'],
+            'LastName' => '',
+            'Gender' => '',
+            'PhoneNumber' => '',
+            'Address' => '',
+            'Email' => '',
+            'Nationality' => '',
+            'BirthDate' => '',
+            'StudentIDNum' => '',
+        ];
     }
 }
 
@@ -57,6 +103,24 @@ function getBookingsForDate($date, $bookings) {
         }
     }
     return $bookingsOnDate;
+}
+
+// ============================================================================
+// AJAX HANDLER: Return available rooms by type for dropdown (for modal)
+// ============================================================================
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['roomType'])) {
+    header('Content-Type: application/json');
+    $roomType = $conn->real_escape_string($_GET['roomType']);
+    $rooms = [];
+    $sql = "SELECT RoomNumber FROM room WHERE RoomType = '$roomType' AND RoomStatus = 'Available' ORDER BY RoomNumber";
+    $result = $conn->query($sql);
+    if ($result) {
+        while ($row = $result->fetch_assoc()) {
+            $rooms[] = $row;
+        }
+    }
+    echo json_encode($rooms);
+    exit;
 }
 
 // ============================================================================
@@ -81,45 +145,71 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $bookingStatus = $_POST['bookingStatus'] ?? 'Pending';
     $roomType = $_POST['roomType'] ?? '';
     $specialRequest = $_POST['specialRequest'] ?? '';
+    $roomNumber = $_POST['roomNumber'] ?? '';
 
-    // A more robust solution would check for availability over the entire date range.
-    $roomSql = "SELECT RoomNumber FROM room WHERE RoomType = '$roomType' AND RoomStatus = 'Available' LIMIT 1";
-    $roomResult = $conn->query($roomSql);
+    // Validate required fields
+    if (empty($roomNumber) || empty($checkIn) || empty($checkOut)) {
+        echo json_encode(['success' => false, 'message' => 'Please select a room and provide check-in/check-out dates.']);
+        exit;
+    }
 
-    if ($roomResult && $roomResult->num_rows > 0) {
-        $room = $roomResult->fetch_assoc();
-        $roomNumber = $room['RoomNumber'];
+    // Check if the selected room is available for the given dates
+    $roomAvailableSql = "SELECT RoomNumber FROM room WHERE RoomNumber = ? AND RoomType = ? AND RoomStatus = 'Available'";
+    $stmt = $conn->prepare($roomAvailableSql);
+    $stmt->bind_param('is', $roomNumber, $roomType);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if (!$result || $result->num_rows === 0) {
+        echo json_encode(['success' => false, 'message' => 'Selected room is not available.']);
+        exit;
+    }
 
-        // Create a new student record for the guest
-        $studentSql = "INSERT INTO student (FirstName, LastName, Gender, PhoneNumber, Address, Email, Nationality, BirthDate, StudentID) 
+    // Check for overlapping bookings for this room
+    $overlapSql = "SELECT 1 FROM booking WHERE RoomNumber = ? AND BookingStatus NOT IN ('Cancelled', 'Completed') AND ((CheckInDate < ? AND CheckOutDate > ?) OR (CheckInDate < ? AND CheckOutDate > ?) OR (CheckInDate >= ? AND CheckOutDate <= ?))";
+    $stmt_overlap = $conn->prepare($overlapSql);
+    $stmt_overlap->bind_param('issssss', $roomNumber, $checkOut, $checkIn, $checkIn, $checkOut, $checkIn, $checkOut);
+    $stmt_overlap->execute();
+    $overlapResult = $stmt_overlap->get_result();
+    if ($overlapResult && $overlapResult->num_rows > 0) {
+        echo json_encode(['success' => false, 'message' => 'Selected room is already booked for the chosen dates.']);
+        exit;
+    }
+
+    // Create a new student record for the guest
+    $studentSql = "INSERT INTO student (FirstName, LastName, Gender, PhoneNumber, Address, Email, Nationality, BirthDate, StudentID) 
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    $stmt_student = $conn->prepare($studentSql);
+    if (!$stmt_student) {
+        echo json_encode(['success' => false, 'message' => 'Failed to prepare guest record statement: ' . $conn->error]);
+        exit;
+    }
+    $stmt_student->bind_param("sssssssss", $firstName, $lastName, $gender, $phone, $address, $email, $nationality, $birthdate, $studentIdNum);
+    
+    if ($stmt_student->execute()) {
+        $studentId = $conn->insert_id;
+
+        $roomStatus = (strtolower($bookingStatus) === 'pending' || strtolower($bookingStatus) === 'reserved') ? 'Reserved' : 'Booked';
+        $bookingSql = "INSERT INTO booking (StudentID, RoomNumber, RoomType, CheckInDate, CheckOutDate, BookingDate, BookingStatus, Notes, RoomStatus) 
                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        $stmt_student = $conn->prepare($studentSql);
-        $stmt_student->bind_param("sssssssss", $firstName, $lastName, $gender, $phone, $address, $email, $nationality, $birthdate, $studentIdNum);
+        $stmt_booking = $conn->prepare($bookingSql);
+        if (!$stmt_booking) {
+            echo json_encode(['success' => false, 'message' => 'Failed to prepare booking statement: ' . $conn->error]);
+            exit;
+        }
+        $stmt_booking->bind_param("iisssssss", $studentId, $roomNumber, $roomType, $checkIn, $checkOut, $bookingDate, $bookingStatus, $specialRequest, $roomStatus);
         
-        if ($stmt_student->execute()) {
-            $studentId = $conn->insert_id;
-
-            $bookingSql = "INSERT INTO booking (StudentID, RoomNumber, RoomType, CheckInDate, CheckOutDate, BookingDate, BookingStatus, Notes, RoomStatus) 
-                           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            $stmt_booking = $conn->prepare($bookingSql);
-            $roomStatus = 'Booked'; // When booking, room becomes booked.
-            $stmt_booking->bind_param("iisssssss", $studentId, $roomNumber, $roomType, $checkIn, $checkOut, $bookingDate, $bookingStatus, $specialRequest, $roomStatus);
-            
-            if ($stmt_booking->execute()) {
-                // Update room status
-                $updateRoomSql = "UPDATE room SET RoomStatus = 'Booked' WHERE RoomNumber = ?";
-                $stmt_update = $conn->prepare($updateRoomSql);
-                $stmt_update->bind_param("i", $roomNumber);
-                $stmt_update->execute();
-                echo json_encode(['success' => true, 'message' => 'Booking created successfully!']);
-            } else {
-                echo json_encode(['success' => false, 'message' => 'Failed to create booking.']);
-            }
+        if ($stmt_booking->execute()) {
+            // Update room status
+            $updateRoomSql = "UPDATE room SET RoomStatus = ? WHERE RoomNumber = ?";
+            $stmt_update = $conn->prepare($updateRoomSql);
+            $stmt_update->bind_param("si", $roomStatus, $roomNumber);
+            $stmt_update->execute();
+            echo json_encode(['success' => true, 'message' => 'Booking created successfully!']);
         } else {
-             echo json_encode(['success' => false, 'message' => 'Failed to create guest record.']);
+            echo json_encode(['success' => false, 'message' => 'Failed to create booking: ' . $stmt_booking->error]);
         }
     } else {
-        echo json_encode(['success' => false, 'message' => "No available rooms of type '$roomType'."]);
+         echo json_encode(['success' => false, 'message' => 'Failed to create guest record: ' . $stmt_student->error]);
     }
     exit;
 }
@@ -144,7 +234,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $email = $_POST['email'] ?? '';
     $phone = $_POST['phone'] ?? '';
 
-    if ($bookingId > 0 && $studentId > 0 && !empty($checkIn) && !empty($checkOut) && !empty($roomNumber)) {
+    if ($bookingId > 0 && $studentId > 0 && !empty($checkIn) && !empty($checkOut) && !empty($roomNumber) && is_numeric($roomNumber)) {
         if (strtotime($checkIn) >= strtotime($checkOut)) {
             echo json_encode(['success' => false, 'message' => 'Check-out date must be after check-in date.']);
             exit;
@@ -177,6 +267,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
     } else {
         echo json_encode(['success' => false, 'message' => 'Invalid input. Please check all fields.']);
+    }
+    exit;
+}
+
+// Add AJAX handler for early checkout
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] == 'early_checkout') {
+    $bookingId = $_POST['bookingId'] ?? 0;
+    $roomNumber = $_POST['roomNumber'] ?? '';
+    if ($bookingId > 0 && !empty($roomNumber)) {
+        $today = date('Y-m-d');
+        $sql = "UPDATE booking SET CheckOutDate = ?, BookingStatus = 'Completed' WHERE BookingID = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param('si', $today, $bookingId);
+        $success = $stmt->execute();
+        if ($success) {
+            $sql2 = "UPDATE room SET RoomStatus = 'Available' WHERE RoomNumber = ?";
+            $stmt2 = $conn->prepare($sql2);
+            $stmt2->bind_param('i', $roomNumber);
+            $stmt2->execute();
+            echo json_encode(['success' => true, 'message' => 'Guest checked out early. Room is now available.']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Failed to process early checkout.']);
+        }
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Invalid booking or room.']);
     }
     exit;
 }
@@ -233,18 +348,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-secondary); }
         .search-input { width: 100%; padding: 0.6rem 0.6rem 0.6rem 2.2rem; border-radius: 20px; border: 1px solid var(--border-color); background: var(--secondary-bg); font-size: 0.9rem; transition: border-color 0.2s, box-shadow 0.2s; }
         .search-input:focus { outline: none; border-color: var(--accent-color); box-shadow: 0 0 0 2px rgba(0,128,0,0.2); }
-        .control-btn { padding: 0.6rem 1.2rem; border: 1px solid var(--border-color); background: var(--secondary-bg); border-radius: 20px; font-size: 0.9rem; font-weight: 500; cursor: pointer; transition: all 0.2s; }
-        .control-btn:hover { background: #e9ecef; }
-        .walk-in-btn { background: #343a40; color: white; border-color: #343a40; }
-        .walk-in-btn:hover { background: #23272b; }
-
-        .calendar-legend { display: flex; justify-content: flex-end; align-items: center; gap: 1.5rem; margin-bottom: 1rem; }
-        .legend-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; }
-        .legend-badge { width: 12px; height: 12px; border-radius: 50%; }
-        .legend-available { background: #28a745; }
-        .legend-booked { background: #dc3545; }
-        .legend-reserved { background: #ffc107; }
-        .legend-maintenance { background: #6c757d; }
+        .control-btn { padding: 0.7rem 2rem; border-radius: 24px; border: 2px solid #4bb174; font-size: 1.1rem; font-weight: 600; background: #fff; color: #4bb174; cursor: pointer; transition: background 0.2s, color 0.2s, box-shadow 0.2s, border 0.2s; box-shadow: none; }
+        .control-btn:hover { background: #e6f4ea; color: #357a4b; border-color: #357a4b; }
+        .walk-in-btn { background: #4bb174; color: #fff; border: 2px solid #4bb174; }
+        .walk-in-btn:hover { background: #357a4b; color: #fff; border-color: #357a4b; }
 
         .calendar-grid { width: 100%; border-collapse: collapse; }
         .calendar-grid th { text-align: left; padding: 0.8rem; font-weight: 500; color: var(--text-secondary); border-bottom: 2px solid var(--border-color); }
@@ -272,69 +379,197 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         .booking-bar.status-reserved { background-color: #ffc107; color: #212529; }
         .booking-bar.status-maintenance { background-color: #6c757d; color: #ffffff; }
 
-        /* MODAL STYLES */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0,0,0,0.5);
-        }
+        /* Redesigned Modal Header and Modal for Pleasant Look */
         .modal-content {
-            background-color: #fefefe;
-            margin: 10% auto;
-            padding: 2rem;
-            border: 1px solid #888;
-            width: 80%;
-            max-width: 500px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        .modal-header {
+            background: #fff;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.12), 0 1.5px 8px 0 rgba(0,0,0,0.08);
+            border-radius: 1.5rem;
+            padding: 2.5rem;
+            min-width: 340px;
+            max-width: 900px;
+            width: 98vw;
+            margin: 2rem auto;
+            border: none;
+            position: relative;
+            transition: box-shadow 0.3s;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 1rem;
-            margin-bottom: 1rem;
+            flex-direction: column;
+            max-height: 95vh;
+            overflow: hidden;
         }
-        .modal-header h2 { font-size: 1.5rem; }
-        .close-btn { color: #aaa; font-size: 1.8rem; font-weight: bold; cursor: pointer; }
-        .close-btn:hover, .close-btn:focus { color: black; }
-        .form-group { margin-bottom: 1rem; }
-        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; }
-        .form-group input, .form-group select { width: 100%; padding: 0.6rem; border: 1px solid var(--border-color); border-radius: 4px; }
+        .modal-content form {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 1.1rem;
+            flex: 1 1 auto;
+            min-height: 0;
+            max-height: 70vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-bottom: 2.5rem;
+            padding-right: 1rem;
+            scrollbar-width: thin;
+            scrollbar-color: #b6e7c9 #f3f3f3;
+        }
+        .modal-content form::-webkit-scrollbar {
+            width: 10px;
+            background: #f3f3f3;
+            border-radius: 8px;
+        }
+        .modal-content form::-webkit-scrollbar-thumb {
+            background: #b6e7c9;
+            border-radius: 8px;
+            min-height: 40px;
+        }
+        .modal-content form::-webkit-scrollbar-thumb:hover {
+            background: #4bb174;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            margin-bottom: 1.2rem;
+            width: 100%;
+        }
+        .form-group label {
+            margin-bottom: 0.3rem;
+            font-weight: 600;
+            color: #2d4a36;
+            font-size: 0.98rem;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            border-radius: 0.9rem;
+            border: 1.5px solid #e0e7ef;
+            background: #f8fafc;
+            font-size: 1.08rem;
+            padding: 0.7rem 1.1rem;
+            margin-top: 0.1rem;
+            margin-bottom: 0.1rem;
+            box-shadow: 0 1.5px 6px 0 rgba(80, 180, 255, 0.03);
+            transition: border 0.2s, box-shadow 0.2s;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border: 1.5px solid #4f8cff;
+            box-shadow: 0 2px 12px 0 rgba(80, 180, 255, 0.10);
+            outline: none;
+        }
         .modal-footer {
             display: flex;
             justify-content: flex-end;
-            gap: 1rem;
-            padding-top: 1rem;
-            margin-top: 1rem;
-            border-top: 1px solid var(--border-color);
+            gap: 1.2rem;
+            margin-top: 2rem;
+            background: transparent;
+            position: static;
+            bottom: auto;
+            z-index: auto;
+            padding-bottom: 0;
         }
+        @media (max-width: 700px) {
+            .modal-content {
+                max-width: 98vw;
+                padding: 1rem 0.5rem 1.5rem 0.5rem;
+                border-radius: 1.2rem;
+            }
+        }
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 0 !important;
+            padding: 2rem 2.5rem 1.2rem 2.5rem;
+            border-radius: 1.5rem 1.5rem 0 0;
+            background: #f8fafc;
+            border-left: 8px solid #e0e0e0;
+            box-shadow: 0 2px 8px rgba(60,60,90,0.04);
+            min-height: 64px;
+            z-index: 10;
+        }
+        .modal-header h2, .modal-header h4 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin: 0;
+            letter-spacing: 0.01em;
+        }
+        .modal-header.status-booked {
+            border-left: 8px solid #dc3545;
+            background: #ffdde0;
+        }
+        .modal-header.status-reserved {
+            border-left: 8px solid #ffc107;
+            background: #fff7d6;
+        }
+        .modal-header.status-maintenance {
+            border-left: 8px solid #6c757d;
+            background: #e6e6e6;
+        }
+        .close-btn {
+            font-size: 1.5rem;
+            color: #888;
+            background: #fff;
+            border: 1.5px solid #e0e7ef;
+            border-radius: 50%;
+            width: 2.5rem;
+            height: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 1px 4px rgba(30,41,59,0.08);
+            transition: background 0.2s, color 0.2s, border 0.2s, transform 0.18s;
+            margin-left: 1rem;
+        }
+        .close-btn:hover {
+            background: #f8fafc;
+            color: #dc3545;
+            border-color: #dc3545;
+            transform: scale(1.08);
+        }
+        .guest-info-table th, .guest-info-table td {
+            background: #f8fafc;
+        }
+        /* Redesigned legend */
+        .booking-legend {
+            display: flex;
+            gap: 1.2rem;
+            align-items: center;
+            margin-bottom: 1.2rem;
+            font-size: 1rem;
+            background: #f8fafc;
+            border-radius: 1rem;
+            padding: 0.5rem 1.2rem;
+            box-shadow: 0 1px 4px rgba(60,60,90,0.04);
+            width: fit-content;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .legend-dot {
+            width: 1.1rem;
+            height: 1.1rem;
+            border-radius: 50%;
+            display: inline-block;
+            border: 2px solid #fff;
+            box-shadow: 0 1px 4px rgba(60,60,90,0.08);
+            vertical-align: middle;
+        }
+        .legend-booked { background: #dc3545; }
+        .legend-reserved { background: #ffc107; }
+        .legend-maintenance { background: #6c757d; }
+        /* Smooth transition for header color changes */
+        .modal-header { transition: border-color 0.3s, background 0.3s; }
 
         /* NEW FORM STYLES */
         .form-step { display: none; }
         .form-step.active { display: block; }
-
-        .booking-details-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-
-        #specialRequest {
-            width: 100%;
-            min-height: 100px;
-            padding: 0.6rem;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-        }
 
         .price-section {
             display: flex;
@@ -364,9 +599,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             margin-top: 1.5rem;
             max-height: 200px;
             overflow-y: auto;
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            padding: 0.5rem;
+            background: #fff;
+            border: 1.5px solid #b6e7c9;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px 0 rgba(60, 60, 90, 0.07);
+            padding: 1.1rem 1.2rem;
+            color: #3a4a3a;
         }
         .result-item {
             padding: 0.5rem;
@@ -377,7 +615,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         }
         .result-item.empty {
             text-align: center;
-            color: var(--text-secondary);
+            color: #7a8a7a;
+            font-size: 1.08rem;
+            letter-spacing: 0.2px;
         }
 
         #detailsCheckIn, #detailsCheckOut {
@@ -391,6 +631,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             width: 100%;
             padding: 0.6rem 0.6rem 0.6rem 2.2rem;
             font-size: 0.9rem;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+        }
+        .modal[style*="display: flex"] {
+            display: flex !important;
+        }
+        .modal-content {
+            padding-top: 2.5rem;
+        }
+        .modal-content form {
+            overflow-y: auto;
+            max-height: 70vh;
+        }
+        .modal-content h4 {
+            margin-top: 1.2rem;
+        }
+        .booking-details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem 1.5rem;
+            max-width: 900px;
+        }
+        .form-group {
+            margin-bottom: 0.7rem;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 0.5rem 0.8rem;
+            font-size: 0.98rem;
+        }
+        @media (max-width: 700px) {
+            .booking-details-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -413,6 +699,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
     <div class="main-content">
         <div class="calendar-container">
+            <div class="booking-legend">
+                <span class="legend-item"><span class="legend-dot legend-booked"></span>Booked</span>
+                <span class="legend-item"><span class="legend-dot legend-reserved"></span>Reserved</span>
+                <span class="legend-item"><span class="legend-dot legend-maintenance"></span>Maintenance</span>
+            </div>
             <div class="calendar-header">
                 <h1>Booking Schedule</h1>
                 <div class="calendar-nav">
@@ -425,13 +716,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             <div class="controls-bar">
                 <button class="control-btn" id="filterBtn">Search & Filter</button>
                 <button class="control-btn walk-in-btn" id="walkInBtn">Walk-in booking</button>
-            </div>
-
-            <div class="calendar-legend">
-                <div class="legend-item"><span class="legend-badge legend-available"></span> Available</div>
-                <div class="legend-item"><span class="legend-badge legend-booked"></span> Booked</div>
-                <div class="legend-item"><span class="legend-badge legend-reserved"></span> Reserved</div>
-                <div class="legend-item"><span class="legend-badge legend-maintenance"></span> Maintenance</div>
             </div>
 
             <table class="calendar-grid">
@@ -517,16 +801,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         </div>
     </div>
 
-    <!-- Walk-in Booking Modal -->
+    <!-- Move modals here, as direct children of body -->
     <div id="bookingModal" class="modal">
         <div class="modal-content">
             <form id="bookingForm">
                 <!-- Step 1: Booking Details -->
                 <div id="form-step-1" class="form-step active">
                     <div class="modal-header">
-                        <h2>Booking Details</h2>
+                        <h2>Booking & Guest Details</h2>
                         <span class="close-btn">&times;</span>
                     </div>
+                    <h4>Booking Details</h4>
                     <div class="booking-details-grid">
                         <div class="form-group">
                             <label for="checkInDate">Check In</label>
@@ -538,7 +823,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                         </div>
                         <div class="form-group">
                             <label for="bookingDate">Booking Date</label>
-                            <input type="date" id="bookingDate" name="bookingDate" value="<?php echo date('Y-m-d'); ?>" required>
+                            <input type="date" id="bookingDate" name="bookingDate" value="<?php echo date('Y-m-d'); ?>" required readonly style="background:#f3f3f3; cursor:not-allowed;">
                         </div>
                         <div class="form-group">
                             <label for="bookingStatus">Booking Status</label>
@@ -546,7 +831,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                         </div>
                         <div class="form-group">
                             <label for="roomType">Room Type</label>
-                            <select id="roomType" name="roomType"><option value="Deluxe">Deluxe</option><option value="Standard">Standard</option><option value="Suite">Suite</option></select>
+                            <select id="roomType" name="roomType">
+                                <option value="Deluxe">Deluxe</option>
+                                <option value="Standard">Standard</option>
+                                <option value="Suite">Suite</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="roomNumber">Room Number</label>
+                            <select id="roomNumber" name="roomNumber" required>
+                                <option value="">Select Room Number</option>
+                            </select>
                         </div>
                         <div class="form-group">
                             <label for="roomStatus">Room Status</label>
@@ -557,22 +852,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                         <label for="specialRequest">Special Request</label>
                         <textarea id="specialRequest" name="specialRequest"></textarea>
                     </div>
-                    <div class="price-section">
-                        <label>Total Price:</label>
-                        <span class="price-display">$0.00</span>
-                    </div>
                     <div class="modal-footer">
                         <button type="button" class="control-btn" id="cancelBtn">Cancel</button>
                         <button type="button" class="control-btn walk-in-btn" id="nextBtn">Next</button>
                     </div>
                 </div>
-
                 <!-- Step 2: Guest Information -->
                 <div id="form-step-2" class="form-step">
                     <div class="modal-header">
-                        <h2>Hotel Guest Information</h2>
+                        <h2>Booking & Guest Details</h2>
                         <span class="close-btn">&times;</span>
                     </div>
+                    <h4>Guest Details</h4>
                     <table class="guest-info-table">
                         <tr><th>First Name</th><td><input type="text" name="firstName" required></td></tr>
                         <tr><th>Last Name</th><td><input type="text" name="lastName" required></td></tr>
@@ -593,7 +884,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         </div>
     </div>
 
-    <!-- Booking Details Modal -->
     <div id="detailsModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -608,7 +898,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 <div class="booking-details-grid">
                     <div class="form-group">
                         <label for="detailsRoomNumber">Room</label>
-                        <input type="text" id="detailsRoomNumber" name="roomNumber" required>
+                        <select id="detailsRoomNumber" name="roomNumber" required>
+                            <option value="">Select Room</option>
+                            <?php
+                            $roomRes = $conn->query("SELECT RoomNumber FROM room ORDER BY RoomNumber");
+                            while ($room = $roomRes->fetch_assoc()) {
+                                echo '<option value="' . htmlspecialchars($room['RoomNumber']) . '">' . htmlspecialchars($room['RoomNumber']) . '</option>';
+                            }
+                            ?>
+                        </select>
                     </div>
                     <div class="form-group">
                         <label for="detailsBookingStatus">Booking Status</label>
@@ -667,12 +965,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 <div class="modal-footer">
                     <button type="button" class="control-btn" id="detailsCancelBtn">Close</button>
                     <button type="submit" class="control-btn walk-in-btn">Save Changes</button>
+                    <button type="button" class="control-btn" id="earlyCheckoutBtn" style="display:none; background:#f7b731; color:#fff; border:2px solid #f7b731;">Check Out Now</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Filter Modal -->
     <div id="filterModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -729,6 +1027,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             const backBtn = document.getElementById('backBtn');
             const cancelBtn = document.getElementById('cancelBtn');
             const detailsCancelBtn = document.getElementById('detailsCancelBtn');
+            const earlyCheckoutBtn = document.getElementById('earlyCheckoutBtn');
             
             // ============================================================================
             // FORM & FORM ELEMENTS
@@ -741,6 +1040,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             const searchInputModal = document.getElementById('searchInputModal');
             const filterStatus = document.getElementById('filterStatus');
             const clearFilterBtn = document.getElementById('clearFilterBtn');
+            const roomTypeSelect = document.getElementById('roomType');
+            const roomNumberSelect = document.getElementById('roomNumber');
+            const detailsBookingId = document.getElementById('detailsBookingId');
+            const detailsRoomNumber = document.getElementById('detailsRoomNumber');
 
             // ============================================================================
             // MODAL VISIBILITY LOGIC
@@ -748,7 +1051,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             if (walkInBtn) {
                 walkInBtn.onclick = () => {
                     if (bookingModal) {
-                        bookingModal.style.display = 'block';
+                        bookingModal.style.display = 'flex';
                         if (formStep1) formStep1.classList.add('active');
                         if (formStep2) formStep2.classList.remove('active');
                     }
@@ -757,7 +1060,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
             if(filterBtn) {
                 filterBtn.onclick = () => {
-                    if (filterModal) filterModal.style.display = 'block';
+                    if (filterModal) filterModal.style.display = 'flex';
                 }
             }
 
@@ -781,6 +1084,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 });
             }
 
+            
             if(nextBtn) {
                 nextBtn.onclick = () => {
                     if (formStep1) formStep1.classList.remove('active');
@@ -922,26 +1226,107 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             document.querySelectorAll('.booking-bar').forEach(bar => {
                 bar.addEventListener('click', () => {
                     if (detailsModal) {
-                        // Populate Booking Details
                         document.getElementById('detailsBookingId').value = bar.dataset.bookingId;
-                        document.getElementById('detailsRoomNumber').value = bar.dataset.roomNumber;
+                        document.getElementById('detailsStudentId').value = bar.dataset.studentId;
+                        // Repopulate and set room dropdown
+                        var roomDropdown = document.getElementById('detailsRoomNumber');
+                        if (roomDropdown) {
+                            populateRoomDropdown(roomDropdown, bar.dataset.roomNumber);
+                        }
                         document.getElementById('detailsCheckIn').value = bar.dataset.checkIn;
                         document.getElementById('detailsCheckOut').value = bar.dataset.checkOut;
                         document.getElementById('detailsBookingStatus').value = bar.dataset.bookingStatus;
                         document.getElementById('detailsRoomStatus').value = bar.dataset.status.charAt(0).toUpperCase() + bar.dataset.status.slice(1);
                         document.getElementById('detailsNotes').value = bar.dataset.notes;
-                        
-                        // Populate Guest Details
-                        document.getElementById('detailsStudentId').value = bar.dataset.studentId;
                         document.getElementById('detailsFirstName').value = bar.dataset.firstName;
                         document.getElementById('detailsLastName').value = bar.dataset.lastName;
                         document.getElementById('detailsEmail').value = bar.dataset.email;
                         document.getElementById('detailsPhone').value = bar.dataset.phone;
-
-                        detailsModal.style.display = 'block';
+                        // Color the modal header
+                        const header = detailsModal.querySelector('.modal-header');
+                        header.classList.remove('status-booked', 'status-reserved', 'status-maintenance');
+                        if (bar.dataset.status === 'booked') header.classList.add('status-booked');
+                        else if (bar.dataset.status === 'reserved') header.classList.add('status-reserved');
+                        else if (bar.dataset.status === 'maintenance') header.classList.add('status-maintenance');
+                        detailsModal.style.display = 'flex';
                     }
                 });
             });
+
+            // ============================================================================
+            // ROOM NUMBER DROPDOWN LOGIC
+            // ============================================================================
+            if(roomTypeSelect && roomNumberSelect) {
+                roomTypeSelect.addEventListener('change', function() {
+                    const selectedType = this.value;
+                    fetch('booking.php?roomType=' + encodeURIComponent(selectedType))
+                        .then(response => response.json())
+                        .then(data => {
+                            roomNumberSelect.innerHTML = '<option value="">Select Room Number</option>';
+                            data.forEach(room => {
+                                roomNumberSelect.innerHTML += `<option value="${room.RoomNumber}">${room.RoomNumber}</option>`;
+                            });
+                        });
+                });
+            }
+
+            // ============================================================================
+            // SHOW/HIDE EARLY CHECKOUT BUTTON
+            // ============================================================================
+            document.querySelectorAll('.booking-bar').forEach(bar => {
+                bar.addEventListener('click', () => {
+                    if (earlyCheckoutBtn) {
+                        const status = bar.dataset.bookingStatus;
+                        const checkOut = bar.dataset.checkOut;
+                        const today = new Date().toISOString().slice(0, 10);
+                        if ((status === 'Confirmed' || status === 'Pending') && checkOut >= today) {
+                            earlyCheckoutBtn.style.display = 'inline-block';
+                        } else {
+                            earlyCheckoutBtn.style.display = 'none';
+                        }
+                    }
+                });
+            });
+
+            if (earlyCheckoutBtn) {
+                earlyCheckoutBtn.onclick = function() {
+                    if (confirm('Are you sure you want to check out this guest now?')) {
+                        fetch('booking.php', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                            body: 'action=early_checkout&bookingId=' + encodeURIComponent(detailsBookingId.value) + '&roomNumber=' + encodeURIComponent(detailsRoomNumber.value)
+                        })
+                        .then(response => response.json())
+                        .then(result => {
+                            alert(result.message);
+                            if (result.success) location.reload();
+                        });
+                    }
+                };
+            }
+
+            // ============================================================================
+            // ADD A JS ARRAY OF ALL ROOMS FOR ROBUST DROPDOWN POPULATION
+            // ============================================================================
+            const allRooms = <?php
+            $roomArr = [];
+            $roomRes = $conn->query("SELECT RoomNumber FROM room ORDER BY RoomNumber");
+            while ($room = $roomRes->fetch_assoc()) {
+                $roomArr[] = $room['RoomNumber'];
+            }
+            echo json_encode($roomArr);
+            ?>;
+
+            // ============================================================================
+            // ADD A JS HELPER FUNCTION TO REPOPULATE THE ROOM DROPDOWN
+            // ============================================================================
+            function populateRoomDropdown(dropdown, selectedRoom) {
+                dropdown.innerHTML = '<option value="">Select Room</option>';
+                allRooms.forEach(room => {
+                    dropdown.innerHTML += `<option value="${room}">${room}</option>`;
+                });
+                if (selectedRoom) dropdown.value = selectedRoom;
+            }
         });
     </script>
 </body>
