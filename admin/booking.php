@@ -565,34 +565,34 @@ if (count($where) > 0) {
       <td>
         <div class="action-group">
         <button type="button" class="action-btn edit-btn"
-  data-id="<?php echo $row['BookingID']; ?>"
-  data-bookingdate="<?php echo htmlspecialchars($row['BookingDate']); ?>"
-  data-studentid="<?php echo $row['StudentID']; ?>"
-  data-checkin="<?php echo $row['CheckInDate']; ?>"
-  data-checkout="<?php echo $row['CheckOutDate']; ?>"
-  data-room="<?php echo $row['RoomNumber']; ?>"
-  data-type="<?php echo $row['RoomType']; ?>"
-  data-bookingstatus="<?php echo $row['BookingStatus']; ?>"
-  data-roomstatus="<?php echo $row['RoomStatus']; ?>"
-  data-notes="<?php echo htmlspecialchars($row['Notes']); ?>"
-  data-price="<?php echo htmlspecialchars($row['Price']); ?>"
-><i class="fas fa-edit"></i></button>
-<button type="button" class="action-btn view-btn"
-  data-id="<?php echo $row['BookingID']; ?>"
-  data-studentid="<?php echo $row['StudentID']; ?>"
-  data-bookingdate="<?php echo htmlspecialchars($row['BookingDate']); ?>"
-  data-checkin="<?php echo $row['CheckInDate']; ?>"
-  data-checkout="<?php echo $row['CheckOutDate']; ?>"
-  data-room="<?php echo $row['RoomNumber']; ?>"
-  data-type="<?php echo $row['RoomType']; ?>"
-  data-bookingstatus="<?php echo $row['BookingStatus']; ?>"
-  data-roomstatus="<?php echo $row['RoomStatus']; ?>"
-  data-notes="<?php echo htmlspecialchars($row['Notes']); ?>"
-  data-price="<?php echo htmlspecialchars($row['Price']); ?>"
-><i class="fas fa-eye"></i></button>
-<button type="button" class="action-btn delete-btn"
-  data-id="<?php echo $row['BookingID']; ?>"
-><i class="fas fa-trash"></i></button>
+          data-id="<?php echo $row['BookingID']; ?>"
+          data-bookingdate="<?php echo htmlspecialchars($row['BookingDate']); ?>"
+          data-studentid="<?php echo $row['StudentID']; ?>"
+          data-checkin="<?php echo $row['CheckInDate']; ?>"
+          data-checkout="<?php echo $row['CheckOutDate']; ?>"
+          data-room="<?php echo $row['RoomNumber']; ?>"
+          data-type="<?php echo $row['RoomType']; ?>"
+          data-bookingstatus="<?php echo $row['BookingStatus']; ?>"
+          data-roomstatus="<?php echo $row['RoomStatus']; ?>"
+          data-notes="<?php echo htmlspecialchars($row['Notes']); ?>"
+          data-price="<?php echo htmlspecialchars($row['Price']); ?>"
+        ><i class="fas fa-edit"></i></button>
+        <button type="button" class="action-btn view-btn"
+          data-id="<?php echo $row['BookingID']; ?>"
+          data-studentid="<?php echo $row['StudentID']; ?>"
+          data-bookingdate="<?php echo htmlspecialchars($row['BookingDate']); ?>"
+          data-checkin="<?php echo $row['CheckInDate']; ?>"
+          data-checkout="<?php echo $row['CheckOutDate']; ?>"
+          data-room="<?php echo $row['RoomNumber']; ?>"
+          data-type="<?php echo $row['RoomType']; ?>"
+          data-bookingstatus="<?php echo $row['BookingStatus']; ?>"
+          data-roomstatus="<?php echo $row['RoomStatus']; ?>"
+          data-notes="<?php echo htmlspecialchars($row['Notes']); ?>"
+          data-price="<?php echo htmlspecialchars($row['Price']); ?>"
+        ><i class="fas fa-eye"></i></button>
+        <button type="button" class="action-btn delete-btn"
+          data-id="<?php echo $row['BookingID']; ?>"
+        ><i class="fas fa-trash"></i></button>
         </div>
       </td>
       <td>

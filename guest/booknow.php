@@ -5,6 +5,34 @@ $confirmation = "";
 $generatedBookingID = "";
 $bookingDate = date("Y-m-d");
 
+// Room pricing configuration
+$room_prices = [
+    'standard' => [
+        'hourly' => 200,
+        '6' => 1100,
+        '12' => 2200, 
+        '24' => 4500,
+        'bed_type' => '1 Queen Bed',
+        'capacity' => '1-2 persons'
+    ],
+    'deluxe' => [
+        'hourly' => 300,
+        '6' => 1600,
+        '12' => 3500,
+        '24' => 7150,
+        'bed_type' => '1 King Bed • 1 Sofa Bed',
+        'capacity' => '3-4 persons'
+    ],
+    'suite' => [
+        'hourly' => 500,
+        '6' => 2929,
+        '12' => 5989,
+        '24' => 11899,
+        'bed_type' => '1 King Bed • 1 Sofa Bed • 1 Lounge Bed',
+        'capacity' => '4-6 persons'
+    ] 
+];
+
 // Room type selection logic (prefer URL, then session)
 $room_type = '';
 $valid_rooms = ['standard', 'deluxe', 'suite'];
