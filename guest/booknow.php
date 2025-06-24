@@ -16,6 +16,27 @@ if (isset($_GET['room']) && in_array(strtolower($_GET['room']), $valid_rooms)) {
   $room_type = strtolower($_SESSION['selected_room_type']);
 }
 
+// Get transferred booking parameters (priority: GET > SESSION)
+$checkin_date = $_GET['checkin'] ?? $_SESSION['checkin_date'] ?? '';
+$checkout_date = $_GET['checkout'] ?? $_SESSION['checkout_date'] ?? '';
+$checkin_time = $_GET['checkin_time'] ?? $_SESSION['checkin_time'] ?? '14:00';
+$checkout_time = $_GET['checkout_time'] ?? $_SESSION['checkout_time'] ?? '12:00';
+$total_price = $_GET['price'] ?? $_SESSION['total_price'] ?? '';
+$reservation_fee = $_GET['rf'] ?? $_SESSION['reservation_fee'] ?? '';
+$duration = $_GET['duration'] ?? $_SESSION['duration'] ?? '';
+$adults = $_GET['adults'] ?? $_SESSION['adults'] ?? 1;
+$children = $_GET['children'] ?? $_SESSION['children'] ?? 0;
+
+// Combine date and time for datetime-local inputs
+$checkin_datetime = '';
+$checkout_datetime = '';
+if ($checkin_date && $checkin_time) {
+  $checkin_datetime = $checkin_date . 'T' . $checkin_time;
+}
+if ($checkout_date && $checkout_time) {
+  $checkout_datetime = $checkout_date . 'T' . $checkout_time;
+}
+
 // Always set Booking ID: use POST if available, else generate new
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['booking_id'])) {
   $generatedBookingID = $_POST['booking_id'];
@@ -39,19 +60,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $special_request = $conn->real_escape_string($_POST['Notes']);
     $booking_id = $_POST['booking_id'];
     $bookingDate = $_POST['BookingDate'];
+    
+    // Use the transferred price or calculate based on room type
+    $price = $_POST['Price'] ?? $total_price;
+    if (empty($price)) {
+      // Fallback price calculation
+      $price_map = [
+        'standard' => 2000,
+        'deluxe' => 10000,
+        'suite' => 5000
+      ];
+      $price = $price_map[$room_type] ?? 2000;
+    }
 
-    // Dummy price logic
-    $price_map = [
-      'standard' => 2000,
-      'deluxe' => 3000,
-      'suite' => 5000
-    ];
-    $price = $price_map[$room_type];
-
-    // Save to database (booking table)
-    $stmt = $conn->prepare("INSERT INTO booking (BookingID, RoomType, CheckInDate, CheckOutDate, Notes, Price, BookingDate) VALUES (?, ?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("sssssis", $booking_id, $room_type, $check_in, $check_out, $special_request, $price, $bookingDate);
-
+    // Check if user is logged in
+    if (!isset($_SESSION['student_id'])) {
+      // Not logged in, redirect to login with all booking parameters
+      $params = [
+        'room' => $room_type,
+        'checkin' => $check_in,
+        'checkout' => $check_out,
+        'checkin_time' => $checkin_time,
+        'checkout_time' => $checkout_time,
+        'price' => $price,
+        'rf' => $reservation_fee,
+        'duration' => $duration,
+        'adults' => $adults,
+        'children' => $children,
+        'next' => 'booknow.php'
+      ];
+      $query = http_build_query($params);
+      header("Location: login.php?$query");
+      exit();
+    }
+    $student_id = $_SESSION['student_id'];
+    // Save to database (booking table) with StudentID
+    $stmt = $conn->prepare("INSERT INTO booking (BookingID, StudentID, RoomType, CheckInDate, CheckOutDate, Notes, Price, BookingDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("ssssssis", $booking_id, $student_id, $room_type, $check_in, $check_out, $special_request, $price, $bookingDate);
+  
     if ($stmt->execute()) {
       $_SESSION['BookingID'] = $booking_id;
       header("Location: guestdetails.php?BookingID=" . urlencode($booking_id));
@@ -164,7 +210,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     display: block;
     margin-bottom: 5px;
   }
-  input, select {
+  input, select, textarea {
     width: 100%;
     padding: 10px;
     border: 1px solid #ccc;
@@ -197,6 +243,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     color: #333;
     cursor: not-allowed;
   }
+  .booking-summary {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+  }
+  .booking-summary h3 {
+    color: #018000;
+    margin-bottom: 10px;
+    font-size: 18px;
+  }
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 14px;
+  }
+  .summary-label {
+    font-weight: 600;
+    color: #555;
+  }
+  .summary-value {
+    color: #333;
+  }
+  .price-highlight {
+    font-size: 18px;
+    font-weight: bold;
+    color: #018000;
+  }
   </style>
 </head>
 <body>
@@ -214,7 +290,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <a href="booking.php">Rooms</a>
     <a href="about.php">About</a>
     <a href="mybookings.php">My Bookings</a>
-    <a href="login.php">Log In</a>
+    <a href="logout.php">Logout</a>
   </nav>
   </header>
 
@@ -222,6 +298,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="container_booking">
   <h2>Book a Room</h2> <br>
   <p>Fill out the form below to book your room.</p><br>
+  
+  <!-- Booking Summary -->
+  <?php if ($total_price || $duration || $checkin_date): ?>
+  <div class="booking-summary">
+    <h3>Booking Summary</h3>
+    <?php if ($duration): ?>
+    <div class="summary-row">
+      <span class="summary-label">Duration:</span>
+      <span class="summary-value"><?php echo htmlspecialchars($duration); ?></span>
+    </div>
+    <?php endif; ?>
+    <?php if ($adults || $children): ?>
+    <div class="summary-row">
+      <span class="summary-label">Guests:</span>
+      <span class="summary-value"><?php echo $adults + $children; ?> (<?php echo $adults; ?> adults, <?php echo $children; ?> children)</span>
+    </div>
+    <?php endif; ?>
+    <?php if ($total_price): ?>
+    <div class="summary-row">
+      <span class="summary-label">Total Price:</span>
+      <span class="summary-value price-highlight">₱<?php echo number_format($total_price); ?></span>
+    </div>
+    <?php endif; ?>
+    <?php if ($reservation_fee): ?>
+    <div class="summary-row">
+      <span class="summary-label">Reservation Fee:</span>
+      <span class="summary-value">₱<?php echo number_format($reservation_fee); ?></span>
+    </div>
+    <?php endif; ?>
+  </div>
+  <?php endif; ?>
+  
   <form method="POST"> 
 
   <!-- Booking ID -->
@@ -257,20 +365,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <div class="form-group">
     <label for="CheckInDate">Check-in Date & Time:</label>
     <input type="datetime-local" id="checkin" name="CheckInDate" required value="<?php
-      // Priority: POST > GET > SESSION
-      if (isset($_POST['checkin'])) {
-        echo htmlspecialchars($_POST['checkin']);
-      } elseif (isset($_GET['checkin'])) {
-        // Accept both 'checkin' as full datetime-local or as date + 'checkin_time'
-        if (strpos($_GET['checkin'], 'T') !== false) {
-          echo htmlspecialchars($_GET['checkin']);
-        } elseif (isset($_GET['checkin_time'])) {
-          echo htmlspecialchars($_GET['checkin'] . 'T' . $_GET['checkin_time']);
-        } else {
-          echo htmlspecialchars($_GET['checkin']);
-        }
-      } elseif (isset($_SESSION['CheckInDate'])) {
-        echo htmlspecialchars($_SESSION['CheckInDate']);
+      // Priority: POST > GET/SESSION combined datetime > individual date/time
+      if (isset($_POST['CheckInDate'])) {
+        echo htmlspecialchars($_POST['CheckInDate']);
+      } elseif ($checkin_datetime) {
+        echo htmlspecialchars($checkin_datetime);
       } else {
         echo '';
       }
@@ -281,19 +380,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <div class="form-group">
     <label for="CheckOutDate">Check-out Date & Time:</label>
     <input type="datetime-local" id="CheckOutDate" name="CheckOutDate" required value="<?php
-      // Priority: POST > GET > SESSION
+      // Priority: POST > GET/SESSION combined datetime > individual date/time
       if (isset($_POST['CheckOutDate'])) {
-        echo htmlspecialchars($_POST['checkout']);
-      } elseif (isset($_GET['checkout'])) {
-        if (strpos($_GET['checkout'], 'T') !== false) {
-          echo htmlspecialchars($_GET['checkout']);
-        } elseif (isset($_GET['checkout_time'])) {
-          echo htmlspecialchars($_GET['checkout'] . 'T' . $_GET['checkout_time']);
-        } else {
-          echo htmlspecialchars($_GET['checkout']);
-        }
-      } elseif (isset($_SESSION['CheckOutDate'])) {
-        echo htmlspecialchars($_SESSION['CheckOutDate']);
+        echo htmlspecialchars($_POST['CheckOutDate']);
+      } elseif ($checkout_datetime) {
+        echo htmlspecialchars($checkout_datetime);
       } else {
         echo '';
       }
@@ -306,23 +397,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <textarea id="Notes" name="Notes" rows="3"><?php echo isset($_POST['Notes']) ? htmlspecialchars($_POST['Notes']) : ''; ?></textarea>
   </div>
 
-  <!-- Price (just for UI) -->
+  <!-- Price (hidden for backend, visible for user) -->
+  <input type="hidden" name="Price" value="<?php echo $total_price; ?>" />
   <div class="form-group">
-    <label for="Price">Estimated Price:</label>
+    <label for="Price">Total Price:</label>
     <input type="text" id="Price" value="<?php
-    if (isset($price)) {
-      echo "₱{$price}";
+    if ($total_price) {
+      echo "₱" . number_format($total_price);
     } elseif ($room_type) {
       $price_map = [
         'standard' => 2000,
-        'deluxe' => 3000,
+        'deluxe' => 10000,
         'suite' => 5000
       ];
-      echo "₱{$price_map[$room_type]}";
+      echo "₱" . number_format($price_map[$room_type]);
     } else {
       echo '';
     }
-    ?>" readonly />
+    ?>" readonly class="readonly-field" />
   </div>
 
   <!-- Book Now Button -->

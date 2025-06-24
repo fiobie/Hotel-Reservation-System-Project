@@ -1,13 +1,50 @@
     <?php include 'connections.php';
     session_start();
 
-    // ✅ Save room type from URL to session if it exists
+    // ✅ Save all booking parameters from URL to session if they exist
     if (isset($_GET['room'])) {
         $room = strtolower(trim($_GET['room']));
         $valid_rooms = ['standard', 'deluxe', 'suite'];
         if (in_array($room, $valid_rooms)) {
             $_SESSION['selected_room_type'] = $room;
         }
+    }
+
+    // Save check-in and check-out dates
+    if (isset($_GET['checkin'])) {
+        $_SESSION['checkin_date'] = $_GET['checkin'];
+    }
+    if (isset($_GET['checkout'])) {
+        $_SESSION['checkout_date'] = $_GET['checkout'];
+    }
+
+    // Save check-in and check-out times
+    if (isset($_GET['checkin_time'])) {
+        $_SESSION['checkin_time'] = $_GET['checkin_time'];
+    }
+    if (isset($_GET['checkout_time'])) {
+        $_SESSION['checkout_time'] = $_GET['checkout_time'];
+    }
+
+    // Save price and reservation fee
+    if (isset($_GET['price'])) {
+        $_SESSION['total_price'] = $_GET['price'];
+    }
+    if (isset($_GET['rf'])) {
+        $_SESSION['reservation_fee'] = $_GET['rf'];
+    }
+
+    // Save duration
+    if (isset($_GET['duration'])) {
+        $_SESSION['duration'] = $_GET['duration'];
+    }
+
+    // Save guest counts
+    if (isset($_GET['adults'])) {
+        $_SESSION['adults'] = $_GET['adults'];
+    }
+    if (isset($_GET['children'])) {
+        $_SESSION['children'] = $_GET['children'];
     }
 
     // ✅ Optional: Save next page (for redirect after login)
@@ -28,12 +65,33 @@
         if ($row = $result->fetch_assoc()) {
             if (password_verify($password, $row['Password'])) {
                 $_SESSION['email'] = $email;
+                $_SESSION['student_id'] = $row['StudentID'];
+                $_SESSION['first_name'] = $row['FirstName'];
+                $_SESSION['last_name'] = $row['LastName'];
+                
                 // After successful login
                 if (isset($_SESSION['next_page'])) {
                     $next = $_SESSION['next_page'];
                     $room = $_SESSION['selected_room_type'] ?? '';
                     unset($_SESSION['next_page']);
-                    header("Location: $next?room=$room");
+                    
+                    // Build query string with all saved parameters
+                    $query_params = [];
+                    if ($room) $query_params['room'] = $room;
+                    if (isset($_SESSION['checkin_date'])) $query_params['checkin'] = $_SESSION['checkin_date'];
+                    if (isset($_SESSION['checkout_date'])) $query_params['checkout'] = $_SESSION['checkout_date'];
+                    if (isset($_SESSION['checkin_time'])) $query_params['checkin_time'] = $_SESSION['checkin_time'];
+                    if (isset($_SESSION['checkout_time'])) $query_params['checkout_time'] = $_SESSION['checkout_time'];
+                    if (isset($_SESSION['total_price'])) $query_params['price'] = $_SESSION['total_price'];
+                    if (isset($_SESSION['reservation_fee'])) $query_params['rf'] = $_SESSION['reservation_fee'];
+                    if (isset($_SESSION['duration'])) $query_params['duration'] = $_SESSION['duration'];
+                    if (isset($_SESSION['adults'])) $query_params['adults'] = $_SESSION['adults'];
+                    if (isset($_SESSION['children'])) $query_params['children'] = $_SESSION['children'];
+                    
+                    $query_string = http_build_query($query_params);
+                    $redirect_url = $query_string ? "$next?$query_string" : $next;
+                    
+                    header("Location: $redirect_url");
                     exit();
                 } else {
                     header("Location: booknow.php");
