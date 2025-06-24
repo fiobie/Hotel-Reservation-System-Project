@@ -205,7 +205,7 @@ session_start();
   </div>
 
   <!-- Room Cards -->
-  <!-- Standard Room -->
+  <!-- Serenity Standard Room -->
   <div class="room-card">
     <img src="images/samplebedroom.png" alt="Standard Room" class="room-img"/>
     <div class="room-info">
@@ -226,6 +226,7 @@ session_start();
     </div>
   </div>
 
+  <!-- Haven Standard Room -->
   <div class="room-card">
     <img src="images/samplebedroom.png" alt="Standard Room" class="room-img"/>
     <div class="room-info">
@@ -246,6 +247,7 @@ session_start();
     </div>
   </div>
 
+  <!-- Enchanted Chamber Room -->
   <div class="room-card">
     <img src="images/samplebedroom.png" alt="Standard Room" class="room-img"/>
     <div class="room-info">
@@ -266,11 +268,53 @@ session_start();
     </div>
   </div>
 
-  <!-- Deluxe Room -->
+  <!-- Family Retreat Deluxe Room -->
   <div class="room-card">
     <img src="images/samplebedroom.png" alt="Deluxe Room" class="room-img"/>
     <div class="room-info">
-      <a href="#" class="room-title">Deluxe Room</a>
+      <a href="#" class="room-title">Family Retreat Deluxe Room</a>
+      <p>1 King bed &nbsp; • &nbsp; Max Occupancy including children: 5 &nbsp; • &nbsp; 58 sq m</p>
+      <p><strong>✔ Guaranteed with Credit Card</strong></p>
+      <ul>
+        <li>Non-Smoking</li>
+        <li>Complimentary Wi-Fi</li>
+        <li>Complimentary welcome amenity</li>
+      </ul>
+    </div>
+    <div class="room-price">
+      <p class="price">₱<?= number_format(10000) ?></p>
+      <p class="per-night">Per Night<br><small>Including taxes and fees</small></p>
+      <button class="btn green" onclick="window.location.href='login.php?next=booknow.php&room=deluxe'">BOOK NOW</button>
+      <button class="btn green" onclick="window.location.href='login.php?next=booknow.php&room=deluxe'">RESERVE NOW</button>
+    </div>
+  </div>
+  
+  <!-- Premier Loft Deluxe Room -->
+  <div class="room-card">
+    <img src="images/samplebedroom.png" alt="Deluxe Room" class="room-img"/>
+    <div class="room-info">
+      <a href="#" class="room-title">Premier Loft	Deluxe Room</a>
+      <p>1 King bed &nbsp; • &nbsp; Max Occupancy including children: 5 &nbsp; • &nbsp; 58 sq m</p>
+      <p><strong>✔ Guaranteed with Credit Card</strong></p>
+      <ul>
+        <li>Non-Smoking</li>
+        <li>Complimentary Wi-Fi</li>
+        <li>Complimentary welcome amenity</li>
+      </ul>
+    </div>
+    <div class="room-price">
+      <p class="price">₱<?= number_format(10000) ?></p>
+      <p class="per-night">Per Night<br><small>Including taxes and fees</small></p>
+      <button class="btn green" onclick="window.location.href='login.php?next=booknow.php&room=deluxe'">BOOK NOW</button>
+      <button class="btn green" onclick="window.location.href='login.php?next=booknow.php&room=deluxe'">RESERVE NOW</button>
+    </div>
+  </div>
+  
+  <!-- Luxe Escape Room -->
+   <div class="room-card">
+    <img src="images/samplebedroom.png" alt="Deluxe Room" class="room-img"/>
+    <div class="room-info">
+      <a href="#" class="room-title">Luxe Escape Room</a>
       <p>1 King bed &nbsp; • &nbsp; Max Occupancy including children: 5 &nbsp; • &nbsp; 58 sq m</p>
       <p><strong>✔ Guaranteed with Credit Card</strong></p>
       <ul>
@@ -287,11 +331,53 @@ session_start();
     </div>
   </div>
 
-  <!-- Suite Room -->
+  <!-- Executive Suite Room -->
   <div class="room-card">
     <img src="images/samplebedroom.png" alt="Suite Room" class="room-img"/>
     <div class="room-info">
-      <a href="#" class="room-title">Suite Room</a>
+      <a href="#" class="room-title">Executive Suite Room</a>
+      <p>1 King bed &nbsp; • &nbsp; Max Occupancy including children: 5 &nbsp; • &nbsp; 58 sq m</p>
+      <p><strong>✔ Guaranteed with Credit Card</strong></p>
+      <ul>
+        <li>Non-Smoking</li>
+        <li>Complimentary Wi-Fi</li>
+        <li>Complimentary welcome amenity</li>
+      </ul>
+    </div>
+    <div class="room-price">
+      <p class="price">₱<?= number_format(12000) ?></p>
+      <p class="per-night">Per Night<br><small>Including taxes and fees</small></p>
+      <button class="btn green" onclick="window.location.href='login.php?next=booknow.php&room=suite'">BOOK NOW</button>
+      <button class="btn green" onclick="window.location.href='login.php?next=booknow.php&room=suite'">RESERVE NOW</button>
+    </div>
+  </div>
+
+  <!-- Grand Villa Suite Room -->
+  <div class="room-card">
+    <img src="images/samplebedroom.png" alt="Suite Room" class="room-img"/>
+    <div class="room-info">
+      <a href="#" class="room-title">Grand Villa Suite Room</a>
+      <p>1 King bed &nbsp; • &nbsp; Max Occupancy including children: 5 &nbsp; • &nbsp; 58 sq m</p>
+      <p><strong>✔ Guaranteed with Credit Card</strong></p>
+      <ul>
+        <li>Non-Smoking</li>
+        <li>Complimentary Wi-Fi</li>
+        <li>Complimentary welcome amenity</li>
+      </ul>
+    </div>
+    <div class="room-price">
+      <p class="price">₱<?= number_format(12000) ?></p>
+      <p class="per-night">Per Night<br><small>Including taxes and fees</small></p>
+      <button class="btn green" onclick="window.location.href='login.php?next=booknow.php&room=suite'">BOOK NOW</button>
+      <button class="btn green" onclick="window.location.href='login.php?next=booknow.php&room=suite'">RESERVE NOW</button>
+    </div>
+  </div>
+
+  <!-- Grand Villa Suite Room -->
+  <div class="room-card">
+    <img src="images/samplebedroom.png" alt="Suite Room" class="room-img"/>
+    <div class="room-info">
+      <a href="#" class="room-title">Royal Haven Suite Room</a>
       <p>1 King bed &nbsp; • &nbsp; Max Occupancy including children: 5 &nbsp; • &nbsp; 58 sq m</p>
       <p><strong>✔ Guaranteed with Credit Card</strong></p>
       <ul>

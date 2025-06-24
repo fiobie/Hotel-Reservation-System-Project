@@ -710,14 +710,8 @@ $recentBookings = getRecentBookings(5);
                 </div>
 
                 <div class="nav-section">
-                    <a class="nav-link" href="payment.php"><i class="fas fa-credit-card"></i><span>Payments</span></a>
+                    <a class="nav-link" href="payment.php"><i class="fas fa-credit-card"></i><span>Invoices</span></a>
                     <a class="nav-link" href="statistics.php"><i class="fas fa-chart-line"></i><span>Statistics</span></a>
-                    <a class="nav-link" href="inbox.php"><i class="fas fa-inbox"></i><span>Inbox</span></a>
-                </div>
-
-                <div class="nav-section">
-                    <a class="nav-link" href="profile.php"><i class="fas fa-user-lock"></i><span>Profile</span></a>
-                    <a class="nav-link" href="logout.php"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a>
                 </div>
             </div>
         </div>

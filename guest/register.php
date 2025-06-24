@@ -4,6 +4,9 @@ include 'connections.php';
 
 $error = '';
 
+
+
+
 // Check if the form is submitted
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     if (!isset($_POST['terms'])) {
@@ -36,8 +39,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
                     $_SESSION['first_name'] = $first_name;
                     $_SESSION['last_name'] = $last_name;
                     $_SESSION['email'] = $email;
-                    // Optionally, redirect to dashboard or another page
-                    header("Location: dashboard.php");
+                    // Redirect to Email Verification
+                    header("Location: register.php");
                     exit;
                 } else {
                     $error = "Registration failed. Please try again.";
@@ -47,6 +50,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
         }
     }
 }
+        // PHPMailer classes
+        use PHPMailer\PHPMailer\PHPMailer;
+        use PHPMailer\PHPMailer\Exception;
+
+        require '../phpmailer/src/Exception.php';
+        require '../phpmailer/src/PHPMailer.php';
+        require '../phpmailer/src/SMTP.php';
+
+        // Only send verification code after successful registration
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['registerForm']) && empty($error)) {
+            $email = $_POST['email'];
+            $code = rand(100000, 999999); // Generate 6-digit OTP
+
+            $_SESSION['verification_code'] = $code;
+            $_SESSION['email'] = $email;
+
+            // Initialize PHPMailer
+            $mail = new PHPMailer(true);
+
+            try {
+                // Server settings
+                $mail->isSMTP();
+                $mail->Host       = 'smtp.gmail.com';
+                $mail->SMTPAuth   = true;
+                $mail->Username   = 'phoebeannbalderamos001@gmail.com';       // Replace with your Gmail
+                $mail->Password   = 'beykwzntdapvqoti';          // Use Gmail App Password
+                $mail->SMTPSecure = 'tls';
+                $mail->Port       = 587;
+
+                // Recipients
+                $mail->setFrom('phoebeannbalderamos001@gmail.com', 'Villa Valore Hotel');
+                $mail->addAddress($email); // Send to user
+
+                // Content
+                $mail->isHTML(true);
+                $mail->Subject = 'Your Verification Code';
+                $mail->Body    = "Your email verification code is <b>$code</b>";
+
+                $mail->send();
+                // Optionally, you can set a message to show on the page
+                // echo 'Verification code sent to your email.';
+            } catch (Exception $e) {
+                $error = "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
+            }
+        }
 ?>
 
 <!DOCTYPE html>
@@ -502,7 +550,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
                         I agree to the <a href="terms.html" target="_blank" style="color:var(--primary-green-dark);text-decoration:underline;">Terms and Conditions</a>
                     </label>
                 </div>
-                <button type="submit" name="register" class="register-btn">SIGN UP</button>
+                <div class="form-group">
+                    <input type="hidden" name="otp" id="otp" class="form-control">
+                    <input type="hidden" name="subject" id="subject" class="form-control" value="Received OTP">
+                
+                </div>
+                <button type="submit" name="register" class="register-btn" onclick="showVerificationMessage(event)">SIGN UP</button>
+                <div id="verification-message" style="display:none; color: #388e3c; margin-top: 18px; background: #e8f5e9; border: 1px solid #b2dfdb; border-radius: 7px; padding: 12px 0; font-size: 1.08rem;">
+                    A verification code has been sent to your email. Please check it.
+                </div>
+                <script>
+                    function showVerificationMessage(e) {
+                        // Only show if form is valid (let server handle actual validation)
+                        var form = document.getElementById('registerForm');
+                        if (form.checkValidity()) {
+                            document.getElementById('verification-message').style.display = 'block';
+                        }
+                    }
+                </script>
                 <?php if (!empty($error)): ?>
                     <div class="error"><?= htmlspecialchars($error) ?></div>
                 <?php endif; ?>
@@ -555,6 +620,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
                 this.insertBefore(error, this.querySelector(".terms"));
             }
         });
+        function generateRandomNumber() {
+            let min = 100000;
+            let max = 999999;
+            let randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
+
+            let lastGeneratedNumber = localStorage.getItem('lastGeneratedNumber');
+            while (randomNumber === parseInt(lastGeneratedNumber)) {
+                randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
+            }
+
+            localStorage.setItem('lastGeneratedNumber', randomNumber);
+            return randomNumber;
+        }
+
+        // Set OTP value if the field exists (ID should be 'otp', not 'OTP')
+        var otpField = document.getElementById('otp');
+        if (otpField) {
+            otpField.value = generateRandomNumber();
+        }
     </script>
 </body>
 </html>

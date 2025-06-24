@@ -540,28 +540,28 @@ if (count($where) > 0) {
           data-roomstatus="<?php echo htmlspecialchars($row['RoomStatus']); ?>"
           data-capacity="<?php echo htmlspecialchars($row['Capacity']); ?>"
 
-><i class="fas fa-edit"></i></button>
-<button type="button" class="action-btn view-btn"
-  data-id="<?php echo $row['RoomID']; ?>"
-  data-roomnumber="<?php echo htmlspecialchars($row['RoomNumber']); ?>"
-  data-roomname="<?php echo htmlspecialchars($row['RoomName']); ?>"
-  data-roomtype="<?php echo htmlspecialchars($row['RoomType']); ?>"
-  data-roomperhour="<?php echo htmlspecialchars($row['RoomPerHour']); ?>"
-  data-roomstatus="<?php echo htmlspecialchars($row['RoomStatus']); ?>"
-  data-capacity="<?php echo htmlspecialchars($row['Capacity']); ?>"
+          ><i class="fas fa-edit"></i></button>
+          <button type="button" class="action-btn view-btn"
+            data-id="<?php echo $row['RoomID']; ?>"
+            data-roomnumber="<?php echo htmlspecialchars($row['RoomNumber']); ?>"
+            data-roomname="<?php echo htmlspecialchars($row['RoomName']); ?>"
+            data-roomtype="<?php echo htmlspecialchars($row['RoomType']); ?>"
+            data-roomperhour="<?php echo htmlspecialchars($row['RoomPerHour']); ?>"
+            data-roomstatus="<?php echo htmlspecialchars($row['RoomStatus']); ?>"
+            data-capacity="<?php echo htmlspecialchars($row['Capacity']); ?>"
 
-><i class="fas fa-eye"></i></button>
-<button type="button" class="action-btn delete-btn"
-  data-id="<?php echo $row['RoomID']; ?>"
-><i class="fas fa-trash"></i></button>
-        </div>
-      </td>
-      <td>
-              <button class="download-table-btn" title="Download Table" onclick="showDownloadModal(event)">
-                <i class="fas fa-download"></i>
-              </button>
-            </td>
-      </tr>
+          ><i class="fas fa-eye"></i></button>
+          <button type="button" class="action-btn delete-btn"
+            data-id="<?php echo $row['RoomID']; ?>"
+          ><i class="fas fa-trash"></i></button>
+                  </div>
+                </td>
+                <td>
+                        <button class="download-table-btn" title="Download Table" onclick="showDownloadModal(event)">
+                          <i class="fas fa-download"></i>
+                        </button>
+                      </td>
+                </tr>
       <?php endwhile; ?>
     <?php else: ?>
       <tr><td colspan="11">No rooms found.</td></tr>
@@ -825,8 +825,8 @@ if (count($where) > 0) {
         viewModal.style.display = 'block';
         document.getElementById('viewDetails').innerHTML = `
         <p><label>Room ID:</label> <span>${this.dataset.id}</span></p>
-        <p><label>Room Number:</label> <span>${this.dataset.roomnumber}</span></p>
         <p><label>Room Name:</label> <span>${this.dataset.roomname}</span></p>
+        <p><label>Room Number:</label> <span>${this.dataset.roomname}</span></p>
         <p><label>Room Type:</label> <span>${this.dataset.roomtype}</span></p>
         <p><label>Room Per Hour:</label> <span>${this.dataset.roomperhour}</span></p>
         <p><label>Room Status:</label> <span>${this.dataset.roomstatus}</span></p>

@@ -1,4 +1,4 @@
-    <?php
+    <?php include 'connections.php';
     session_start();
 
     // ✅ Save room type from URL to session if it exists
@@ -14,9 +14,6 @@
     if (isset($_GET['next'])) {
         $_SESSION['next_page'] = $_GET['next'];
     }
-
-    include 'connections.php';
-
     $error = '';
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
@@ -50,7 +47,8 @@
         }
         $stmt->close();
     }
-    ?>
+
+            ?>
 
     <!DOCTYPE html>
     <html lang="en">
@@ -494,6 +492,7 @@
             document.getElementById('signUpTab').addEventListener('click', function() {
                 window.location.href = 'register.php';
             });
+
         </script>
     </body>
     </html>

@@ -100,7 +100,7 @@ if (isset($_GET['checkin_date']) && !empty($_GET['checkin_date'])) {
     $whereClause .= " AND DATE(PCheckInDate) = '$checkinDate'";
 }
 
-$resQuery = "SELECT * FROM reservation $whereClause ORDER BY ReservationID DESC";
+$resQuery = "SELECT * FROM reservations $whereClause ORDER BY ReservationID DESC";
 $resResult = $conn->query($resQuery);
 
 // Get available rooms for create form
