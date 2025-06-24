@@ -425,42 +425,6 @@ for ($m = 1; $m <= 12; $m++) {
                 <h2 style="margin-bottom: 1rem; color: #333;">Total Sales & Revenue (Monthly)</h2>
                 <canvas id="salesRevenueChart" height="100"></canvas>
             </div>
-            <!-- Filter/Search Bar and Add Button -->
-            <div class="search-filter-bar">
-                <div class="search-wrapper">
-                    <i class="fas fa-search search-icon"></i>
-                    <input type="text" id="searchInput" class="search-input" placeholder="Search Statistics">
-                </div>
-                <button class="create-btn" id="createBtn">Add Statistic</button>
-            </div>
-            <!-- Table -->
-            <table class="reservation-table">
-                <thead>
-                    <tr>
-                        <th>Statistic ID</th>
-                        <th>Name</th>
-                        <th>Value</th>
-                        <th>Date</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- PHP loop for rows here -->
-                </tbody>
-            </table>
-            <!-- Add Statistic Modal (hidden by default) -->
-            <div id="createModal" class="modal">
-                <div class="modal-content">
-                    <span class="close" id="closeCreateModal">&times;</span>
-                    <h2>Add Statistic</h2>
-                    <form id="createForm">
-                        <!-- Statistic form fields here -->
-                        <button type="submit">Create</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
     <script>
         // Sidebar toggle
         function toggleMenu(menuId) {
@@ -509,26 +473,7 @@ for ($m = 1; $m <= 12; $m++) {
                 }
             }
         });
-        // Modal logic for Add Statistic
-        const createBtn = document.getElementById('createBtn');
-        const createModal = document.getElementById('createModal');
-        const closeCreateModal = document.getElementById('closeCreateModal');
-        createBtn.onclick = function() { createModal.style.display = 'block'; }
-        closeCreateModal.onclick = function() { createModal.style.display = 'none'; }
-        window.onclick = function(event) { if (event.target == createModal) createModal.style.display = 'none'; }
-        // Search logic
-        const searchInput = document.getElementById('searchInput');
-        const tableRows = document.querySelectorAll('.reservation-table tbody tr');
-        searchInput.oninput = function() {
-            const val = searchInput.value.toLowerCase();
-            tableRows.forEach(row => {
-                let match = false;
-                row.querySelectorAll('td').forEach(cell => {
-                    if (cell.innerText.toLowerCase().includes(val)) match = true;
-                });
-                row.style.display = match ? '' : 'none';
-            });
-        }
+    
     </script>
 </body>
 </html> 

@@ -752,6 +752,7 @@ if (count($where) > 0) {
                         <th>Check Out</th>
                         <th>Status</th>
                         <th>Actions</th>
+                        <th>Download</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -791,6 +792,11 @@ if (count($where) > 0) {
                                     ><i class="fas fa-trash"></i></button>
                                 </div>
                             </td>
+                            <td>
+                                <button class="download-table-btn" title="Download Table" onclick="showDownloadModal(event)">
+                                <i class="fas fa-download"></i>
+                        </button>
+                      </td>
                         </tr>
                     <?php endwhile; ?>
                 <?php else: ?>

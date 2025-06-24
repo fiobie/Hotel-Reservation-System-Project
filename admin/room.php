@@ -4,59 +4,51 @@ include 'connections.php';
 // --- FILTER HANDLING ---
 $where = [];
 $params = [];
-
-// If filter form is submitted (GET)
-if ($_SERVER['REQUEST_METHOD'] === 'GET' && (
-  isset($_GET['RoomID']) || isset($_GET['RoomNumber'])|| isset($_GET['RoomName']) || isset($_GET['RoomType']) ||
-  isset($_GET['RoomPerHour']) || isset($_GET['RoomStatus']) || isset($_GET['Capacity'])
-)) {
+if (
+  $_SERVER['REQUEST_METHOD'] === 'GET' && (
+    isset($_GET['RoomID']) || isset($_GET['RoomNumber']) || isset($_GET['RoomName']) || isset($_GET['RoomType']) ||
+    isset($_GET['RoomPerHour']) || isset($_GET['RoomStatus']) || isset($_GET['Capacity'])
+  )
+) {
   if (!empty($_GET['RoomID'])) {
-    $where[] = "RoomID = ?";
-    $params[] = $_GET['RoomID'];
+    $where[] = "RoomID = '" . $conn->real_escape_string($_GET['RoomID']) . "'";
   }
   if (!empty($_GET['RoomNumber'])) {
-    $where[] = "RoomNumber = ?";
-    $params[] = $_GET['RoomNumber'];
+    $where[] = "RoomNumber = '" . $conn->real_escape_string($_GET['RoomNumber']) . "'";
   }
   if (!empty($_GET['RoomName'])) {
-    $where[] = "RoomName = ?";
-    $params[] = $_GET['RoomName'];
+    $where[] = "RoomName = '" . $conn->real_escape_string($_GET['RoomName']) . "'";
   }
   if (!empty($_GET['RoomType'])) {
-    $where[] = "RoomType = ?";
-    $params[] = $_GET['RoomType'];
+    $where[] = "RoomType = '" . $conn->real_escape_string($_GET['RoomType']) . "'";
   }
   if (!empty($_GET['RoomPerHour'])) {
-    $where[] = "RoomPerHour = ?";
-    $params[] = $_GET['RoomPerHour'];
+    $where[] = "RoomPerHour = '" . $conn->real_escape_string($_GET['RoomPerHour']) . "'";
   }
   if (!empty($_GET['RoomStatus'])) {
-    $where[] = "RoomStatus = ?";
-    $params[] = $_GET['RoomStatus'];
+    $where[] = "RoomStatus = '" . $conn->real_escape_string($_GET['RoomStatus']) . "'";
   }
   if (!empty($_GET['Capacity'])) {
-    $where[] = "Capacity = ?";
-    $params[] = $_GET['Capacity'];
+    $where[] = "Capacity = '" . $conn->real_escape_string($_GET['Capacity']) . "'";
   }
 }
 
 // --- AJAX UPDATE ---
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['RoomID']) && !isset($_POST['deleteRoom']) && !isset($_POST['createRoom'])) {
+if (
+  $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['RoomID']) && isset($_POST['RoomNumber']) && isset($_POST['RoomName']) && !isset($_POST['createRoom']) && !isset($_POST['deleteRoom'])
+) {
   $roomid = intval($_POST['RoomID']);
-  $roomnumber = $_POST['RoomNumber'];
-  $roomname = $_POST['RoomName'];
-  $roomtype = $_POST['RoomType'];
+  $roomnumber = $conn->real_escape_string($_POST['RoomNumber']);
+  $roomname = $conn->real_escape_string($_POST['RoomName']);
+  $roomtype = $conn->real_escape_string($_POST['RoomType']);
   $roomperhour = floatval($_POST['RoomPerHour']);
-  $roomstatus = $_POST['RoomStatus'];
+  $roomstatus = $conn->real_escape_string($_POST['RoomStatus']);
   $capacity = intval($_POST['Capacity']);
 
-  // Use correct types: RoomNumber (string/int), RoomType (string), RoomPerHour (float), RoomStatus (string), Capacity (int), RoomID (int)
-  $stmt = $conn->prepare("UPDATE room SET RoomNumber=?, RoomName=?, RoomType=?, RoomPerHour=?, RoomStatus=?, Capacity=? WHERE RoomID=?");
-  $stmt->bind_param("ssdssi", $roomnumber, $roomname, $roomtype, $roomperhour, $roomstatus, $capacity, $roomid);
-  $success = $stmt->execute();
-
+  $sql = "UPDATE room SET RoomNumber='$roomnumber', RoomName='$roomname', RoomType='$roomtype', RoomPerHour='$roomperhour', RoomStatus='$roomstatus', Capacity='$capacity' WHERE RoomID=$roomid";
+  $success = $conn->query($sql);
   header('Content-Type: application/json');
-  echo json_encode(['success' => $success]);
+  echo json_encode(['success' => $success, 'error' => $conn->error, 'sql' => $sql, 'post' => $_POST]);
   exit;
 }
 
@@ -66,7 +58,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['deleteRoom']) && isse
   $sql = "DELETE FROM room WHERE RoomID=$roomid";
   $success = $conn->query($sql);
   header('Content-Type: application/json');
-  echo json_encode(['success' => $success]);
+  echo json_encode(['success' => $success, 'error' => $conn->error, 'sql' => $sql]);
+  exit;
+}
+
+// --- FETCH LATEST ROOM (AJAX) ---
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['latestRoom'])) {
+  $sql = "SELECT * FROM room ORDER BY RoomID DESC LIMIT 1";
+  $result = $conn->query($sql);
+  $room = $result ? $result->fetch_assoc() : null;
+  header('Content-Type: application/json');
+  echo json_encode(['room' => $room]);
   exit;
 }
 
@@ -75,31 +77,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['createRoom'])) {
   $roomnumber = $conn->real_escape_string($_POST['RoomNumber']);
   $roomname = $conn->real_escape_string($_POST['RoomName']);
   $roomtype = $conn->real_escape_string($_POST['RoomType']);
-  $roomperhour = $conn->real_escape_string($_POST['RoomPerHour']);
+  $roomperhour = floatval($_POST['RoomPerHour']);
   $roomstatus = $conn->real_escape_string($_POST['RoomStatus']);
-  $capacity = $conn->real_escape_string($_POST['Capacity']);
-  $sql = "INSERT INTO room (RoomNumber, RoomName, RoomType, RoomPerHour, RoomStatus, Capacity) VALUES ('$roomnumber', '$roomtype', '$roomperhour', '$roomstatus', '$capacity')";
+  $capacity = intval($_POST['Capacity']);
+  $sql = "INSERT INTO room (RoomNumber, RoomName, RoomType, RoomPerHour, RoomStatus, Capacity) VALUES ('$roomnumber', '$roomname', '$roomtype', '$roomperhour', '$roomstatus', '$capacity')";
   $success = $conn->query($sql);
-  if (isset($_SERVER['HTTP_X_REQUESTED_WITH'])) {
-    header('Content-Type: application/json');
-    echo json_encode(['success' => $success]);
-    exit;
-  } else {
-    header('Location: room.php');
-    exit;
-  }
+  header('Content-Type: application/json');
+  echo json_encode(['success' => $success, 'error' => $conn->error, 'sql' => $sql]);
+  exit;
 }
 
 // --- FETCH ROOMS (with filter) ---
 if (count($where) > 0) {
   $sql = "SELECT * FROM room WHERE " . implode(' AND ', $where) . " ORDER BY RoomID DESC";
-  $stmt = $conn->prepare($sql);
-  if ($params) {
-    $types = str_repeat('s', count($params));
-    $stmt->bind_param($types, ...$params);
-  }
-  $stmt->execute();
-  $resResult = $stmt->get_result();
+  $resResult = $conn->query($sql);
 } else {
   $resQuery = "SELECT * FROM room ORDER BY RoomID DESC";
   $resResult = $conn->query($resQuery);
@@ -813,7 +804,7 @@ if (count($where) > 0) {
     </thead>
     <tbody>
     <?php if ($resResult && $resResult->num_rows > 0): ?>
-      <?php while($row = $resResult->fetch_assoc()): ?>
+      <?php while($row = $resResult->fetch_assoc()): ?> 
       <tr data-id="<?php echo $row['RoomID']; ?>">
       <td><b><?php echo $row['RoomID']; ?></b></td>
       <td><b><?php echo htmlspecialchars($row['RoomNumber']); ?></b></td>
@@ -1071,10 +1062,10 @@ if (count($where) > 0) {
     submenu.classList.toggle('active');
   }
 
-  // Edit Modal
-  const editModal = document.getElementById('editModal');
-  const closeEditModal = document.getElementById('closeEditModal');
-  function bindEditBtns() {
+  // --- Modal Logic & Action Buttons for Room Table ---
+  // Event delegation for dynamic table rows
+  function bindRoomTableActions() {
+    // Edit Modal
     document.querySelectorAll('.edit-btn').forEach(btn => {
       btn.onclick = function() {
         editModal.style.display = 'block';
@@ -1087,10 +1078,35 @@ if (count($where) > 0) {
         document.getElementById('editCapacity').value = this.dataset.capacity;
       }
     });
+    // View Modal
+    document.querySelectorAll('.view-btn').forEach(btn => {
+      btn.onclick = function() {
+        viewModal.style.display = 'block';
+        document.getElementById('viewDetails').innerHTML = `
+          <p><label>Room ID:</label> <span>${this.dataset.id}</span></p>
+          <p><label>Room Name:</label> <span>${this.dataset.roomname}</span></p>
+          <p><label>Room Number:</label> <span>${this.dataset.roomnumber}</span></p>
+          <p><label>Room Type:</label> <span>${this.dataset.roomtype}</span></p>
+          <p><label>Room Per Hour:</label> <span>${this.dataset.roomperhour}</span></p>
+          <p><label>Room Status:</label> <span>${this.dataset.roomstatus}</span></p>
+          <p><label>Capacity:</label> <span>${this.dataset.capacity}</span></p>
+        `;
+      }
+    });
+    // Delete Modal
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+      btn.onclick = function() {
+        deleteRoomId = this.dataset.id;
+        deleteModal.style.display = 'block';
+      }
+    });
   }
-  bindEditBtns();
+  bindRoomTableActions();
+
+  // Edit Modal
+  const editModal = document.getElementById('editModal');
+  const closeEditModal = document.getElementById('closeEditModal');
   closeEditModal.onclick = function() { editModal.style.display = 'none'; }
-  // Save Edit
   const editForm = document.getElementById('editForm');
   editForm.onsubmit = function(e) {
     e.preventDefault();
@@ -1102,8 +1118,28 @@ if (count($where) > 0) {
     .then(res => res.json())
     .then(data => {
       if (data.success) {
+        // Update the table row in-place (like reservation.php)
+        const roomId = document.getElementById('editRoomID').value;
+        const row = document.querySelector(`tr[data-id='${roomId}']`);
+        if (row) {
+          row.children[1].innerHTML = `<b>${document.getElementById('editRoomNumber').value}</b>`;
+          row.children[2].innerHTML = `<b>${document.getElementById('editRoomName').value}</b>`;
+          row.children[3].innerHTML = `<b>${document.getElementById('editRoomType').value}</b>`;
+          row.children[4].innerHTML = `<b>${document.getElementById('editRoomPerHour').value}</b>`;
+          row.children[5].innerHTML = document.getElementById('editRoomStatus').value;
+          row.children[6].innerHTML = `<b>${document.getElementById('editCapacity').value}</b>`;
+          // Update the edit button's data-* attributes
+          const editBtn = row.querySelector('.edit-btn');
+          if (editBtn) {
+            editBtn.dataset.roomnumber = document.getElementById('editRoomNumber').value;
+            editBtn.dataset.roomname = document.getElementById('editRoomName').value;
+            editBtn.dataset.roomtype = document.getElementById('editRoomType').value;
+            editBtn.dataset.roomperhour = document.getElementById('editRoomPerHour').value;
+            editBtn.dataset.roomstatus = document.getElementById('editRoomStatus').value;
+            editBtn.dataset.capacity = document.getElementById('editCapacity').value;
+          }
+        }
         editModal.style.display = 'none';
-        setTimeout(() => location.reload(), 200);
       } else {
         alert('Update failed.');
       }
@@ -1112,24 +1148,33 @@ if (count($where) > 0) {
   // View Modal
   const viewModal = document.getElementById('viewModal');
   const closeViewModal = document.getElementById('closeViewModal');
-  function bindViewBtns() {
-    document.querySelectorAll('.view-btn').forEach(btn => {
-      btn.onclick = function() {
-        viewModal.style.display = 'block';
-        document.getElementById('viewDetails').innerHTML = `
-        <p><label>Room ID:</label> <span>${this.dataset.id}</span></p>
-        <p><label>Room Name:</label> <span>${this.dataset.roomname}</span></p>
-        <p><label>Room Number:</label> <span>${this.dataset.roomname}</span></p>
-        <p><label>Room Type:</label> <span>${this.dataset.roomtype}</span></p>
-        <p><label>Room Per Hour:</label> <span>${this.dataset.roomperhour}</span></p>
-        <p><label>Room Status:</label> <span>${this.dataset.roomstatus}</span></p>
-        <p><label>Capacity:</label> <span>${this.dataset.capacity}</span></p>
-        `;
+  closeViewModal.onclick = function() { viewModal.style.display = 'none'; }
+  // Delete Modal
+  const deleteModal = document.getElementById('deleteModal');
+  const closeDeleteModal = document.getElementById('closeDeleteModal');
+  let deleteRoomId = null;
+  document.querySelector('.confirm-delete').onclick = function() {
+    if (!deleteRoomId) return;
+    const formData = new FormData();
+    formData.append('deleteRoom', 1);
+    formData.append('RoomID', deleteRoomId);
+    fetch('room.php', {
+      method: 'POST',
+      body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        deleteModal.style.display = 'none';
+        setTimeout(() => location.reload(), 200);
+      } else {
+        alert('Delete failed.');
       }
     });
   }
-  bindViewBtns();
-  closeViewModal.onclick = function() { viewModal.style.display = 'none'; }
+  document.querySelector('.cancel-delete').onclick = function() { deleteModal.style.display = 'none'; deleteRoomId = null; }
+  closeDeleteModal.onclick = function() { deleteModal.style.display = 'none'; }
+  // Modal close on outside click
   window.onclick = function(event) {
     if (event.target == editModal) editModal.style.display = 'none';
     if (event.target == viewModal) viewModal.style.display = 'none';
@@ -1149,56 +1194,16 @@ if (count($where) > 0) {
       row.style.display = match ? '' : 'none';
     });
   }
-  // Create Booking Modal
+  // Add Room Modal
   const createModal = document.getElementById('createModal');
   const createBtn = document.getElementById('createBtn');
   const closeCreateModal = document.getElementById('closeCreateModal');
+  const createForm = document.getElementById('createForm');
   createBtn.onclick = function() { createModal.style.display = 'block'; }
   closeCreateModal.onclick = function() { createModal.style.display = 'none'; }
-
-  // --- AJAX CREATE BOOKING ---
-  document.getElementById('createForm').onsubmit = function(e) {
+  createForm.onsubmit = function(e) {
     e.preventDefault();
-    const formData = new FormData(this);
-    fetch('room.php', {
-      method: 'POST',
-      body: formData,
-      headers: { 'X-Requested-With': 'XMLHttpRequest' }
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (data.success) {
-        createModal.style.display = 'none';
-        setTimeout(() => location.reload(), 200);
-      } else {
-        alert('Create failed.');
-      }
-    });
-  };
-
-  // Delete Modal
-  const deleteModal = document.getElementById('deleteModal');
-  const closeDeleteModal = document.getElementById('closeDeleteModal');
-  let deleteBookingId = null;
-  function bindDeleteBtns() {
-    document.querySelectorAll('.delete-btn').forEach(btn => {
-      btn.onclick = function() {
-        deleteBookingId = this.dataset.id;
-        deleteModal.style.display = 'block';
-      }
-    });
-  }
-  bindDeleteBtns();
-  closeDeleteModal.onclick = function() { deleteModal.style.display = 'none'; }
-  document.querySelector('#deleteModal .cancel-delete').onclick = function() {
-    deleteModal.style.display = 'none';
-    deleteBookingId = null;
-  }
-  document.querySelector('#deleteModal .confirm-delete').onclick = function() {
-    if (!deleteBookingId) return;
-    const formData = new FormData();
-    formData.append('deleteRoom', 1);
-    formData.append('RoomID', deleteBookingId);
+    const formData = new FormData(createForm);
     fetch('room.php', {
       method: 'POST',
       body: formData
@@ -1206,36 +1211,64 @@ if (count($where) > 0) {
     .then(res => res.json())
     .then(data => {
       if (data.success) {
-        deleteModal.style.display = 'none';
-        setTimeout(() => location.reload(), 200);
+        // Fetch the latest room and add to the table
+        fetch('room.php?latestRoom=1')
+          .then(res => res.json())
+          .then(json => {
+            if (json.room) {
+              const tbody = document.querySelector('.reservation-table tbody');
+              const row = document.createElement('tr');
+              row.setAttribute('data-id', json.room.RoomID);
+              row.innerHTML = `
+                <td><b>${json.room.RoomID}</b></td>
+                <td><b>${json.room.RoomNumber}</b></td>
+                <td><b>${json.room.RoomName}</b></td>
+                <td><b>${json.room.RoomType}</b></td>
+                <td><b>${json.room.RoomPerHour}</b></td>
+                <td>${json.room.RoomStatus}</td>
+                <td><b>${json.room.Capacity}</b></td>
+                <td>
+                  <div class="action-group">
+                    <button type="button" class="action-btn edit-btn"
+                      data-id="${json.room.RoomID}"
+                      data-roomnumber="${json.room.RoomNumber}"
+                      data-roomname="${json.room.RoomName}"
+                      data-roomtype="${json.room.RoomType}"
+                      data-roomperhour="${json.room.RoomPerHour}"
+                      data-roomstatus="${json.room.RoomStatus}"
+                      data-capacity="${json.room.Capacity}"
+                    ><i class="fas fa-edit"></i></button>
+                    <button type="button" class="action-btn view-btn"
+                      data-id="${json.room.RoomID}"
+                      data-roomnumber="${json.room.RoomNumber}"
+                      data-roomname="${json.room.RoomName}"
+                      data-roomtype="${json.room.RoomType}"
+                      data-roomperhour="${json.room.RoomPerHour}"
+                      data-roomstatus="${json.room.RoomStatus}"
+                      data-capacity="${json.room.Capacity}"
+                    ><i class="fas fa-eye"></i></button>
+                    <button type="button" class="action-btn delete-btn"
+                      data-id="${json.room.RoomID}"
+                    ><i class="fas fa-trash"></i></button>
+                  </div>
+                </td>
+                <td>
+                  <button class="download-table-btn" title="Download Table" onclick="showDownloadModal(event)">
+                    <i class="fas fa-download"></i>
+                  </button>
+                </td>
+              `;
+              tbody.prepend(row);
+              bindRoomTableActions();
+            }
+            createModal.style.display = 'none';
+            createForm.reset();
+          });
       } else {
-        alert('Delete failed.');
+        alert('Create failed.');
       }
     });
   }
-
-  // --- FILTER LOGIC ---
-  const filterBtn = document.getElementById('filterBtn');
-  const filterDropdown = document.getElementById('filterDropdown');
-  const clearFilterBtn = document.getElementById('clearFilterBtn');
-  filterBtn.onclick = function() {
-    filterDropdown.classList.toggle('active');
-  }
-  document.addEventListener('click', function(e) {
-    if (!filterDropdown.contains(e.target) && e.target !== filterBtn) {
-      filterDropdown.classList.remove('active');
-    }
-  });
-  clearFilterBtn.onclick = function() {
-    window.location = 'room.php';
-  }
-
-  // Re-bind buttons after AJAX reload (if using partial reload in future)
-  // function rebindAllBtns() {
-  //   bindEditBtns();
-  //   bindViewBtns();
-  //   bindDeleteBtns();
-  // }
   </script>
 </body>
 </html>

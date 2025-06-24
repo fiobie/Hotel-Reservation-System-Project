@@ -745,6 +745,33 @@ if (count($where) > 0) {
             cursor: default;
             user-select: none;
         }
+        /* Download icon button in table cell */
+        .download-table-btn {
+            background: none;
+            border: none;
+            color: #008000;
+            border-radius: 50%;
+            padding: 0.3rem;
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s, color 0.2s;
+            margin: 0 auto; /* Center horizontally */
+        }
+        .download-table-btn i {
+            font-size: 1.05em;
+            color: #008000;
+            transition: color 0.2s;
+        }
+        .download-table-btn:hover, .download-table-btn:focus {
+            background: #e6f5ea;
+        }
+        .download-table-btn:hover i, .download-table-btn:focus i {
+            color: #005c00;
+        }
+        /* Center the download button in the table cell */
   </style>
 </head>
 <body>
@@ -832,6 +859,7 @@ if (count($where) > 0) {
             <th>Phone Number</th>
             <th>Email</th>
             <th>Actions</th>
+            <th>Download</th>
           </tr>
         </thead>
         <tbody>
@@ -872,6 +900,11 @@ if (count($where) > 0) {
                 ><i class="fas fa-trash"></i></button>
               </div>
             </td>
+            <td>
+              <button class="download-table-btn" title="Download Table" onclick="showDownloadModal(event)">
+                          <i class="fas fa-download"></i>
+                        </button>
+                      </td>
           </tr>
           <?php endwhile; ?>
         <?php else: ?>
