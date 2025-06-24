@@ -749,39 +749,7 @@ $reservation = $conn->query("SELECT COUNT(*) as count FROM booking WHERE Booking
 
             <!-- Live Data Sections -->
             <div class="live-data-container">
-                <!-- Recent Bookings Section -->
-                <div class="live-section">
-                    <div class="section-header">
-                        <h3><i class="fas fa-clock"></i> Recent Bookings (Last 24 Hours)</h3>
-                        <div class="live-indicator">
-                            <span class="live-dot"></span>
-                            <span class="live-text">LIVE</span>
-                        </div>
-                    </div>
-                    <div class="recent-bookings" id="recent-bookings">
-                        <div class="loading-placeholder">
-                            <i class="fas fa-spinner fa-spin"></i>
-                            <span>Loading recent bookings...</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Low Stock Alerts Section -->
-                <div class="live-section">
-                    <div class="section-header">
-                        <h3><i class="fas fa-exclamation-triangle"></i> Low Stock Alerts</h3>
-                        <div class="live-indicator">
-                            <span class="live-dot"></span>
-                            <span class="live-text">LIVE</span>
-                        </div>
-                    </div>
-                    <div class="low-stock-alerts" id="low-stock-alerts">
-                        <div class="loading-placeholder">
-                            <i class="fas fa-spinner fa-spin"></i>
-                            <span>Loading stock alerts...</span>
-                        </div>
-                    </div>
-                </div>
+                <!-- Removed Recent Bookings and Low Stock Alerts sections -->
             </div>
 
             <!-- Last Update Indicator -->
@@ -819,325 +787,58 @@ $reservation = $conn->query("SELECT COUNT(*) as count FROM booking WHERE Booking
             }
         });
 
-        // ============================================================================
         // LIVE DATA FUNCTIONALITY
-        // ============================================================================
-        
-        let updateInterval;
-        let isUpdating = false;
-
-        // Initialize live data functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            // Load initial data
-            fetchLiveData();
-            
-            // Set up automatic refresh every 30 seconds
-            updateInterval = setInterval(fetchLiveData, 30000);
-            
-            // Set up manual refresh button
-            document.getElementById('manual-refresh-btn').addEventListener('click', function() {
-                if (!isUpdating) {
-                    fetchLiveData(true);
-                }
-            });
-        });
-
-        // Fetch live data from server
-        async function fetchLiveData(manualRefresh = false) {
-            if (isUpdating) return;
-            
-            isUpdating = true;
-            
-            // Show loading state on manual refresh
-            if (manualRefresh) {
-                const refreshBtn = document.getElementById('manual-refresh-btn');
-                refreshBtn.classList.add('loading');
-            }
-
-            try {
-                const formData = new FormData();
-                formData.append('get_live_data', '1');
-
-                const response = await fetch('staff_dashboard.php', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-
-                const data = await response.json();
-                
-                if (data.success) {
-                    updateDashboard(data.data);
-                    showNotification('Data updated successfully', 'success');
-                } else {
-                    throw new Error('Failed to fetch data');
-                }
-            } catch (error) {
-                console.error('Error fetching live data:', error);
-                showNotification('Failed to update data. Please try again.', 'error');
-            } finally {
-                isUpdating = false;
-                if (manualRefresh) {
-                    const refreshBtn = document.getElementById('manual-refresh-btn');
-                    refreshBtn.classList.remove('loading');
-                }
-            }
-        }
-
-        // Update dashboard with new data
-        function updateDashboard(data) {
-            // Update statistics
-            updateStatValue('new-booking', data.stats.newBooking);
-            updateStatValue('available-room', data.stats.availableRoom);
-            updateStatValue('check-in', data.stats.checkIn);
-            updateStatValue('check-out', data.stats.checkOut);
-            updateStatValue('reservation', data.stats.reservation);
-
-            // Update inventory
-            updateStatValue('toiletries-stock', data.inventory.Toiletries);
-            updateStatValue('amenities-stock', data.inventory.Amenities);
-            updateStatValue('food-stock', data.inventory.Food);
-
-            // Update recent bookings
-            updateRecentBookings(data.recentBookings);
-
-            // Update low stock alerts
-            updateLowStockAlerts(data.lowStockAlerts);
-
-            // Update last update time
-            document.getElementById('last-update-time').textContent = data.lastUpdate;
-        }
-
-        // Update individual stat values with animation
         function updateStatValue(elementId, newValue) {
             const element = document.getElementById(elementId);
             if (!element) return;
-
-            const currentValue = parseInt(element.textContent) || 0;
-            const newValueInt = parseInt(newValue) || 0;
-
-            if (currentValue !== newValueInt) {
-                // Add highlight animation
-                element.classList.add('data-update');
-                
-                // Animate the number change
-                animateNumber(element, currentValue, newValueInt);
-                
-                // Remove highlight after animation
-                setTimeout(() => {
-                    element.classList.remove('data-update');
-                }, 500);
-            }
+            element.textContent = newValue;
         }
 
-        // Animate number changes
-        function animateNumber(element, start, end) {
-            const duration = 1000;
-            const startTime = performance.now();
-            
-            function updateNumber(currentTime) {
-                const elapsed = currentTime - startTime;
-                const progress = Math.min(elapsed / duration, 1);
-                
-                const current = Math.floor(start + (end - start) * progress);
-                element.textContent = current;
-                
-                if (progress < 1) {
-                    requestAnimationFrame(updateNumber);
-                } else {
-                    element.textContent = end;
+        function updateLastUpdateTime() {
+            const now = new Date();
+            const formatted = now.getFullYear() + '-' +
+                String(now.getMonth() + 1).padStart(2, '0') + '-' +
+                String(now.getDate()).padStart(2, '0') + ' ' +
+                String(now.getHours()).padStart(2, '0') + ':' +
+                String(now.getMinutes()).padStart(2, '0') + ':' +
+                String(now.getSeconds()).padStart(2, '0');
+            const lastUpdate = document.getElementById('last-update-time');
+            if (lastUpdate) lastUpdate.textContent = formatted;
+        }
+
+        function fetchLiveData() {
+            const formData = new FormData();
+            formData.append('get_live_data', '1');
+            fetch('staff_dashboard.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const stats = data.data.stats;
+                    updateStatValue('new-booking', stats.newBooking);
+                    updateStatValue('available-room', stats.availableRoom);
+                    updateStatValue('check-in', stats.checkIn);
+                    updateStatValue('check-out', stats.checkOut);
+                    updateStatValue('reservation', stats.reservation);
+                    const inventory = data.data.inventory;
+                    updateStatValue('toiletries-stock', inventory.Toiletries);
+                    updateStatValue('amenities-stock', inventory.Amenities);
+                    updateStatValue('food-stock', inventory.Food);
+                    updateLastUpdateTime();
                 }
-            }
-            
-            requestAnimationFrame(updateNumber);
-        }
-
-        // Update recent bookings section
-        function updateRecentBookings(bookings) {
-            const container = document.getElementById('recent-bookings');
-            
-            if (bookings.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-calendar-times"></i>
-                        <p>No recent bookings in the last 24 hours</p>
-                    </div>
-                `;
-                return;
-            }
-
-            const bookingsHTML = bookings.map(booking => `
-                <div class="booking-item">
-                    <div class="booking-info">
-                        <div class="booking-guest">${booking.GuestName || 'Guest #' + booking.BookingID}</div>
-                        <div class="booking-details">
-                            Room ${booking.RoomNumber} • ${booking.RoomType} • Check-in: ${formatDate(booking.CheckInDate)}
-                        </div>
-                    </div>
-                    <div class="booking-status status-${booking.BookingStatus.toLowerCase()}">
-                        ${booking.BookingStatus}
-                    </div>
-                </div>
-            `).join('');
-
-            container.innerHTML = bookingsHTML;
-        }
-
-        // Update low stock alerts section
-        function updateLowStockAlerts(alerts) {
-            const container = document.getElementById('low-stock-alerts');
-            
-            if (alerts.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-check-circle"></i>
-                        <p>All inventory items are well stocked</p>
-                    </div>
-                `;
-                return;
-            }
-
-            const alertsHTML = alerts.map(alert => `
-                <div class="alert-item">
-                    <div class="alert-info">
-                        <div class="alert-item-name">${alert.ItemName}</div>
-                        <div class="alert-stock-info">
-                            Current: ${alert.CurrentStocks} • Minimum: ${alert.MinimumStocks}
-                        </div>
-                    </div>
-                    <div class="alert-stock-count">
-                        ${alert.CurrentStocks}
-                    </div>
-                </div>
-            `).join('');
-
-            container.innerHTML = alertsHTML;
-        }
-
-        // Format date for display
-        function formatDate(dateString) {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
             });
         }
 
-        // Show notification
-        function showNotification(message, type = 'info') {
-            const notification = document.createElement('div');
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                padding: 1rem 1.5rem;
-                border-radius: 0.5rem;
-                color: white;
-                font-weight: 500;
-                z-index: 10000;
-                animation: slideIn 0.3s ease;
-                max-width: 300px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            `;
-            
-            switch(type) {
-                case 'success':
-                    notification.style.background = '#28a745';
-                    break;
-                case 'error':
-                    notification.style.background = '#dc3545';
-                    break;
-                case 'warning':
-                    notification.style.background = '#ffc107';
-                    notification.style.color = '#212529';
-                    break;
-                default:
-                    notification.style.background = '#17a2b8';
-            }
-            
-            notification.innerHTML = `
-                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i>
-                    <span>${message}</span>
-                </div>
-            `;
-            
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.style.animation = 'slideOut 0.3s ease';
-                setTimeout(() => {
-                    if (document.body.contains(notification)) {
-                        document.body.removeChild(notification);
-                    }
-                }, 300);
-            }, 3000);
-        }
-
-        // Add CSS animations for notifications
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes slideIn {
-                from { transform: translateX(100%); opacity: 0; }
-                to { transform: translateX(0); opacity: 1; }
-            }
-            @keyframes slideOut {
-                from { transform: translateX(0); opacity: 1; }
-                to { transform: translateX(100%); opacity: 0; }
-            }
-        `;
-        document.head.appendChild(style);
-
-        // Keyboard shortcuts for dashboard
-        document.addEventListener('keydown', function(e) {
-            // Only trigger shortcuts when not typing in input fields
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
-                return;
-            }
-
-            // Ctrl/Cmd + R: Refresh data
-            if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
-                e.preventDefault();
-                if (!isUpdating) {
-                    fetchLiveData(true);
-                }
-            }
-
-            // F5: Refresh data
-            if (e.key === 'F5') {
-                e.preventDefault();
-                if (!isUpdating) {
-                    fetchLiveData(true);
-                }
-            }
-        });
-
-        // Page visibility API - pause updates when page is hidden
-        document.addEventListener('visibilitychange', function() {
-            if (document.hidden) {
-                // Pause updates when page is not visible
-                if (updateInterval) {
-                    clearInterval(updateInterval);
-                    updateInterval = null;
-                }
-            } else {
-                // Resume updates when page becomes visible
-                if (!updateInterval) {
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchLiveData(); // Initial fetch
+            setInterval(fetchLiveData, 1000); // Fetch every 1 second
+            var refreshBtn = document.getElementById('manual-refresh-btn');
+            if (refreshBtn) {
+                refreshBtn.addEventListener('click', function() {
                     fetchLiveData();
-                    updateInterval = setInterval(fetchLiveData, 30000);
-                }
-            }
-        });
-
-        // Clean up interval when page is unloaded
-        window.addEventListener('beforeunload', function() {
-            if (updateInterval) {
-                clearInterval(updateInterval);
+                });
             }
         });
     </script>
