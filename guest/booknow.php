@@ -253,16 +253,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ?>" readonly class="readonly-field" required />
   </div>
 
-  <!-- Check-in Date -->
+  <!-- Check-in Date & Time -->
   <div class="form-group">
-    <label for="CheckInDate">Check-in Date:</label>
-    <input type="date" id="CheckInDate" name="CheckInDate" required value="<?php echo isset($_POST['CheckInDate']) ? htmlspecialchars($_POST['CheckInDate']) : ''; ?>" />
+    <label for="CheckInDate">Check-in Date & Time:</label>
+    <input type="datetime-local" id="checkin" name="CheckInDate" required value="<?php
+      // Priority: POST > GET > SESSION
+      if (isset($_POST['checkin'])) {
+        echo htmlspecialchars($_POST['checkin']);
+      } elseif (isset($_GET['checkin'])) {
+        // Accept both 'checkin' as full datetime-local or as date + 'checkin_time'
+        if (strpos($_GET['checkin'], 'T') !== false) {
+          echo htmlspecialchars($_GET['checkin']);
+        } elseif (isset($_GET['checkin_time'])) {
+          echo htmlspecialchars($_GET['checkin'] . 'T' . $_GET['checkin_time']);
+        } else {
+          echo htmlspecialchars($_GET['checkin']);
+        }
+      } elseif (isset($_SESSION['CheckInDate'])) {
+        echo htmlspecialchars($_SESSION['CheckInDate']);
+      } else {
+        echo '';
+      }
+    ?>" />
   </div>
 
-  <!-- Check-out Date -->
+  <!-- Check-out Date & Time -->
   <div class="form-group">
-    <label for="CheckOutDate">Check-out Date:</label>
-    <input type="date" id="CheckOutDate" name="CheckOutDate" required value="<?php echo isset($_POST['CheckOutDate']) ? htmlspecialchars($_POST['CheckOutDate']) : ''; ?>" />
+    <label for="CheckOutDate">Check-out Date & Time:</label>
+    <input type="datetime-local" id="CheckOutDate" name="CheckOutDate" required value="<?php
+      // Priority: POST > GET > SESSION
+      if (isset($_POST['CheckOutDate'])) {
+        echo htmlspecialchars($_POST['checkout']);
+      } elseif (isset($_GET['checkout'])) {
+        if (strpos($_GET['checkout'], 'T') !== false) {
+          echo htmlspecialchars($_GET['checkout']);
+        } elseif (isset($_GET['checkout_time'])) {
+          echo htmlspecialchars($_GET['checkout'] . 'T' . $_GET['checkout_time']);
+        } else {
+          echo htmlspecialchars($_GET['checkout']);
+        }
+      } elseif (isset($_SESSION['CheckOutDate'])) {
+        echo htmlspecialchars($_SESSION['CheckOutDate']);
+      } else {
+        echo '';
+      }
+    ?>" />
   </div>
 
   <!-- Notes -->
