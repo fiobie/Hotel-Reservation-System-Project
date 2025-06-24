@@ -497,11 +497,8 @@ if ($result) {
         /* RESPONSIVE */
         @media (max-width: 900px) {
             .main-content { margin-left: 0; padding: 1rem; }
-            .sidebar { left: calc(-1 * var(--sidebar-width) - 20px); }
-            .sidebar.active { left: 0; }
-            .hamburger { display: flex; position: fixed; top: 1rem; left: 1rem; z-index: 1100; background: var(--primary-color); border: none; border-radius: 6px; cursor: pointer; padding: 0.5rem; }
-            .hamburger span { display: block; width: 22px; height: 3px; background: #fff; margin: 4px 0; border-radius: 2px; }
-            .inventory-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+            .sidebar { left: -220px; box-shadow: none; }
+            .sidebar.active { left: 0; box-shadow: 2px 0 8px rgba(0,0,0,0.08); }
         }
         /* Download icon button in table cell */
         .download-table-btn {
@@ -565,6 +562,98 @@ if ($result) {
             background: #ededed;
             color: var(--theme-green);
         }
+        .sidebar-section-label {
+            display: block;
+            color: #fff;
+            font-size: 0.93rem;
+            font-weight: 400;
+            opacity: 0.85;
+            margin: 0.5rem 0 0.1rem 0.1rem;
+            padding-left: 0.2rem;
+            letter-spacing: 0.5px;
+            cursor: default;
+            user-select: none;
+        }
+        .sidebar .nav-section {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            padding-left: 1rem;
+            gap: 0.5rem;
+            margin-bottom: 0;
+        }
+        .top-bar {
+            position: fixed;
+            left: 180px;
+            right: 0;
+            top: 0;
+            height: 60px;
+            background: #fff;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            z-index: 1001;
+            padding: 0 2rem;
+            transition: left 0.3s;
+        }
+        .top-bar-right {
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+        }
+        .top-bar-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #f0f2f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: #333;
+            cursor: pointer;
+            position: relative;
+        }
+        .top-bar-account {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #bbb;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        .top-bar-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.7rem;
+            color: #147219;
+            margin-right: 1rem;
+            cursor: pointer;
+        }
+        .search-filter-bar { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
+        .search-input { padding: 0.7rem 2.5rem 0.7rem 2.5rem; border-radius: 1.2rem; border: none; background: #ededed; font-size: 1rem; width: 260px; outline: none; }
+        .search-icon { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #888; }
+        .create-btn { padding: 0.7rem 1.5rem; border-radius: 1rem; border: 2px solid #222; background: #f5f6fa; font-size: 1rem; cursor: pointer; margin-left: 0.5rem; transition: background 0.2s, color 0.2s; }
+        .create-btn:hover { background: #222; color: #fff; }
+        .reservation-table { width: 100%; border-collapse: collapse; }
+        .reservation-table th, .reservation-table td { padding: 1rem; border-bottom: 1px solid #f0f2f5; text-align: left; }
+        .reservation-table th { background: #f8f9fa; color: #666; font-weight: 600; }
+        .reservation-table td { color: #222; font-weight: 500; }
+        .action-group { display: flex; gap: 0.3rem; justify-content: center; align-items: center; }
+        .action-btn { display: inline-flex; align-items: center; justify-content: center; border: none; outline: none; border-radius: 50%; padding: 0.3rem; font-size: 1.1rem; background: none; cursor: pointer; transition: background 0.18s, color 0.18s; box-shadow: none; }
+        .action-btn.edit-btn i { color: #008000; }
+        .action-btn.view-btn i { color: #00b894; }
+        .action-btn.delete-btn i { color: #e74c3c; }
+        .action-btn:hover, .action-btn:focus { background: #e6f5ea; }
+        .action-btn.delete-btn:hover, .action-btn.delete-btn:focus { background: #fbeaea; }
     </style>
 </head>
 <body>
@@ -577,27 +666,36 @@ if ($result) {
             <div class="sidebar-nav-center">
                 <div class="nav-section">
                     <a class="nav-link" href="index.php"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
+                </div>
+                <div class="nav-section">
+                    <span class="sidebar-section-label">Management</span>
                     <a class="nav-link" href="student.php"><i class="fas fa-user"></i><span>Guest</span></a>
                     <a class="nav-link" href="booking.php"><i class="fas fa-book"></i><span>Booking</span></a>
                     <a class="nav-link" href="reservation.php"><i class="fas fa-calendar-check"></i><span>Reservation</span></a>
                 </div>
-
                 <div class="nav-section">
-                    <div class="nav-link toggle-btn" onclick="toggleMenu('management')">
-                        <i class="fas fa-cog"></i><span>Manage</span>
-                    </div>
-                    <div class="submenu" id="management">
-                        <a class="nav-link" href="room.php"><i class="fas fa-door-open"></i><span>Room</span></a>
-                        <a class="nav-link" href="menu_service.php"><i class="fas fa-utensils"></i><span>Menu</span></a>
-                        <a class="nav-link" href="account.php"><i class="fas fa-user"></i><span>Account</span></a>
-                        <a class="nav-link" href="inventory.php"><i class="fas fa-box"></i><span>Inventory</span></a>
-                    </div>
+                    <span class="sidebar-section-label">Resources</span>
+                    <a class="nav-link" href="room.php"><i class="fas fa-door-open"></i><span>Room</span></a>
+                    <a class="nav-link" href="menu_service.php"><i class="fas fa-utensils"></i><span>Menu</span></a>
+                    <a class="nav-link" href="inventory.php"><i class="fas fa-box"></i><span>Inventory</span></a>
                 </div>
-
                 <div class="nav-section">
+                    <span class="sidebar-section-label">Administration</span>
+                    <a class="nav-link" href="account.php"><i class="fas fa-user"></i><span>Account</span></a>
+                </div>
+                <div class="nav-section">
+                    <span class="sidebar-section-label">Finance & Analytics</span>
                     <a class="nav-link" href="payment.php"><i class="fas fa-credit-card"></i><span>Invoices</span></a>
                     <a class="nav-link" href="statistics.php"><i class="fas fa-chart-line"></i><span>Statistics</span></a>
                 </div>
+            </div>
+        </div>
+        <div class="top-bar" id="topBar">
+            <button class="top-bar-toggle" id="sidebarToggle" aria-label="Toggle Sidebar"><i class="fas fa-bars"></i></button>
+            <div class="top-bar-right">
+                <div class="top-bar-icon" title="Email"><i class="fas fa-envelope"></i></div>
+                <div class="top-bar-icon" title="Notifications"><i class="fas fa-bell"></i></div>
+                <div class="top-bar-account" title="Account">PB</div>
             </div>
         </div>
 
@@ -606,82 +704,85 @@ if ($result) {
             <div class="inventory-header">
                 <h1>Inventory</h1>
                 <div class="header-controls">
-                    <div class="search-wrapper">
-                        <i class="fas fa-search search-icon"></i>
-                    <input type="text" id="searchInput" class="search-input" placeholder="Search inventory...">
+                    <div class="search-filter-bar">
+                        <div class="search-wrapper">
+                            <i class="fas fa-search search-icon"></i>
+                            <input type="text" id="searchInput" class="search-input" placeholder="Search Inventory">
+                        </div>
+                        <button class="create-btn" id="createBtn">Add Inventory Item</button>
+                    </div>
+                    <button class="btn btn-secondary" id="filterBtn"><i class="fas fa-filter"></i> Filter</button>
+                    <button class="btn btn-primary" id="sendRequestBtn"><i class="fas fa-envelope"></i>Stock Requests</button>
                 </div>
-                <button class="btn btn-secondary" id="filterBtn"><i class="fas fa-filter"></i> Filter</button>
-                <button class="btn btn-primary" id="sendRequestBtn"><i class="fas fa-envelope"></i>Stock Requests</button>
             </div>
-        </div>
-        <div class="table-container">
-            <table class="inventory-table">
-          <thead>
-              <tr>
-            <th>Item ID</th>
-            <th>Item Name</th>
-            <th>Date Received</th>
-            <th>Date Expiry</th>
-            <th>Quantity</th>
-            <th>Price</th>
-            <th>Total Value</th>
-            <th>Current Stocks</th>
-            <th>Status</th>
-            <th>Actions</th>
-            <th>Download</th>
-              </tr>
-          </thead>
-          <tbody id="inventoryTableBody">
-              <?php if (!empty($inventoryItems)): ?>
-            <?php foreach ($inventoryItems as $item): ?>
-                <tr>
-              <td><?php echo htmlspecialchars($item['ItemID']); ?></td>
-              <td><?php echo htmlspecialchars($item['ItemName']); ?></td>
-              <td><?php echo htmlspecialchars($item['DateReceived']); ?></td>
-              <td><?php echo htmlspecialchars($item['DateExpiry']); ?></td>
-              <td><?php echo htmlspecialchars($item['Quantity']); ?></td>
-              <td>$<?php echo htmlspecialchars(number_format($item['Price'], 2)); ?></td>
-              <td>$<?php echo htmlspecialchars(number_format($item['Total'], 2)); ?></td>
-              <td><?php echo htmlspecialchars($item['CurrentStocks']); ?></td>
-              <td><?php echo htmlspecialchars($item['Status']); ?></td>
-              <td>
-                  <div class="action-group">
-                <button type="button" class="action-btn edit-btn"
-                    data-id="<?php echo $item['ItemID']; ?>"
-                    data-itemname="<?php echo htmlspecialchars($item['ItemName']); ?>"
-                    data-datereceived="<?php echo htmlspecialchars($item['DateReceived']); ?>"
-                    data-dateexpiry="<?php echo htmlspecialchars($item['DateExpiry']); ?>"
-                    data-quantity="<?php echo htmlspecialchars($item['Quantity']); ?>"
-                    data-price="<?php echo htmlspecialchars(number_format($item['Price'], 2)); ?>"
-                    data-total="<?php echo htmlspecialchars(number_format($item['Total'], 2)); ?>"
-                ><i class="fas fa-edit"></i></button>
-                <button type="button" class="action-btn view-btn"
-                    data-id="<?php echo $item['ItemID']; ?>"
-                    data-itemname="<?php echo htmlspecialchars($item['ItemName']); ?>"
-                    data-datereceived="<?php echo htmlspecialchars($item['DateReceived']); ?>"
-                    data-dateexpiry="<?php echo htmlspecialchars($item['DateExpiry']); ?>"
-                    data-quantity="<?php echo htmlspecialchars($item['Quantity']); ?>"
-                    data-price="<?php echo htmlspecialchars(number_format($item['Price'], 2)); ?>"
-                    data-total="<?php echo htmlspecialchars(number_format($item['Total'], 2)); ?>"
-                ><i class="fas fa-eye"></i></button>
-                <button type="button" class="action-btn delete-btn"
-                    data-id="<?php echo $item['ItemID']; ?>"
-                ><i class="fas fa-trash"></i></button>
-                  </div>
-              </td>
-              <td>
-                  <button class="download-table-btn" title="Download Row" onclick="showDownloadModal(event)">
-                <i class="fas fa-download"></i>
-                  </button>
-              </td>
-                </tr>
-            <?php endforeach; ?>
-              <?php else: ?>
-            <tr><td colspan="11" style="text-align:center; padding: 2rem;">No inventory items found.</td></tr>
-              <?php endif; ?>
-          </tbody>
-            </table>
-        </div>
+            <div class="table-container">
+                <table class="inventory-table">
+                    <thead>
+                        <tr>
+                            <th>Item ID</th>
+                            <th>Item Name</th>
+                            <th>Date Received</th>
+                            <th>Date Expiry</th>
+                            <th>Quantity</th>
+                            <th>Price</th>
+                            <th>Total Value</th>
+                            <th>Current Stocks</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                            <th>Download</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventoryTableBody">
+                        <?php if (!empty($inventoryItems)): ?>
+                        <?php foreach ($inventoryItems as $item): ?>
+                            <tr>
+                                <td><?php echo htmlspecialchars($item['ItemID']); ?></td>
+                                <td><?php echo htmlspecialchars($item['ItemName']); ?></td>
+                                <td><?php echo htmlspecialchars($item['DateReceived']); ?></td>
+                                <td><?php echo htmlspecialchars($item['DateExpiry']); ?></td>
+                                <td><?php echo htmlspecialchars($item['Quantity']); ?></td>
+                                <td>$<?php echo htmlspecialchars(number_format($item['Price'], 2)); ?></td>
+                                <td>$<?php echo htmlspecialchars(number_format($item['Total'], 2)); ?></td>
+                                <td><?php echo htmlspecialchars($item['CurrentStocks']); ?></td>
+                                <td><?php echo htmlspecialchars($item['Status']); ?></td>
+                                <td>
+                                    <div class="action-group">
+                                        <button type="button" class="action-btn edit-btn"
+                                            data-id="<?php echo $item['ItemID']; ?>"
+                                            data-itemname="<?php echo htmlspecialchars($item['ItemName']); ?>"
+                                            data-datereceived="<?php echo htmlspecialchars($item['DateReceived']); ?>"
+                                            data-dateexpiry="<?php echo htmlspecialchars($item['DateExpiry']); ?>"
+                                            data-quantity="<?php echo htmlspecialchars($item['Quantity']); ?>"
+                                            data-price="<?php echo htmlspecialchars(number_format($item['Price'], 2)); ?>"
+                                            data-total="<?php echo htmlspecialchars(number_format($item['Total'], 2)); ?>"
+                                        ><i class="fas fa-edit"></i></button>
+                                        <button type="button" class="action-btn view-btn"
+                                            data-id="<?php echo $item['ItemID']; ?>"
+                                            data-itemname="<?php echo htmlspecialchars($item['ItemName']); ?>"
+                                            data-datereceived="<?php echo htmlspecialchars($item['DateReceived']); ?>"
+                                            data-dateexpiry="<?php echo htmlspecialchars($item['DateExpiry']); ?>"
+                                            data-quantity="<?php echo htmlspecialchars($item['Quantity']); ?>"
+                                            data-price="<?php echo htmlspecialchars(number_format($item['Price'], 2)); ?>"
+                                            data-total="<?php echo htmlspecialchars(number_format($item['Total'], 2)); ?>"
+                                        ><i class="fas fa-eye"></i></button>
+                                        <button type="button" class="action-btn delete-btn"
+                                            data-id="<?php echo $item['ItemID']; ?>"
+                                        ><i class="fas fa-trash"></i></button>
+                                    </div>
+                                </td>
+                                <td>
+                                    <button class="download-table-btn" title="Download Row" onclick="showDownloadModal(event)">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                        <?php else: ?>
+                        <tr><td colspan="11" style="text-align:center; padding: 2rem;">No inventory items found.</td></tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
   

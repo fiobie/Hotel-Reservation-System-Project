@@ -146,17 +146,203 @@ if (count($where) > 0) {
         }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
         body { background-color: #f5f6fa; display: flex; }
-        .sidebar { width: 200px; background: var(--theme-green); min-height: 100vh; padding: 0.5rem; color: white; position: fixed; left: 0; top: 0; bottom: 0; transition: left 0.3s, box-shadow 0.3s; z-index: 1000; }
-        .sidebar-title { color: white; font-size: 1.4rem; font-weight: 500; margin-bottom: 1.5rem; padding: 1rem; }
-        .nav-section { margin-bottom: 1rem; }
-        .nav-link { display: flex; align-items: center; padding: 0.5rem 1rem; color: white; text-decoration: none; font-size: 0.9rem; margin-bottom: 0.25rem; transition: background-color 0.2s; }
-        .nav-link:hover { background-color: rgba(255, 255, 255, 0.1); }
-        .nav-link i { margin-right: 0.75rem; width: 20px; text-align: center; opacity: 0.9; }
-        .management-label { color: var(--theme-green-light); font-size: 0.8em; margin: 1rem 0 0.5rem 1rem; }
-        .toggle-btn { display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
-        .toggle-btn::after { content: '▼'; font-size: 0.7rem; margin-left: 0.5rem; }
-        .submenu { margin-left: 1.5rem; display: none; }
-        .submenu.active { display: block; }
+         /* Sidebar Styles */
+         .sidebar {
+            width: 180px;
+            background: #008000;
+            min-height: 100vh;
+            padding: 0.5rem 0;
+            color: white;
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 1000;
+            transition: left 0.3s, width 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .sidebar-logo {
+            width: 90px;
+            height: 90px;
+            margin: 1.5rem auto 1rem auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .sidebar-logo img {
+            width: 90px;
+            height: 90px;
+            object-fit: contain;
+            border-radius: 0;
+            border: none;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .sidebar-title {
+            display: block;
+            font-size: 1.25rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            letter-spacing: 1px;
+            /* Professional font styling */
+            font-family: 'Montserrat', 'Segoe UI', Arial, sans-serif;
+            color: #fff;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.08);
+        }
+
+        .sidebar .nav-section {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            padding-left: 1rem;
+            gap: 0.5rem;
+            margin-bottom: 0;
+        }
+
+        .sidebar .nav-section:not(:last-child) {
+            margin-bottom: 1rem;
+        }
+
+        .sidebar .nav-link {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 0.35rem 0.6rem;
+            color: white;
+            text-decoration: none;
+            font-size: 0.93rem;
+            margin-bottom: 0.15rem;
+            border-radius: 5px;
+            width: 90%;
+            transition: background-color 0.2s;
+            height: 36px;
+            gap: 0.5rem;
+        }
+
+        .sidebar .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.13);
+        }
+
+        .sidebar .nav-link i {
+            margin: 0;
+            width: 22px;
+            text-align: center;
+            font-size: 1.08rem;
+            opacity: 0.95;
+        }
+
+        .sidebar .nav-link span {
+            font-size: 0.93rem;
+            margin-top: 0;
+            display: block;
+            text-align: left;
+            letter-spacing: 0.5px;
+        }
+
+        .sidebar .management-label {
+            display: none;
+        }
+
+        .sidebar .toggle-btn {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            cursor: pointer;
+            width: 90%;
+            padding: 0 0.6rem;
+            height: 36px;
+            gap: 0.5rem;
+        }
+
+        .sidebar .toggle-btn::after {
+            display: none;
+        }
+
+        .sidebar .submenu {
+            margin-left: 0.3rem;
+            display: none;
+            width: 100%;
+        }
+
+        .sidebar .submenu.active {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .sidebar-nav-center {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            width: 100%;
+            align-items: flex-start;
+        }
+
+
+        /* Top Bar Styles */
+        .top-bar {
+            position: fixed;
+            left: 180px;
+            right: 0;
+            top: 0;
+            height: 60px;
+            background: #fff;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            z-index: 1001;
+            padding: 0 2rem;
+            transition: left 0.3s;
+        }
+        .top-bar-right {
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+        }
+        .top-bar-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #f0f2f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: #333;
+            cursor: pointer;
+            position: relative;
+        }
+        .top-bar-account {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #bbb;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        .top-bar-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.7rem;
+            color: #147219;
+            margin-right: 1rem;
+            cursor: pointer;
+        }
         .main-content { flex: 1; padding: 2rem; margin-left: 200px; overflow-x: hidden; transition: margin-left 0.3s; }
         .reservation-section { max-width: 1200px; margin: 2rem auto; background: #fff; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); padding: 2rem; }
         h1 { font-size: 2rem; margin-bottom: 1.5rem; color: #333; }
@@ -447,44 +633,182 @@ if (count($where) > 0) {
             text-align: center;
             vertical-align: middle;
         }
-    </style>
+        /* Responsive Styles */
+        @media (max-width: 1200px) {
+            .stats-cards {
+                grid-template-columns: 1fr 1fr;
+            }
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        @media (max-width: 900px) {
+            .main-content {
+                padding: 1rem;
+            }
+        }
+        @media (max-width: 700px) {
+            .sidebar {
+                left: -200px;
+                width: 180px;
+            }
+            .sidebar.active {
+                left: 0;
+            }
+            .top-bar {
+                left: 0;
+                padding-left: 0.5rem;
+            }
+            .main-content {
+                margin-left: 0;
+            }
+            .top-bar-toggle {
+                display: block;
+            }
+        }
+        @media (max-width: 600px) {
+            .main-content {
+                padding: 0.5rem;
+            }
+        }
+        .section-toggle {
+            background: none;
+            border: none;
+            color: #e6e6e6;
+            font-size: 1.08rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.1rem;
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            padding: 0.35rem 0.6rem 0.35rem 0;
+            outline: none;
+            border-radius: 5px;
+            transition: background 0.18s, color 0.18s;
+        }
+        .section-toggle:focus, .section-toggle:hover {
+            color: #fff;
+            background: rgba(255,255,255,0.10);
+        }
+        .section-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.08rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        .section-label i {
+            font-size: 1.15rem;
+            opacity: 0.95;
+        }
+        .chevron {
+            margin-left: auto;
+            font-size: 1.1rem;
+            transition: transform 0.25s cubic-bezier(.4,2,.6,1), color 0.18s;
+        }
+        .section-toggle[aria-expanded="false"] .chevron {
+            transform: rotate(-90deg);
+        }
+        .section-links {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            width: 100%;
+            transition: max-height 0.2s, opacity 0.2s;
+            overflow: hidden;
+            opacity: 1;
+            max-height: 500px;
+            margin-bottom: 0.2rem;
+        }
+        .section-links.collapsed {
+            opacity: 0;
+            max-height: 0;
+            pointer-events: none;
+        }
+        .sidebar .nav-section {
+            margin-bottom: 0.2rem;
+        }
+        .sidebar-section-label {
+            display: block;
+            color: #fff;
+            font-size: 0.93rem;
+            font-weight: 400;
+            opacity: 0.85;
+            margin: 0.5rem 0 0.1rem 0.1rem;
+            padding-left: 0.2rem;
+            letter-spacing: 0.5px;
+            cursor: default;
+            user-select: none;
+        }
+  </style>
 </head>
 <body>
-  <div class="sidebar">
-    <div class="sidebar">
-        <h4 class="sidebar-title">Villa Valore Hotel</h4>
-        
-        <div class="nav-section">
-            <a class="nav-link" href="index.php"><i class="fas fa-th-large"></i>Dashboard</a>
-            <a class="nav-link" href="student.php"><i class="fas fa-user"></i>Guest</a>
-            <a class="nav-link" href="booking.php"><i class="fas fa-book"></i>Booking</a>
-            <a class="nav-link" href="reservation.php"><i class="fas fa-calendar-check"></i>Reservation</a>
-        </div>
-
-        <div class="nav-section">
-            <div class="management-label">MANAGEMENT</div>
-            <div class="nav-link toggle-btn" onclick="toggleMenu('management')">
-                <div><i class="fas fa-cog"></i>Manage</div>
+  <!-- Sidebar Navigation -->
+  <div class="sidebar" id="sidebar">
+            <div class="sidebar-logo">
+                <img src="images/villavalorelogo.png" alt="Villa Valore Logo">
             </div>
-            <div class="submenu" id="management">
-                <a class="nav-link" href="room.php"><i class="fas fa-door-open"></i>Room</a>
-                <a class="nav-link" href="menu_service.php"><i class="fas fa-utensils"></i>Menu & Service</a>
-                <a class="nav-link" href="account.php"><i class="fas fa-user"></i>Account</a>
-                <a class="nav-link" href="inventory.php"><i class="fas fa-box"></i>Inventory</a>
+            <div class="sidebar-title">Villa Valore</div>
+            <div class="sidebar-nav-center">
+                <div class="nav-section">
+                    <a class="nav-link" href="index.php"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
+                </div>
+                <div class="nav-section">
+                    <span class="sidebar-section-label">Management</span>
+                    <a class="nav-link" href="student.php"><i class="fas fa-user"></i><span>Guest</span></a>
+                    <a class="nav-link" href="booking.php"><i class="fas fa-book"></i><span>Booking</span></a>
+                    <a class="nav-link" href="reservation.php"><i class="fas fa-calendar-check"></i><span>Reservation</span></a>
+                </div>
+                <div class="nav-section">
+                    <span class="sidebar-section-label">Resources</span>
+                    <a class="nav-link" href="room.php"><i class="fas fa-door-open"></i><span>Room</span></a>
+                    <a class="nav-link" href="menu_service.php"><i class="fas fa-utensils"></i><span>Menu</span></a>
+                    <a class="nav-link" href="inventory.php"><i class="fas fa-box"></i><span>Inventory</span></a>
+                </div>
+                <div class="nav-section">
+                    <span class="sidebar-section-label">Administration</span>
+                    <a class="nav-link" href="account.php"><i class="fas fa-user"></i><span>Account</span></a>
+                </div>
+                <div class="nav-section">
+                    <span class="sidebar-section-label">Finance & Analytics</span>
+                    <a class="nav-link" href="payment.php"><i class="fas fa-credit-card"></i><span>Invoices</span></a>
+                    <a class="nav-link" href="statistics.php"><i class="fas fa-chart-line"></i><span>Statistics</span></a>
+                </div>
             </div>
         </div>
+  <script>
+  document.querySelectorAll('.section-toggle').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+          const expanded = btn.getAttribute('aria-expanded') === 'true';
+          btn.setAttribute('aria-expanded', !expanded);
+          const sectionId = btn.getAttribute('aria-controls');
+          const sectionLinks = document.getElementById(sectionId);
+          if (sectionLinks) {
+              sectionLinks.classList.toggle('collapsed', expanded);
+          }
+      });
+      btn.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              btn.click();
+          }
+      });
+  });
+  </script>
 
-        <div class="nav-section">
-            <a class="nav-link" href="payment.php"><i class="fas fa-credit-card"></i>Payments</a>
-            <a class="nav-link" href="statistics.php"><i class="fas fa-chart-line"></i>Statistics</a>
-            <a class="nav-link" href="inbox.php"><i class="fas fa-inbox"></i>Inbox</a>
-        </div>
-
-        <div class="nav-section">
-            <a class="nav-link" href="profile.php"><i class="fas fa-user-lock"></i>Profile Account</a>
-            <a class="nav-link" href="logout.php"><i class="fas fa-sign-out-alt"></i>Logout</a>
-        </div>
-    </div>
+  <!-- Top Bar -->
+  <div class="top-bar" id="topBar">
+      <button class="top-bar-toggle" id="sidebarToggle" aria-label="Toggle Sidebar"><i class="fas fa-bars"></i></button>
+      <div class="top-bar-right">
+          <div class="top-bar-icon" title="Email"><i class="fas fa-envelope"></i></div>
+          <div class="top-bar-icon" title="Notifications"><i class="fas fa-bell"></i></div>
+          <div class="top-bar-account" title="Account">PB</div>
+      </div>
   </div>
 
 <div class="main-content">
@@ -494,48 +818,20 @@ if (count($where) > 0) {
         <div class="search-filter-bar">
           <div class="search-wrapper">
             <i class="fas fa-search search-icon"></i>
-            <input type="text" id="searchInput" class="search-input" placeholder="Search">
+            <input type="text" id="searchInput" class="search-input" placeholder="Search Guests">
           </div>
-          <div style="position: relative;">
-            <button class="filter-btn" id="filterBtn">Filter</button>
-            <div class="filter-dropdown" id="filterDropdown">
-              <form id="filterForm" method="GET">
-                <label>Student ID <input type="text" name="StudentID" value="<?php echo isset($_GET['StudentID']) ? htmlspecialchars($_GET['StudentID']) : ''; ?>"></label>
-                <label>First Name <input type="text" name="FirstName" value="<?php echo isset($_GET['FirstName']) ? htmlspecialchars($_GET['FirstName']) : ''; ?>"></label>
-                <label>Last Name <input type="text" name="LastName" value="<?php echo isset($_GET['LastName']) ? htmlspecialchars($_GET['LastName']) : ''; ?>"></label>
-                <label>Gender
-                  <select name="Gender">
-                    <option value="">Any</option>
-                    <option value="Male" <?php if(isset($_GET['Gender']) && $_GET['Gender']=='Male') echo 'selected'; ?>>Male</option>
-                    <option value="Female" <?php if(isset($_GET['Gender']) && $_GET['Gender']=='Female') echo 'selected'; ?>>Female</option>
-                    <option value="Prefer not to say" <?php if(isset($_GET['Gender']) && $_GET['Gender']=='Prefer not to say') echo 'selected'; ?>>Prefer not to say</option>
-                  </select>
-                </label>
-                <label>Phone Number <input type="number" name="PhoneNumber" value="<?php echo isset($_GET['PhoneNumber']) ? htmlspecialchars($_GET['PhoneNumber']) : ''; ?>"></label>
-                <label>Address <input type="text" name="Address" value="<?php echo isset($_GET['Address']) ? htmlspecialchars($_GET['Address']) : ''; ?>"></label>
-                <label>Email <input type="email" name="Email" value="<?php echo isset($_GET['Email']) ? htmlspecialchars($_GET['Email']) : ''; ?>"></label>
-                <label>Nationality <input type="text" name="Nationality" value="<?php echo isset($_GET['Nationality']) ? htmlspecialchars($_GET['Nationality']) : ''; ?>"></label>
-                <label>Birthdate <input type="date" name="Birthdate" value="<?php echo isset($_GET['Birthdate']) ? htmlspecialchars($_GET['Birthdate']) : ''; ?>"></label>
-                <div class="filter-actions">
-                  <button type="submit" id="applyFilterBtn" class="filter-btn">Apply</button>
-                  <button type="button" id="clearFilterBtn" class="filter-btn">Clear</button>
-                </div>
-              </form>
-            </div>
-          </div>
-          <button class="create-btn" id="createBtn">Add Student</button>
+          <button class="create-btn" id="createBtn">Add Guest</button>
         </div>
       </div>
       <table class="reservation-table">
         <thead>
           <tr>
-            <th>Student ID</th>
+            <th>Guest ID</th>
             <th>First Name</th>
             <th>Last Name</th>
             <th>Phone Number</th>
             <th>Email</th>
             <th>Actions</th>
-            <th>Download</th>
           </tr>
         </thead>
         <tbody>
@@ -575,11 +871,6 @@ if (count($where) > 0) {
                   data-id="<?php echo $row['StudentID']; ?>"
                 ><i class="fas fa-trash"></i></button>
               </div>
-            </td>
-            <td>
-              <button class="download-table-btn" title="Download Table" onclick="showDownloadModal(event)">
-                <i class="fas fa-download"></i>
-              </button>
             </td>
           </tr>
           <?php endwhile; ?>
@@ -750,7 +1041,7 @@ if (count($where) > 0) {
   <div id="createModal" class="modal">
     <div class="modal-content">
       <span class="close" id="closeCreateModal">&times;</span>
-      <h2>Add Student</h2>
+      <h2>Add Guest</h2>
       <form id="createForm">
         <input type="hidden" name="createStudent" value="1">
         
@@ -929,22 +1220,6 @@ if (count($where) > 0) {
       });
       row.style.display = match ? '' : 'none';
     });
-  }
-
-  // --- FILTER LOGIC ---
-  const filterBtn = document.getElementById('filterBtn');
-  const filterDropdown = document.getElementById('filterDropdown');
-  const clearFilterBtn = document.getElementById('clearFilterBtn');
-  filterBtn.onclick = function() {
-    filterDropdown.classList.toggle('active');
-  }
-  document.addEventListener('click', function(e) {
-    if (!filterDropdown.contains(e.target) && e.target !== filterBtn) {
-      filterDropdown.classList.remove('active');
-    }
-  });
-  clearFilterBtn.onclick = function() {
-    window.location = 'student.php';
   }
   </script>
 </body>

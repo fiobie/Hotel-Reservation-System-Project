@@ -13,7 +13,7 @@
   <!-- Top Header Bar -->
   <div class="top-bar">
     <div class="logo-container">
-      <img src="cvsu-logo.png" alt="CVSU Logo" class="cvsu-logo">
+      <img src="images/cvsu-logo.png" alt="CVSU Logo" class="cvsu-logo">
       <div class="university-info">
         <strong>CAVITE STATE UNIVERSITY – SILANG CAMPUS</strong>
         <span>Truth | Excellence | Service</span>
@@ -47,16 +47,7 @@
           <a href="deluxeroom.php">Deluxe Room</a>
           <a href="suiteroom.php">Suite Room</a>
         </div>
-      </div>
-
-      <div class="dropdown">
-        <a href="#offers">Offers <span class="arrow">▼</span></a>
-        <div class="dropdown-content">
-          <a href="#">Weekend Promo</a>
-          <a href="#">Summer Lovin' Package</a>
-          <a href="#">Holiday Packages</a>
-        </div>
-      </div>
+      </div>  
 
       <a href="contact.php">Contact</a>
     </nav>

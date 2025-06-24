@@ -277,6 +277,8 @@ $recentBookings = getRecentBookings(5);
             flex-direction: column;
             align-items: flex-start;
             padding-left: 1rem;
+            gap: 0.5rem;
+            margin-bottom: 0;
         }
 
         .sidebar .nav-section:not(:last-child) {
@@ -679,12 +681,86 @@ $recentBookings = getRecentBookings(5);
                 padding: 0.5rem;
             }
         }
+        .section-toggle {
+            background: none;
+            border: none;
+            color: #e6e6e6;
+            font-size: 1.08rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.1rem;
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            padding: 0.35rem 0.6rem 0.35rem 0;
+            outline: none;
+            border-radius: 5px;
+            transition: background 0.18s, color 0.18s;
+        }
+        .section-toggle:focus, .section-toggle:hover {
+            color: #fff;
+            background: rgba(255,255,255,0.10);
+        }
+        .section-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.08rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        .section-label i {
+            font-size: 1.15rem;
+            opacity: 0.95;
+        }
+        .chevron {
+            margin-left: auto;
+            font-size: 1.1rem;
+            transition: transform 0.25s cubic-bezier(.4,2,.6,1), color 0.18s;
+        }
+        .section-toggle[aria-expanded="false"] .chevron {
+            transform: rotate(-90deg);
+        }
+        .section-links {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            width: 100%;
+            transition: max-height 0.2s, opacity 0.2s;
+            overflow: hidden;
+            opacity: 1;
+            max-height: 500px;
+            margin-bottom: 0.2rem;
+        }
+        .section-links.collapsed {
+            opacity: 0;
+            max-height: 0;
+            pointer-events: none;
+        }
+        .sidebar .nav-section {
+            margin-bottom: 0.2rem;
+        }
+        .sidebar-section-label {
+            display: block;
+            color: #fff;
+            font-size: 0.93rem;
+            font-weight: 400;
+            opacity: 0.85;
+            margin: 0.5rem 0 0.1rem 0.1rem;
+            padding-left: 0.2rem;
+            letter-spacing: 0.5px;
+            cursor: default;
+            user-select: none;
+        }
     </style>
 </head>
 <body>
     <div class="layout-container">
-        <!-- Sidebar Navigation -->
-        <div class="sidebar" id="sidebar">
+         <!-- Sidebar Navigation -->
+         <div class="sidebar" id="sidebar">
             <div class="sidebar-logo">
                 <img src="images/villavalorelogo.png" alt="Villa Valore Logo">
             </div>
@@ -692,24 +768,25 @@ $recentBookings = getRecentBookings(5);
             <div class="sidebar-nav-center">
                 <div class="nav-section">
                     <a class="nav-link" href="index.php"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
+                </div>
+                <div class="nav-section">
+                    <span class="sidebar-section-label">Management</span>
                     <a class="nav-link" href="student.php"><i class="fas fa-user"></i><span>Guest</span></a>
                     <a class="nav-link" href="booking.php"><i class="fas fa-book"></i><span>Booking</span></a>
                     <a class="nav-link" href="reservation.php"><i class="fas fa-calendar-check"></i><span>Reservation</span></a>
                 </div>
-
                 <div class="nav-section">
-                    <div class="nav-link toggle-btn" onclick="toggleMenu('management')">
-                        <i class="fas fa-cog"></i><span>Manage</span>
-                    </div>
-                    <div class="submenu" id="management">
-                        <a class="nav-link" href="room.php"><i class="fas fa-door-open"></i><span>Room</span></a>
-                        <a class="nav-link" href="menu_service.php"><i class="fas fa-utensils"></i><span>Menu</span></a>
-                        <a class="nav-link" href="account.php"><i class="fas fa-user"></i><span>Account</span></a>
-                        <a class="nav-link" href="inventory.php"><i class="fas fa-box"></i><span>Inventory</span></a>
-                    </div>
+                    <span class="sidebar-section-label">Resources</span>
+                    <a class="nav-link" href="room.php"><i class="fas fa-door-open"></i><span>Room</span></a>
+                    <a class="nav-link" href="menu_service.php"><i class="fas fa-utensils"></i><span>Menu</span></a>
+                    <a class="nav-link" href="inventory.php"><i class="fas fa-box"></i><span>Inventory</span></a>
                 </div>
-
                 <div class="nav-section">
+                    <span class="sidebar-section-label">Administration</span>
+                    <a class="nav-link" href="account.php"><i class="fas fa-user"></i><span>Account</span></a>
+                </div>
+                <div class="nav-section">
+                    <span class="sidebar-section-label">Finance & Analytics</span>
                     <a class="nav-link" href="payment.php"><i class="fas fa-credit-card"></i><span>Invoices</span></a>
                     <a class="nav-link" href="statistics.php"><i class="fas fa-chart-line"></i><span>Statistics</span></a>
                 </div>
@@ -734,28 +811,28 @@ $recentBookings = getRecentBookings(5);
                 <!-- Stats Cards -->
                 <div class="stats-cards">
                     <div class="stat-card">
-                        <div class="stat-icon">📅</div>
+                        <div class="stat-icon"><i class="fas fa-calendar-plus"></i></div>
                         <div class="stat-info">
-                            <h3>New</h3>
+                            <h3>New Bookings</h3>
                             <p><?php echo $stats['new_bookings']; ?></p>
                         </div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-icon">📥</div>
+                        <div class="stat-icon"><i class="fas fa-sign-in-alt"></i></div>
                         <div class="stat-info">
                             <h3>Check In</h3>
                             <p><?php echo $stats['check_ins']; ?></p>
                         </div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-icon">📤</div>
+                        <div class="stat-icon"><i class="fas fa-sign-out-alt"></i></div>
                         <div class="stat-info">
                             <h3>Check Out</h3>
                             <p><?php echo $stats['check_outs']; ?></p>
                         </div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-icon">🛏️</div>
+                        <div class="stat-icon"><i class="fas fa-bed"></i></div>
                         <div class="stat-info">
                             <h3>Available Rooms</h3>
                             <p><?php echo $stats['available_rooms']; ?></p>
@@ -951,6 +1028,24 @@ $recentBookings = getRecentBookings(5);
                 e.stopPropagation();
                 currentDate.setMonth(currentDate.getMonth() + 1);
                 updateCalendar(currentDate.getFullYear(), currentDate.getMonth() + 1);
+            });
+        });
+
+        document.querySelectorAll('.section-toggle').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const expanded = btn.getAttribute('aria-expanded') === 'true';
+                btn.setAttribute('aria-expanded', !expanded);
+                const sectionId = btn.getAttribute('aria-controls');
+                const sectionLinks = document.getElementById(sectionId);
+                if (sectionLinks) {
+                    sectionLinks.classList.toggle('collapsed', expanded);
+                }
+            });
+            btn.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    btn.click();
+                }
             });
         });
     </script>
