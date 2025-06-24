@@ -317,7 +317,8 @@ if ($selected['room_type'] && $hours > 0) {
   <a href="booking.php">Rooms</a>
   <a href="about.php">About</a>
   <a href="mybookings.php">My Bookings</a>
-  <?php if (isset($_SESSION['user_id'])): ?>
+  <?php if (isset($_SESSION['student_id'])): ?>
+    <a href="account/change_password.php">Change Password</a>
     <a href="logout.php">Log Out</a>
   <?php else: ?>
     <a href="login.php">Log In</a>
@@ -585,7 +586,7 @@ if ($selected['room_type'] && $hours > 0) {
           ]);
         ?>
         <button class="btn green" onclick="window.location.href='login.php?next=booknow.php&<?= $query ?>'">BOOK</button>
-        <button class="btn green" onclick="window.location.href='login.php?next=booknow.php&<?= $query ?>'">RESERVE</button>
+        <button class="btn green" onclick="window.location.href='login.php?next=reservenow.php&<?= $query ?>'">RESERVE</button>
         </div>
       </div>
       <?php endforeach; ?>

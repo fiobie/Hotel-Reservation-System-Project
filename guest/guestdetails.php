@@ -1,6 +1,12 @@
 <?php
 include 'connections.php';
 session_start(); // Enable sessions
+// Add PHPMailer use statements at the top
+require_once __DIR__ . '/../phpmailer/src/PHPMailer.php';
+require_once __DIR__ . '/../phpmailer/src/SMTP.php';
+require_once __DIR__ . '/../phpmailer/src/Exception.php';
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
 
 $confirmation = "";
 $generated_booking_id = "";
@@ -92,32 +98,40 @@ $latest_payment = [
   'PaymentStatus' => 'Pending',
 ];
 
+// Fetch Reservation ID from GET or SESSION
+if (isset($_GET['ReservationID'])) {
+    $reservation_id = $conn->real_escape_string($_GET['ReservationID']);
+    $_SESSION['reservation_id'] = $reservation_id;
+} else {
+    $reservation_id = $_SESSION['reservation_id'] ?? '';
+}
+
+// Calculate duration in hours if check-in and check-out are set
+$duration_hours = '';
+if (!empty($checkin_date) && !empty($checkout_date)) {
+    $dt1 = new DateTime($checkin_date);
+    $dt2 = new DateTime($checkout_date);
+    $interval = $dt1->diff($dt2);
+    $hours = ($interval->days * 24) + $interval->h + ($interval->i / 60);
+    $duration_hours = $hours . ' hour(s)';
+}
+
 // Combined Form Submission Handling
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   // Validate Guest Details fields
   $required_guest = [
-    'StudentID', 'BookingID', 'FirstName', 'LastName', 'Gender', 'PhoneNumber', 'Address', 'Email', 'Nationality', 'Birthdate'
+    'StudentID', 'ReservationID', 'FirstName', 'LastName', 'Gender', 'PhoneNumber', 'Address', 'Email', 'Nationality', 'Birthdate'
   ];
   $missing = false;
   foreach ($required_guest as $field) {
-    if (empty($_POST[$field])) $missing = true;
-  }
-  // Validate Payment Details fields
-  $required_payment = [
-    'PaymentID', 'PaymentDate', 'Amount', 'PaymentMethod', 'PaymentStatus', 'ReferenceCode'
-  ];
-  foreach ($required_payment as $field) {
-    if (empty($_POST[$field])) $missing = true;
+    if (!isset($_POST[$field]) || empty(trim($_POST[$field]))) $missing = true;
   }
   if ($missing) {
     $confirmation = "<p style='color: red;'>All fields are required.</p>";
   } else {
-    // DEBUG: Log POST data
-    error_log('POST DATA: ' . print_r($_POST, true));
-
     // --- GUEST DETAILS DB LOGIC ---
     $student_id   = $conn->real_escape_string($_POST['StudentID']);
-    $booking_id   = $conn->real_escape_string($_POST['BookingID']);
+    $reservation_id = $conn->real_escape_string($_POST['ReservationID']);
     $gender       = $conn->real_escape_string($_POST['Gender']);
     $phone_number = $conn->real_escape_string($_POST['PhoneNumber']);
     $address      = $conn->real_escape_string($_POST['Address']);
@@ -144,48 +158,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         VALUES ('$student_id', '$first_name', '$last_name', '$gender', '$phone_number', '$address', '$email', '$nationality', '$birthdate')";
       $conn->query($sql_insert);
     }
-    // --- BOOKING DB LOGIC (insert if not exists) ---
-    $room_type = $conn->real_escape_string($_POST['RoomType'] ?? '');
-    $check_in = $conn->real_escape_string($_POST['CheckInDate'] ?? '');
-    $check_out = $conn->real_escape_string($_POST['CheckOutDate'] ?? '');
-    $price = $conn->real_escape_string($_POST['Price'] ?? '');
-    $booking_date = date('Y-m-d');
-    $check_booking = $conn->query("SELECT * FROM booking WHERE BookingID = '$booking_id' LIMIT 1");
-    if (!$check_booking || $check_booking->num_rows == 0) {
-      // Insert booking with StudentID
-      $sql_booking = "INSERT INTO booking (BookingID, StudentID, RoomType, CheckInDate, CheckOutDate, BookingStatus, Price, BookingDate)
-        VALUES ('$booking_id', '$student_id', '$room_type', '$check_in', '$check_out', 'Pending', '$price', '$booking_date')";
-      if (!$conn->query($sql_booking)) {
-        error_log('Booking insert error: ' . $conn->error);
-        echo '<div style="color:red;">Booking insert error: ' . htmlspecialchars($conn->error) . '</div>';
-      }
-    } else {
-      // Booking exists, ensure StudentID is set
-      $existing = $check_booking->fetch_assoc();
-      if (empty($existing['StudentID'])) {
-        $conn->query("UPDATE booking SET StudentID = '$student_id' WHERE BookingID = '$booking_id'");
-      }
+    // TODO: Insert reservation record if not already done in reservenow.php
+
+    // --- EMAIL GUEST ---
+    $mail = new PHPMailer(true);
+    try {
+      $mail->isSMTP();
+      $mail->Host = 'smtp.gmail.com';
+      $mail->SMTPAuth = true;
+      $mail->Username = 'phoebeannbalderamos001@gmail.com';
+      $mail->Password = 'wrrxrfipnsmfhyyu';
+      $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+      $mail->Port = 587;
+      $mail->setFrom('phoebeannbalderamos001@gmail.com', 'Villa Valore Hotel');
+      $mail->addAddress($email, $first_name . ' ' . $last_name);
+      $mail->isHTML(true);
+      $mail->Subject = 'Reservation Received - Villa Valore Hotel';
+      $mail->Body = '<h2>Reservation Details</h2>' .
+        '<p>Dear ' . htmlspecialchars($first_name) . ',</p>' .
+        '<p>Thank you for submitting your reservation request. Here are your details:</p>' .
+        '<ul>' .
+        '<li><b>Reservation ID:</b> ' . htmlspecialchars($reservation_id) . '</li>' .
+        '<li><b>Check-in:</b> ' . htmlspecialchars($checkin_date) . '</li>' .
+        '<li><b>Check-out:</b> ' . htmlspecialchars($checkout_date) . '</li>' .
+        '<li><b>Reservation Fee:</b> ₱' . number_format($reservation_fee) . '</li>' .
+        '</ul>' .
+        '<p><b>Please pay the reservation fee to confirm your reservation.</b> Once payment is received, our staff will issue an invoice and send you a receipt. You will then receive a confirmation email that your room is reserved for your final booking check-in date.</p>' .
+        '<p>Thank you for choosing Villa Valore Hotel!</p>';
+      $mail->AltBody = 'Dear ' . $first_name . ',\nThank you for submitting your reservation request. Reservation ID: ' . $reservation_id . '. Please pay the reservation fee to confirm your reservation.';
+      $mail->send();
+      $confirmation = "<p style='color: green;'>Guest details submitted! An email has been sent with your reservation info. Please pay the reservation fee to confirm your reservation.</p>";
+    } catch (Exception $e) {
+      $confirmation = "<p style='color: red;'>Guest details submitted, but email could not be sent. Mailer Error: {$mail->ErrorInfo}</p>";
     }
-    // --- PAYMENT DETAILS DB LOGIC ---
-    $payment_id = $conn->real_escape_string($_POST['PaymentID']);
-    $amount = $conn->real_escape_string($_POST['Amount']);
-    $payment_status = $conn->real_escape_string($_POST['PaymentStatus']);
-    $payment_date = $conn->real_escape_string($_POST['PaymentDate']);
-    $payment_method = $conn->real_escape_string($_POST['PaymentMethod']);
-    $reference_code = $conn->real_escape_string($_POST['ReferenceCode']);
-    // Insert payment
-    $sql_payment = "INSERT INTO payment (PaymentID, BookingID, Amount, PaymentStatus, PaymentDate, PaymentMethod, ReferenceCode)
-      VALUES ('$payment_id', '$booking_id', '$amount', '$payment_status', '$payment_date', '$payment_method', '$reference_code')";
-    if (!$conn->query($sql_payment)) {
-      error_log('Payment insert error: ' . $conn->error);
-      echo '<div style="color:red;">Payment insert error: ' . htmlspecialchars($conn->error) . '</div>';
-    } else {
-      // After payment, update student with BookingID and PaymentID
-      $conn->query("UPDATE student SET BookingID = '$booking_id', PaymentID = '$payment_id' WHERE StudentID = '$student_id'");
-      // Redirect to mybookings.php with success message
-      header('Location: mybookings.php?success=1');
-      exit();
-    }
+    // TODO: Staff-side: When payment is confirmed, issue invoice, send receipt, and update guest account/bookings.
   }
 }
 
@@ -233,6 +239,71 @@ $debug_payments = $conn->query("SELECT * FROM payment ORDER BY PaymentDate DESC,
       font-weight: bold;
       color: #018000;
     }
+    .flex-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 32px;
+      align-items: flex-start;
+    }
+    .form-section {
+      flex: 2 1 350px;
+      min-width: 320px;
+    }
+    .booking-summary-section {
+      flex: 1 1 300px;
+      min-width: 260px;
+      max-width: 350px;
+      margin-top: 32px;
+    }
+    @media (max-width: 900px) {
+      .flex-container { flex-direction: column; }
+      .booking-summary-section { margin-top: 0; max-width: 100%; }
+    }
+    .booking-summary-floating {
+      position: absolute;
+      top: 120px;
+      right: 5vw;
+      z-index: 10;
+      max-width: 350px;
+      min-width: 260px;
+    }
+    @media (max-width: 1100px) {
+      .booking-summary-floating {
+        position: static;
+        margin: 0 auto 24px auto;
+        display: block;
+        max-width: 98vw;
+        right: unset;
+        top: unset;
+      }
+    }
+    .container_booking {
+      position: relative;
+      margin-top: 32px;
+    }
+    .booking-details-flex-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 40px;
+      align-items: flex-start;
+      justify-content: center;
+      margin-top: 0;
+    }
+    .form-section {
+      flex: 2 1 350px;
+      min-width: 320px;
+      max-width: 500px;
+    }
+    .booking-summary-section {
+      flex: 1 1 300px;
+      min-width: 260px;
+      max-width: 350px;
+      margin-top: 0;
+    }
+    @media (max-width: 900px) {
+      .booking-details-flex-row { flex-direction: column; align-items: stretch; }
+      .booking-summary-section { margin-top: 24px; max-width: 100%; }
+    }
   </style>
 </head>
 <body>
@@ -251,203 +322,155 @@ $debug_payments = $conn->query("SELECT * FROM payment ORDER BY PaymentDate DESC,
     <a href="booking.php">Rooms</a>
     <a href="about.php">About</a>
     <a href="mybookings.php">My Bookings</a>
-    <a href="logout.php">Logout</a>
+    <?php if (isset($_SESSION['student_id'])): ?>
+      <a href="account/change_password.php">Change Password</a>
+      <a href="logout.php">Logout</a>
+    <?php else: ?>
+      <a href="login.php">Log In</a>
+    <?php endif; ?>
   </nav>
   </header>
 
-<!-- Guest Details Form -->
-<div class="container_booking">
-  <h2>Guest Information</h2>
-
-  <!-- Booking Summary -->
-  <?php if ($total_price || $duration || $checkin_date): ?>
+<!-- Place the booking summary outside and above the container_booking, aligned right
+<div class="booking-summary-floating">
   <div class="booking-summary">
     <h3>Booking Summary</h3>
-    <?php if ($duration): ?>
     <div class="summary-row">
       <span class="summary-label">Duration:</span>
-      <span class="summary-value"><?php echo htmlspecialchars($duration); ?></span>
+      <span class="summary-value"><?php echo htmlspecialchars($duration_hours); ?></span>
     </div>
-    <?php endif; ?>
-    <?php if ($adults || $children): ?>
     <div class="summary-row">
       <span class="summary-label">Guests:</span>
       <span class="summary-value"><?php echo $adults + $children; ?> (<?php echo $adults; ?> adults, <?php echo $children; ?> children)</span>
     </div>
-    <?php endif; ?>
-    <?php if ($checkin_date): ?>
     <div class="summary-row">
       <span class="summary-label">Check-in:</span>
       <span class="summary-value"><?php echo htmlspecialchars($checkin_date); ?></span>
     </div>
-    <?php endif; ?>
-    <?php if ($checkout_date): ?>
     <div class="summary-row">
       <span class="summary-label">Check-out:</span>
       <span class="summary-value"><?php echo htmlspecialchars($checkout_date); ?></span>
     </div>
-    <?php endif; ?>
-    <?php if ($total_price): ?>
     <div class="summary-row">
       <span class="summary-label">Total Price:</span>
       <span class="summary-value price-highlight">₱<?php echo number_format($total_price); ?></span>
     </div>
-    <?php endif; ?>
-    <?php if ($reservation_fee): ?>
     <div class="summary-row">
       <span class="summary-label">Reservation Fee:</span>
       <span class="summary-value">₱<?php echo number_format($reservation_fee); ?></span>
     </div>
-    <?php endif; ?>
   </div>
-  <?php endif; ?>
-
-  <form method="POST">
-  <!-- Visible Booking ID field -->
-  <div class="form-group">
-    <label for="BookingID">Booking ID:</label>
-    <input type="text" id="BookingID" name="BookingID" value="<?php echo htmlspecialchars($generated_booking_id); ?>" readonly />
-  </div>
-
-  <div class="form-group">
-    <label for="StudentID">Student ID:</label>
-    <input type="text" id="StudentID" name="StudentID" required 
-    value="<?php echo htmlspecialchars($form_values['StudentID']); ?>" />
-  </div>
-
-  <div class="form-group">
-    <label for="FirstName">First Name:</label>
-    <input type="text" id="FirstName" name="FirstName" required 
-    value="<?php echo htmlspecialchars($form_values['FirstName']); ?>" />
-  </div>
-
-  <div class="form-group">
-    <label for="LastName">Last Name:</label>
-    <input type="text" id="LastName" name="LastName" required 
-    value="<?php echo htmlspecialchars($form_values['LastName']); ?>" />
-  </div>
-
-  <div class="form-group">
-    <label for="Gender">Gender:</label>
-    <select id="Gender" name="Gender" required>
-    <option value="">Select Gender</option>
-    <option value="Male" <?php if ($form_values['Gender'] == 'Male') echo 'selected'; ?>>Male</option>
-    <option value="Female" <?php if ($form_values['Gender'] == 'Female') echo 'selected'; ?>>Female</option>
-    <option value="Prefer not to say" <?php if ($form_values['Gender'] == 'Prefer not to say') echo 'selected'; ?>>Prefer not to say</option>
-    <option value="Other" <?php if ($form_values['Gender'] == 'Other') echo 'selected'; ?>>Other</option>
-    </select>
-  </div>
-
-  <div class="form-group">
-    <label for="PhoneNumber">Phone Number:</label>
-    <input type="text" id="PhoneNumber" name="PhoneNumber" required 
-    value="<?php echo htmlspecialchars($form_values['PhoneNumber']); ?>" />
-  </div>
-
-  <div class="form-group">
-    <label for="Address">Address:</label>
-    <input type="text" id="Address" name="Address" required 
-    value="<?php echo htmlspecialchars($form_values['Address']); ?>" />
-  </div>
-
-  <div class="form-group">
-    <label for="Email">Email:</label>
-    <input type="email" id="Email" name="Email" required 
-    value="<?php echo htmlspecialchars($form_values['Email']); ?>" />
-  </div>
-
-  <div class="form-group">
-    <label for="Nationality">Nationality:</label>
-    <input type="text" id="Nationality" name="Nationality" required 
-    value="<?php echo htmlspecialchars($form_values['Nationality']); ?>" />
-  </div>
-
-  <div class="form-group">
-    <label for="Birthdate">Birthdate:</label>
-    <input type="date" id="Birthdate" name="Birthdate" required 
-    value="<?php echo htmlspecialchars($form_values['Birthdate']); ?>" />
-  </div>
-
-  <!-- Payment Details Section -->
-  <h2 style="margin-top:2em;">Payment Details</h2>
-
-  <div class="form-group">
-    <label for="PaymentID">Payment ID:</label>
-    <input type="text" id="PaymentID" name="PaymentID" value="<?php echo htmlspecialchars($generated_payment_id); ?>" readonly />
-  </div>
-
-  <input type="hidden" name="PaymentDate" value="<?php echo $payment_date; ?>" />
-  <div class="form-group">
-    <label for="PaymentDate">Payment Date:</label>
-    <input type="text" id="PaymentDate" value="<?php echo $payment_date; ?>" readonly />
-  </div>
-
-  <div class="form-group">
-    <label for="Amount">Amount:</label>
-    <input type="text" id="Amount" name="Amount" value="<?php echo htmlspecialchars($total_price); ?>" required />
-  </div>
-
-  <div class="form-group">
-    <label for="PaymentMethod">Payment Method:</label>
-    <select id="PaymentMethod" name="PaymentMethod" required>
-      <option value="Cash" selected>Cash</option>
-    </select>
-  </div>
-
-  <div class="form-group">
-    <label for="PaymentStatus">Payment Status:</label>
-    <input type="text" id="PaymentStatus" name="PaymentStatus" value="Pending" required />
-  </div>
-
-  <div class="form-group">
-    <label for="ReferenceCode">Reference Code:</label>
-    <input type="text" id="ReferenceCode" name="ReferenceCode" value="<?php echo htmlspecialchars($generated_reference_code); ?>" readonly />
-  </div>
-
-  <button type="submit" class="btn">Submit</button>
-  <button type="button" class="btn" onclick="window.location.href='booking.php';">Back</button>
-
-  </form>
-
-  <?php echo $confirmation; ?>
 </div>
+-->
 
-<div style="background:#fffbe6;border:1px solid #ffe58f;padding:1em;margin-top:2em;">
-  <h3>Debug: Last 5 Bookings</h3>
-  <table border="1" cellpadding="4" style="width:100%;font-size:0.95em;">
-    <tr>
-      <th>BookingID</th><th>StudentID</th><th>RoomType</th><th>CheckInDate</th><th>CheckOutDate</th><th>Status</th><th>Price</th><th>BookingDate</th>
-    </tr>
-    <?php while($row = $debug_bookings && $debug_bookings->fetch_assoc()): ?>
-    <tr>
-      <td><?php echo htmlspecialchars($row['BookingID']); ?></td>
-      <td><?php echo htmlspecialchars($row['StudentID']); ?></td>
-      <td><?php echo htmlspecialchars($row['RoomType']); ?></td>
-      <td><?php echo htmlspecialchars($row['CheckInDate']); ?></td>
-      <td><?php echo htmlspecialchars($row['CheckOutDate']); ?></td>
-      <td><?php echo htmlspecialchars($row['BookingStatus']); ?></td>
-      <td><?php echo htmlspecialchars($row['Price']); ?></td>
-      <td><?php echo htmlspecialchars($row['BookingDate']); ?></td>
-    </tr>
-    <?php endwhile; ?>
-  </table>
-  <h3>Debug: Last 5 Payments</h3>
-  <table border="1" cellpadding="4" style="width:100%;font-size:0.95em;">
-    <tr>
-      <th>PaymentID</th><th>BookingID</th><th>Amount</th><th>Status</th><th>Method</th><th>Date</th><th>ReferenceCode</th>
-    </tr>
-    <?php while($row = $debug_payments && $debug_payments->fetch_assoc()): ?>
-    <tr>
-      <td><?php echo htmlspecialchars($row['PaymentID']); ?></td>
-      <td><?php echo htmlspecialchars($row['BookingID']); ?></td>
-      <td><?php echo htmlspecialchars($row['Amount']); ?></td>
-      <td><?php echo htmlspecialchars($row['PaymentStatus']); ?></td>
-      <td><?php echo htmlspecialchars($row['PaymentMethod']); ?></td>
-      <td><?php echo htmlspecialchars($row['PaymentDate']); ?></td>
-      <td><?php echo htmlspecialchars($row['ReferenceCode']); ?></td>
-    </tr>
-    <?php endwhile; ?>
-  </table>
+<!-- Guest Details Form -->
+<div class="container_booking">
+  <div class="booking-details-flex-row">
+    <div class="form-section">
+      <h2>Guest Information</h2>
+      <form method="POST">
+        <!-- Reservation ID field -->
+        <div class="form-group">
+          <label for="ReservationID">Reservation ID:</label>
+          <input type="text" id="ReservationID" name="ReservationID" value="<?php echo htmlspecialchars($reservation_id); ?>" readonly />
+        </div>
+
+        <div class="form-group">
+          <label for="StudentID">Student ID:</label>
+          <input type="text" id="StudentID" name="StudentID" required 
+          value="<?php echo htmlspecialchars($form_values['StudentID']); ?>" />
+        </div>
+
+        <div class="form-group">
+          <label for="FirstName">First Name:</label>
+          <input type="text" id="FirstName" name="FirstName" required 
+          value="<?php echo htmlspecialchars($form_values['FirstName']); ?>" />
+        </div>
+
+        <div class="form-group">
+          <label for="LastName">Last Name:</label>
+          <input type="text" id="LastName" name="LastName" required 
+          value="<?php echo htmlspecialchars($form_values['LastName']); ?>" />
+        </div>
+
+        <div class="form-group">
+          <label for="Gender">Gender:</label>
+          <select id="Gender" name="Gender" required>
+          <option value="">Select Gender</option>
+          <option value="Male" <?php if ($form_values['Gender'] == 'Male') echo 'selected'; ?>>Male</option>
+          <option value="Female" <?php if ($form_values['Gender'] == 'Female') echo 'selected'; ?>>Female</option>
+          <option value="Prefer not to say" <?php if ($form_values['Gender'] == 'Prefer not to say') echo 'selected'; ?>>Prefer not to say</option>
+          <option value="Other" <?php if ($form_values['Gender'] == 'Other') echo 'selected'; ?>>Other</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="PhoneNumber">Phone Number:</label>
+          <input type="text" id="PhoneNumber" name="PhoneNumber" required 
+          value="<?php echo htmlspecialchars($form_values['PhoneNumber']); ?>" />
+        </div>
+
+        <div class="form-group">
+          <label for="Address">Address:</label>
+          <input type="text" id="Address" name="Address" required 
+          value="<?php echo htmlspecialchars($form_values['Address']); ?>" />
+        </div>
+
+        <div class="form-group">
+          <label for="Email">Email:</label>
+          <input type="email" id="Email" name="Email" required 
+          value="<?php echo htmlspecialchars($form_values['Email']); ?>" />
+        </div>
+
+        <div class="form-group">
+          <label for="Nationality">Nationality:</label>
+          <input type="text" id="Nationality" name="Nationality" required 
+          value="<?php echo htmlspecialchars($form_values['Nationality']); ?>" />
+        </div>
+
+        <div class="form-group">
+          <label for="Birthdate">Birthdate:</label>
+          <input type="date" id="Birthdate" name="Birthdate" required 
+          value="<?php echo htmlspecialchars($form_values['Birthdate']); ?>" />
+        </div>
+
+        <button type="submit" class="btn">Submit</button>
+        <button type="button" class="btn" onclick="window.location.href='booking.php';">Back</button>
+
+      </form>
+
+      <?php echo $confirmation; ?>
+    </div>
+    <div class="booking-summary-section">
+      <div class="booking-summary">
+        <h3>Booking Summary</h3>
+        <div class="summary-row">
+          <span class="summary-label">Duration:</span>
+          <span class="summary-value"><?php echo htmlspecialchars($duration_hours); ?></span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">Guests:</span>
+          <span class="summary-value"><?php echo $adults + $children; ?> (<?php echo $adults; ?> adults, <?php echo $children; ?> children)</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">Check-in:</span>
+          <span class="summary-value"><?php echo htmlspecialchars($checkin_date); ?></span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">Check-out:</span>
+          <span class="summary-value"><?php echo htmlspecialchars($checkout_date); ?></span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">Total Price:</span>
+          <span class="summary-value price-highlight">₱<?php echo number_format($total_price); ?></span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">Reservation Fee:</span>
+          <span class="summary-value">₱<?php echo number_format($reservation_fee); ?></span>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 </body>

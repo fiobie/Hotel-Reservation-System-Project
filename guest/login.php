@@ -94,8 +94,23 @@
                     header("Location: $redirect_url");
                     exit();
                 } else {
-                    header("Location: booknow.php");
-                    exit();
+                    // Check for booking or payment history
+                    $student_id = $_SESSION['student_id'];
+                    $has_booking = false;
+                    $has_payment = false;
+                    $booking_res = $conn->query("SELECT 1 FROM booking WHERE StudentID = '" . $conn->real_escape_string($student_id) . "' LIMIT 1");
+                    if ($booking_res && $booking_res->num_rows > 0) $has_booking = true;
+                    $payment_res = $conn->query("SELECT 1 FROM payment WHERE BookingID IN (SELECT BookingID FROM booking WHERE StudentID = '" . $conn->real_escape_string($student_id) . "') LIMIT 1");
+                    if ($payment_res && $payment_res->num_rows > 0) $has_payment = true;
+                    $booking_res && $booking_res->close();
+                    $payment_res && $payment_res->close();
+                    if ($has_booking || $has_payment) {
+                        header("Location: mybookings.php");
+                        exit();
+                    } else {
+                        header("Location: booknow.php");
+                        exit();
+                    }
                 }
             } else {
                 $error = "Invalid email or password.";

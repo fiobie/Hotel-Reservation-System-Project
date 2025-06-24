@@ -7,11 +7,23 @@ $reservationDate = date("Y-m-d");
 // Generate Reservation ID on page load if not submitting
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     $date_code = date("Ymd");
-    $result = $conn->query("SELECT COUNT(*) AS total FROM reservations WHERE DATE(         ) = CURDATE()");
+    $result = $conn->query("SELECT COUNT(*) AS total FROM reservations WHERE DATE(PCheckInDate) = CURDATE()");
     $row = $result->fetch_assoc();
     $count_today = $row['total'] + 1;
     $generatedReservationID = "RS-" . $date_code . "-" . str_pad($count_today, 4, '0', STR_PAD_LEFT);
 }
+
+// Accept booking parameters from GET/SESSION
+$room_type = $_GET['room'] ?? $_SESSION['selected_room_type'] ?? '';
+$checkin_date = $_GET['checkin'] ?? $_SESSION['checkin_date'] ?? '';
+$checkout_date = $_GET['checkout'] ?? $_SESSION['checkout_date'] ?? '';
+$checkin_time = $_GET['checkin_time'] ?? $_SESSION['checkin_time'] ?? '14:00';
+$checkout_time = $_GET['checkout_time'] ?? $_SESSION['checkout_time'] ?? '12:00';
+$total_price = $_GET['price'] ?? $_SESSION['total_price'] ?? '';
+$reservation_fee = $_GET['rf'] ?? $_SESSION['reservation_fee'] ?? '';
+$duration = $_GET['duration'] ?? $_SESSION['duration'] ?? '';
+$adults = $_GET['adults'] ?? $_SESSION['adults'] ?? 1;
+$children = $_GET['children'] ?? $_SESSION['children'] ?? 0;
 
 // Reservation submission logic
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -19,41 +31,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $confirmation = "<p style='color: red;'>All fields are required.</p>";
     } else {
         $room_type = $conn->real_escape_string($_POST['RoomType']);
+        $_SESSION['selected_room_type'] = $room_type;
         $check_in = $_POST['CheckInDate'];
         $check_out = $_POST['CheckOutDate'];
         $special_request = $conn->real_escape_string($_POST['Notes']);
         $reservation_id = $_POST['reservation_id'];
-
-        // Reservation fee logic
-        $fee_map = [
-            'standard' => 500,
-            'deluxe' => 800,
-            'suite' => 1000
-        ];
-        $reservation_fee = $fee_map[strtolower($room_type)];
-
+        $reservationDate = (!empty($_POST['ReservationDate']) && $_POST['ReservationDate'] !== '0000-00-00')
+            ? $_POST['ReservationDate']
+            : date('Y-m-d');
+        // Reservation fee is 30% of total price
+        $reservation_fee = 0;
+        if (!empty($total_price) && is_numeric($total_price)) {
+            $reservation_fee = round($total_price * 0.3);
+        }
+        // Calculate duration (in hours)
+        $duration = '';
+        if (!empty($check_in) && !empty($check_out)) {
+            $dt1 = new DateTime($check_in);
+            $dt2 = new DateTime($check_out);
+            $interval = $dt1->diff($dt2);
+            $hours = ($interval->days * 24) + $interval->h + ($interval->i / 60);
+            if ($hours < 24) {
+                $duration = round($hours, 2) . ' hour(s)';
+            } else {
+                $duration = $interval->days . ' day(s)';
+            }
+        }
         // Insert into reservation table
-        $sql = "INSERT INTO reservation (ReservationID, ReservationDate, RoomType, PCheckInDate, PCheckOutDate, Notes, ReservationFee)
+        $sql = "INSERT INTO reservations (ReservationID, ReservationDate, RoomType, PCheckInDate, PCheckOutDate, Notes, ReservationFee)
                 VALUES ('$reservation_id', '$reservationDate', '$room_type', '$check_in', '$check_out', '$special_request', '$reservation_fee')";
-
         if ($conn->query($sql)) {
-            $confirmation = "
-                <div class='confirmation'>
-                    <h2>Reservation Confirmed!</h2>
-                    <p>Thank you for reserving with Villa Valore Hotel!</p>
-                    <p>Reservation ID: <strong>$reservation_id</strong></p>
-                    <p>Reservation Date: <strong>$reservationDate</strong></p>
-                    <p>Room Type: <strong>" . ucfirst($room_type) . "</strong></p>
-                    <p>Check-in: <strong>$check_in</strong> | Check-out: <strong>$check_out</strong></p>
-                    <p>Reservation Fee: <strong>₱" . number_format($reservation_fee) . "</strong></p>
-                    <p>Special Request: <em>$special_request</em></p>
-                    <a href='guestdetails.php' class='btn'>Next</a>
-                </div>";
+            // Save to session for guestdetails/paymentdetails
+            $_SESSION['reservation_id'] = $reservation_id;
+            $_SESSION['reservation_date'] = $reservationDate;
+            $_SESSION['selected_room_type'] = $room_type;
+            $_SESSION['checkin_date'] = $check_in;
+            $_SESSION['checkout_date'] = $check_out;
+            $_SESSION['special_request'] = $special_request;
+            $_SESSION['reservation_fee'] = $reservation_fee;
+            $_SESSION['duration'] = $duration;
+            $_SESSION['adults'] = $adults;
+            $_SESSION['children'] = $children;
+            // Redirect to guestdetails.php
+            header("Location: guestdetails.php?ReservationID=" . urlencode($reservation_id));
+            exit();
         } else {
             $confirmation = "<p style='color: red;'>Error: " . $conn->error . "</p>";
         }
-
-        $conn->close();
     }
 }
 ?>
@@ -91,6 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <!-- Reservation Form -->
 <div class="container_booking">
   <h2>Reserve a Room</h2>
+
   <form method="POST">
 
     <!-- Reservation ID -->
@@ -110,22 +135,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <label for="RoomType">Room Type:</label>
       <select id="RoomType" name="RoomType" required>
         <option value="">Select a Room Type</option>
-        <option value="standard">Standard Room</option>
-        <option value="deluxe">Deluxe Room</option>
-        <option value="suite">Suite Room</option>
+        <option value="standard" <?php if($room_type=='standard') echo 'selected'; ?>>Standard Room</option>
+        <option value="deluxe" <?php if($room_type=='deluxe') echo 'selected'; ?>>Deluxe Room</option>
+        <option value="suite" <?php if($room_type=='suite') echo 'selected'; ?>>Suite Room</option>
       </select>
     </div>
 
     <!-- Check-in -->
     <div class="form-group">
-      <label for="CheckInDate">Check-in Date:</label>
-      <input type="date" id="CheckInDate" name="CheckInDate" required />
+      <label for="CheckInDate">Check-in Date & Time:</label>
+      <input type="datetime-local" id="CheckInDate" name="CheckInDate" required value="<?php echo htmlspecialchars($checkin_date . 'T' . $checkin_time); ?>" />
     </div>
 
     <!-- Check-out -->
     <div class="form-group">
-      <label for="CheckOutDate">Check-out Date:</label>
-      <input type="date" id="CheckOutDate" name="CheckOutDate" required />
+      <label for="CheckOutDate">Check-out Date & Time:</label>
+      <input type="datetime-local" id="CheckOutDate" name="CheckOutDate" required value="<?php echo htmlspecialchars($checkout_date . 'T' . $checkout_time); ?>" />
     </div>
 
     <!-- Notes -->
@@ -137,7 +162,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <!-- Reservation Fee -->
     <div class="form-group">
       <label for="ReservationFee">Reservation Fee:</label>
-      <input type="text" id="ReservationFee" readonly />
+      <input type="text" id="ReservationFee" readonly value="<?php echo $reservation_fee ? '₱'.number_format($reservation_fee) : ''; ?>" />
+      <small style="color:#018000;display:block;margin-top:4px;">Reservation Fee is 30% of the Total Price.</small>
     </div>
 
     <button type="submit" class="btn">Confirm Reservation</button>
@@ -147,16 +173,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </div>
 
 <script>
+document.addEventListener('DOMContentLoaded', function () {
+  const feeDisplay = document.getElementById("ReservationFee");
+  const totalPriceInput = document.getElementById("TotalPrice");
+  let totalPrice = 0;
+  if (totalPriceInput) {
+    totalPrice = parseFloat(totalPriceInput.value) || 0;
+  } else if (typeof total_price !== 'undefined') {
+    totalPrice = parseFloat(total_price) || 0;
+  }
+  if (totalPrice > 0) {
+    feeDisplay.value = "₱" + Math.round(totalPrice * 0.3).toLocaleString();
+  }
+});
 document.getElementById("RoomType").addEventListener("change", function () {
   const feeDisplay = document.getElementById("ReservationFee");
   const roomType = this.value;
-
   const fees = {
     standard: 500,
     deluxe: 800,
     suite: 1000
   };
-
   if (fees[roomType]) {
     feeDisplay.value = "₱" + fees[roomType].toLocaleString();
   } else {

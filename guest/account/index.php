@@ -27,5 +27,8 @@
       <a href="login.php">Log In</a>
     </nav>
   </header>
+  <main style="max-width:400px;margin:2em auto;text-align:center;">
+    <a href="change_password.php" style="display:inline-block;margin-top:2em;padding:0.7em 1.5em;background:#018000;color:#fff;border-radius:4px;text-decoration:none;">Change Password</a>
+  </main>
 </body>
 </html>

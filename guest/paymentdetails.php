@@ -168,7 +168,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <a href="booking.php">Rooms</a>
     <a href="about.php">About</a>
     <a href="mybookings.php">My Bookings</a>
-    <a href="logout.php">Logout</a>
+    <?php if (isset($_SESSION['student_id'])): ?>
+      <a href="account/change_password.php">Change Password</a>
+      <a href="logout.php">Logout</a>
+    <?php else: ?>
+      <a href="login.php">Log In</a>
+    <?php endif; ?>
   </nav>
 </header>
 
