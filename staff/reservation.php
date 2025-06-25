@@ -752,13 +752,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
                 <label>Student ID:
                     <input type="text" name="StudentID" id="createStudentID" required>
                 </label>
-                <label>Duration (hours):
-                    <select name="Duration" id="createDuration" required>
-                        <option value="6">6</option>
-                        <option value="12">12</option>
-                        <option value="24">24</option>
-                    </select>
-                </label>
                 <div id="createFormError" style="color: #dc3545; margin-bottom: 1rem; display: none;"></div>
                 <button type="submit">Create Reservation</button>
             </form>
