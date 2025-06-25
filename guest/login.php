@@ -507,6 +507,38 @@
                 background: #e8f5e9;
                 color: var(--primary-green);
             }
+            #policyModal.modal {
+                position: fixed;
+                top: 0; left: 0; right: 0; bottom: 0;
+                background: rgba(0,0,0,0.55);
+                display: none;
+                align-items: center;
+                justify-content: center;
+                z-index: 9999;
+            }
+            #policyModal .modal-content {
+                background: #fff;
+                border-radius: 12px;
+                max-width: 700px;
+                width: 95vw;
+                max-height: 90vh;
+                overflow-y: auto;
+                padding: 2rem 2.5rem 1.5rem 2.5rem;
+                position: relative;
+                box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+            }
+            #policyModal .close-btn {
+                position: absolute;
+                top: 18px;
+                right: 22px;
+                background: none;
+                border: none;
+                font-size: 2rem;
+                color: #888;
+                cursor: pointer;
+                z-index: 2;
+            }
+            #policyModal .close-btn:hover { color: #008000; }
         </style>
     </head>
     <body>
@@ -539,10 +571,10 @@
                             <path d="M12 17a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm6-7V7a6 6 0 0 0-12 0v3a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2zm-8-3a4 4 0 0 1 8 0v3H6V7z"/>
                         </svg>
                     </div>
-                    <div class="terms">
-                        <label>
-                            <input type="checkbox" name="terms" required>
-                            I agree to the <a href="terms.html" target="_blank" style="color:var(--primary-green-dark);text-decoration:underline;">Terms and Conditions</a>
+                    <div class="form-group">
+                        <input type="checkbox" id="agreePolicy" required>
+                        <label for="agreePolicy">
+                            I agree to the <a href="#" onclick="openPolicyModal();return false;">Terms, Privacy, and Hotel Policy</a>.
                         </label>
                     </div>
                     <button type="submit" name="login" class="login-btn">SIGN IN</button>
@@ -566,6 +598,46 @@
                 window.location.href = 'register.php';
             });
 
+        </script>
+        <!-- Combined Policy Modal -->
+        <div id="policyModal" class="modal">
+            <div class="modal-content">
+                <button class="close-btn" onclick="closePolicyModal()">&times;</button>
+                <h2>Terms, Privacy, and Hotel Policy</h2>
+                <h3>Terms and Conditions</h3>
+                <ul>
+                    <li>No cancellation of the Reservation and Booking.</li>
+                    <li>By using this site, you agree to abide by all hotel rules and policies.</li>
+                </ul>
+                <h3>Privacy Policy</h3>
+                <ul>
+                    <li>Your information is kept confidential and used only for reservation and communication purposes.</li>
+                    <li>We do not share your data with third parties except as required by law.</li>
+                </ul>
+                <h3>Hotel Policy</h3>
+                <ul>
+                    <li>Check-in and check-out times must be followed.</li>
+                    <li>Guests must present valid identification upon check-in.</li>
+                    <li>Respect hotel property and staff at all times.</li>
+                    <li>No cancellation of the Reservation and Booking.</li>
+                </ul>
+            </div>
+        </div>
+        <script>
+        function openPolicyModal() {
+            document.getElementById('policyModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+        function closePolicyModal() {
+            document.getElementById('policyModal').style.display = 'none';
+            document.body.style.overflow = '';
+        }
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closePolicyModal();
+        });
+        document.getElementById('policyModal').addEventListener('click', function(e) {
+            if (e.target === this) closePolicyModal();
+        });
         </script>
     </body>
     </html>

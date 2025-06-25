@@ -95,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
             min-width: 420px;
             max-width: 520px;
             width: 45vw;
-            background: url('guest/images/samplebedroom.png') center center/cover no-repeat;
+            background: url('admin/images/samplebedroom.png') center center/cover no-repeat;
             display: flex;
             flex-direction: column;
             justify-content: flex-end;

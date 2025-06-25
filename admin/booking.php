@@ -809,7 +809,6 @@ if (count($where) > 0) {
                 <div class="nav-section">
                     <span class="sidebar-section-label">Resources</span>
                     <a class="nav-link" href="room.php"><i class="fas fa-door-open"></i><span>Room</span></a>
-                    <a class="nav-link" href="menu_service.php"><i class="fas fa-utensils"></i><span>Menu</span></a>
                     <a class="nav-link" href="inventory.php"><i class="fas fa-box"></i><span>Inventory</span></a>
                 </div>
                 <div class="nav-section">
@@ -842,16 +841,6 @@ if (count($where) > 0) {
       });
   });
   </script>
-
-  <!-- Top Bar -->
-  <div class="top-bar" id="topBar">
-      <button class="top-bar-toggle" id="sidebarToggle" aria-label="Toggle Sidebar"><i class="fas fa-bars"></i></button>
-      <div class="top-bar-right">
-          <div class="top-bar-icon" title="Email"><i class="fas fa-envelope"></i></div>
-          <div class="top-bar-icon" title="Notifications"><i class="fas fa-bell"></i></div>
-          <div class="top-bar-account" title="Account">PB</div>
-      </div>
-  </div>
 
 <div class="main-content">
     <div class="reservation-section">

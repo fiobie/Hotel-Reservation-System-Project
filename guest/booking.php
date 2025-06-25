@@ -11,7 +11,7 @@ $rooms = [
     'beds' => '1 Queen bed',
     'capacity' => 2,
     'size' => '28 sq m',
-    'img' => 'images/samplebedroom.png',
+    'img' => 'images/serenity_standard room.jpg',
   ],
   [
     'id' => 2,
@@ -21,7 +21,7 @@ $rooms = [
     'beds' => '1 Queen bed',
     'capacity' => 2,
     'size' => '28 sq m',
-    'img' => 'images/samplebedroom.png',
+    'img' => 'images/haven_standard room.jpg',
   ],
   [
     'id' => 3,
@@ -31,7 +31,7 @@ $rooms = [
     'beds' => '1 Queen bed',
     'capacity' => 2,
     'size' => '28 sq m',
-    'img' => 'images/samplebedroom.png',
+    'img' => 'images/chamber_standard room.png',
   ],
   [
     'id' => 4,
@@ -41,7 +41,7 @@ $rooms = [
     'beds' => '1 King bed, 1 Sofa bed',
     'capacity' => 4,
     'size' => '38 sq m',
-    'img' => 'images/samplebedroom.png',
+    'img' => 'images/family retreat_deluxe room.jpg',
   ],
   [
     'id' => 5,
@@ -51,7 +51,7 @@ $rooms = [
     'beds' => '1 King bed, 1 Sofa bed',
     'capacity' => 4,
     'size' => '38 sq m',
-    'img' => 'images/samplebedroom.png',
+    'img' => 'images/premier loft_deluxe room.jpg',
   ],
   [
     'id' => 6,
@@ -61,7 +61,7 @@ $rooms = [
     'beds' => '1 King bed, 1 Sofa bed',
     'capacity' => 4,
     'size' => '38 sq m',
-    'img' => 'images/samplebedroom.png',
+    'img' => 'images/luxe escape_deluxe room.png',
   ],
   [
     'id' => 7,
@@ -71,7 +71,7 @@ $rooms = [
     'beds' => '1 King bed, 1 Sofa Bed, 1 Lounge Bed',
     'capacity' => 6,
     'size' => '60 sq m',
-    'img' => 'images/samplebedroom.png',
+    'img' => 'images/executive suite_suite room.jpg',
   ],
   [
     'id' => 8,
@@ -81,7 +81,7 @@ $rooms = [
     'beds' => '1 King bed, 1 Sofa Bed, 1 Lounge Bed',
     'capacity' => 6,
     'size' => '60 sq m',
-    'img' => 'images/samplebedroom.png',
+    'img' => 'images/grand villa_suite room.jpg',
   ],
   [
     'id' => 9,
@@ -91,7 +91,7 @@ $rooms = [
     'beds' => '1 King bed, 1 Sofa Bed, 1 Lounge Bed',
     'capacity' => 6,
     'size' => '60 sq m',
-    'img' => 'images/samplebedroom.png',
+    'img' => 'images/royal haven_suite room.png',
   ],
 ];
 

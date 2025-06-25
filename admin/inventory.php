@@ -28,10 +28,21 @@ CREATE TABLE IF NOT EXISTS stock_requests (
     Reason TEXT,
     Priority ENUM('Low', 'Medium', 'High'),
     Notes TEXT,
+    Status ENUM('Pending', 'Approved', 'Declined') DEFAULT 'Pending',
     RequestDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )";
 if (!$conn->query($requestsTableSQL)) {
     die("Error creating stock_requests table: " . $conn->error);
+}
+
+// Add Status column if it doesn't exist
+$checkStatusColumn = "SHOW COLUMNS FROM stock_requests LIKE 'Status'";
+$statusResult = $conn->query($checkStatusColumn);
+if ($statusResult->num_rows == 0) {
+    $addStatusColumn = "ALTER TABLE stock_requests ADD COLUMN Status ENUM('Pending', 'Approved', 'Declined') DEFAULT 'Pending' AFTER Notes";
+    if (!$conn->query($addStatusColumn)) {
+        die("Error adding Status column: " . $conn->error);
+    }
 }
 
 // Insert sample data into 'inventory' if it's empty
@@ -50,6 +61,24 @@ if ($row['count'] == 0) {
     ";
     if (!$conn->query($sampleDataSQL)) {
         die("Error inserting sample inventory data: " . $conn->error);
+    }
+}
+
+// Insert sample data into 'stock_requests' if it's empty
+$checkRequestsSQL = "SELECT COUNT(*) as count FROM stock_requests";
+$requestsResult = $conn->query($checkRequestsSQL);
+$requestsRow = $requestsResult->fetch_assoc();
+if ($requestsRow['count'] == 0) {
+    $sampleRequestsSQL = "
+    INSERT INTO stock_requests (RequestedBy, Department, ProductName, RequestedQuantity, Reason, Priority, Notes, Status) VALUES
+    ('John Smith', 'Housekeeping', 'Shampoo', 50, 'Running low on supplies', 'Medium', 'Need for guest rooms', 'Pending'),
+    ('Maria Garcia', 'Kitchen', 'Coffee Beans', 25, 'High demand during breakfast', 'High', 'Urgent for morning service', 'Pending'),
+    ('David Johnson', 'Maintenance', 'Light Bulbs', 100, 'Regular replacement schedule', 'Low', 'Preventive maintenance', 'Pending'),
+    ('Sarah Wilson', 'Housekeeping', 'Hand Soap', 75, 'Guest bathroom supplies', 'Medium', 'Standard restocking', 'Pending'),
+    ('Mike Brown', 'Kitchen', 'Disinfectant', 30, 'Kitchen cleaning supplies', 'High', 'Food safety requirement', 'Pending')
+    ";
+    if (!$conn->query($sampleRequestsSQL)) {
+        die("Error inserting sample stock requests data: " . $conn->error);
     }
 }
 
@@ -90,6 +119,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     exit;
 }
 
+// ============================================================================
+// AJAX HANDLER FOR APPROVING/DECLINING STOCK REQUESTS
+// ============================================================================
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_request_status') {
+    header('Content-Type: application/json');
+    
+    $requestID = intval($_POST['requestID']);
+    $status = $conn->real_escape_string($_POST['status']);
+    
+    if (!in_array($status, ['Approved', 'Declined'])) {
+        echo json_encode(['success' => false, 'message' => 'Invalid status']);
+        exit;
+    }
+    
+    $stmt = $conn->prepare("UPDATE stock_requests SET Status = ? WHERE RequestID = ?");
+    $stmt->bind_param("si", $status, $requestID);
+    
+    if ($stmt->execute()) {
+        echo json_encode(['success' => true, 'message' => 'Request ' . strtolower($status) . ' successfully']);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Database update failed: ' . $conn->error]);
+    }
+    $stmt->close();
+    exit;
+}
+
 // UPDATE EDIT 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'edit') {
       header('Content-Type: application/json');
@@ -123,6 +178,16 @@ $result = $conn->query($sql);
 if ($result) {
     while($row = $result->fetch_assoc()) {
         $inventoryItems[] = $row;
+    }
+}
+
+// Fetch stock requests data
+$stockRequestsSQL = "SELECT RequestID, RequestedBy, Department, ProductName, RequestedQuantity, Reason, Priority, Notes, Status, RequestDate FROM stock_requests ORDER BY RequestDate DESC";
+$stockRequests = [];
+$stockRequestsResult = $conn->query($stockRequestsSQL);
+if ($stockRequestsResult) {
+    while($row = $stockRequestsResult->fetch_assoc()) {
+        $stockRequests[] = $row;
     }
 }
 ?>
@@ -393,14 +458,79 @@ if ($result) {
         }
 
         /* MAIN CONTENT & HEADER */
-        .main-content { flex: 1; padding: 2rem; margin-left: var(--sidebar-width); transition: margin-left 0.3s; }
-        .inventory-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
-        .inventory-header h1 { font-size: 2.1rem; font-weight: 700; }
-        .header-controls { display: flex; align-items: center; gap: 0.8rem; }
-        .search-wrapper { position: relative; }
-        .search-input { padding: 0.6rem 1rem 0.6rem 2.2rem; border-radius: 8px; border: 1px solid var(--border-color); background: #fff; font-size: 0.9rem; width: 200px; outline: none; transition: border-color 0.2s; }
-        .search-input:focus { border-color: var(--primary-color); }
-        .search-icon { position: absolute; left: 0.8rem; top: 50%; transform: translateY(-50%); color: var(--text-secondary); }
+        .main-content { 
+            flex: 1; 
+            padding: 2rem; 
+            margin-left: 180px; 
+            transition: margin-left 0.3s; 
+        }
+        .inventory-header { 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            margin-bottom: 1.5rem; 
+        }
+        .inventory-header h1 { 
+            font-size: 2.1rem; 
+            font-weight: 700; 
+        }
+        .header-controls { 
+            display: flex; 
+            align-items: center; 
+            gap: 0.8rem; 
+        }
+        .search-wrapper { 
+            position: relative; 
+        }
+
+        /* Logout Button Styles */
+        .sidebar-logout {
+            margin-top: auto;
+            padding: 1rem;
+            width: 100%;
+        }
+
+        .logout-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            width: 100%;
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .logout-btn i {
+            font-size: 1.1rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                left: -180px;
+            }
+            
+            .sidebar.active {
+                left: 0;
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 1rem;
+            }
+        }
 
         /* BUTTONS */
         .btn { padding: 0.6rem 1.2rem; border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; }
@@ -494,12 +624,6 @@ if ($result) {
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideIn { from { transform: translateY(-50px) scale(0.95); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
         
-        /* RESPONSIVE */
-        @media (max-width: 900px) {
-            .main-content { margin-left: 0; padding: 1rem; }
-            .sidebar { left: -220px; box-shadow: none; }
-            .sidebar.active { left: 0; box-shadow: 2px 0 8px rgba(0,0,0,0.08); }
-        }
         /* Download icon button in table cell */
         .download-table-btn {
             background: none;
@@ -654,6 +778,151 @@ if ($result) {
         .action-btn.delete-btn i { color: #e74c3c; }
         .action-btn:hover, .action-btn:focus { background: #e6f5ea; }
         .action-btn.delete-btn:hover, .action-btn.delete-btn:focus { background: #fbeaea; }
+        
+        /* Priority Badge Styles */
+        .priority-badge {
+            padding: 0.3rem 0.8rem;
+            border-radius: 1rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .priority-low {
+            background: #e8f5e8;
+            color: #2d5a2d;
+        }
+        .priority-medium {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .priority-high {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        /* Status Badge Styles */
+        .status-badge {
+            padding: 0.3rem 0.8rem;
+            border-radius: 1rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .status-approved {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-declined {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        /* Approve/Decline Action Buttons */
+        .action-btn.approve-btn {
+            color: #28a745;
+        }
+        .action-btn.approve-btn:hover {
+            background: #d4edda;
+            color: #155724;
+        }
+        .action-btn.decline-btn {
+            color: #dc3545;
+        }
+        .action-btn.decline-btn:hover {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status-text {
+            color: #666;
+            font-style: italic;
+            font-size: 0.9rem;
+        }
+        
+        /* Stock Requests Table Styles */
+        .stock-requests-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        .stock-requests-table th,
+        .stock-requests-table td {
+            padding: 0.8rem;
+            border-bottom: 1px solid #f0f2f5;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+        .stock-requests-table th {
+            background: #f8f9fa;
+            color: #666;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .stock-requests-table td {
+            color: #222;
+            font-weight: 500;
+        }
+        .stock-requests-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        /* Modal Header Actions */
+        .modal-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-sm {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.85rem;
+        }
+        
+        /* Stock Requests Modal Specific Styles */
+        #stockRequestsModal .modal-content {
+            width: 96vw !important;
+            max-width: 1800px !important;
+            height: 90vh !important;
+            max-height: 95vh !important;
+            border-radius: 12px !important;
+            margin: 2vh auto !important;
+            padding: 2rem 2vw !important;
+            overflow-x: auto !important;
+            overflow-y: auto !important;
+            box-sizing: border-box;
+        }
+        
+        #stockRequestsModal .table-container {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        
+        #stockRequestsModal .inventory-table {
+            margin: 0;
+        }
+
+        .header-content {
+            max-width: 98vw;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 2rem;
+        }
+        
+        .full-window-content {
+            padding: 2rem 2vw;
+            max-width: 98vw;
+            margin: 0 auto;
+        }
     </style>
 </head>
 <body>
@@ -676,7 +945,6 @@ if ($result) {
                 <div class="nav-section">
                     <span class="sidebar-section-label">Resources</span>
                     <a class="nav-link" href="room.php"><i class="fas fa-door-open"></i><span>Room</span></a>
-                    <a class="nav-link" href="menu_service.php"><i class="fas fa-utensils"></i><span>Menu</span></a>
                     <a class="nav-link" href="inventory.php"><i class="fas fa-box"></i><span>Inventory</span></a>
                 </div>
                 <div class="nav-section">
@@ -688,14 +956,10 @@ if ($result) {
                     <a class="nav-link" href="payment.php"><i class="fas fa-credit-card"></i><span>Invoices</span></a>
                     <a class="nav-link" href="statistics.php"><i class="fas fa-chart-line"></i><span>Statistics</span></a>
                 </div>
-            </div>
-        </div>
-        <div class="top-bar" id="topBar">
-            <button class="top-bar-toggle" id="sidebarToggle" aria-label="Toggle Sidebar"><i class="fas fa-bars"></i></button>
-            <div class="top-bar-right">
-                <div class="top-bar-icon" title="Email"><i class="fas fa-envelope"></i></div>
-                <div class="top-bar-icon" title="Notifications"><i class="fas fa-bell"></i></div>
-                <div class="top-bar-account" title="Account">PB</div>
+                <div class="nav-section sidebar-logout">
+                    <span class="sidebar-section-label">Logout</span>
+                    <a class="logout-btn" href="logout.php"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a>
+                </div>
             </div>
         </div>
 
@@ -708,11 +972,10 @@ if ($result) {
                         <div class="search-wrapper">
                             <i class="fas fa-search search-icon"></i>
                             <input type="text" id="searchInput" class="search-input" placeholder="Search Inventory">
-                        </div>
-                        <button class="create-btn" id="createBtn">Add Inventory Item</button>
-                    </div>
+                        </div>                    </div>
                     <button class="btn btn-secondary" id="filterBtn"><i class="fas fa-filter"></i> Filter</button>
-                    <button class="btn btn-primary" id="sendRequestBtn"><i class="fas fa-envelope"></i>Stock Requests</button>
+                    <button class="btn btn-primary" id="viewStockRequestsBtn"><i class="fas fa-list"></i> View Stock Requests</button>
+                    <button class="btn btn-success" id="newRequestBtn"><i class="fas fa-plus"></i> New Item</button>
                 </div>
             </div>
             <div class="table-container">
@@ -994,42 +1257,32 @@ if ($result) {
     <div id="newRequestModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title">New Stock Request</h2>
+                <h2 class="modal-title">New Item</h2>
                 <button class="close-btn"><i class="fas fa-times"></i></button>
             </div>
             <form id="requestForm">
                 <div class="request-info">
                     <label>Date:</label><span><?php echo date('Y-m-d'); ?></span>
-                    <label for="requestedBy">Requested By:</label><input type="text" id="requestedBy" required>
-                    <label for="department">Department:</label><input type="text" id="department" required>
-                </div>
-
-                <h4>Product Details</h4>
-                <table class="product-details-table" id="productDetailsTable">
-                    <thead>
-                        <tr><th>Product Name</th><th>Requested Qty</th><th>Reason</th><th></th></tr>
-                    </thead>
-                    <tbody>
-                        <!-- Dynamic rows -->
-                    </tbody>
-                </table>
-                <button type="button" class="btn btn-secondary btn-sm" id="addProductBtn"><i class="fas fa-plus"></i> Add Product</button>
-
-                <div class="form-group" style="margin-top: 1.5rem;">
-                    <h4>Priority Level:</h4>
-                    <select id="priority" class="form-group-input" required>
-                        <option value="Low">Low</option>
-                        <option value="Medium">Medium</option>
-                        <option value="High">High</option>
+                    <label for="itemName">Item Name:</label><input type="text" id="itemName" required>
+                    <label for="dateReceived">Date Received:</label><input type="date" id="dateReceived" required>
+                    <label for="dateExpiry">Date Expiry:</label><input type="date" id="dateExpiry" required>
+                    <label for="quantity">Quantity:</label><input type="number" id="quantity" required>
+                    <label for="price">Price:</label><input type="number" id="price" required>
+                    <label for="currentStocks">Current Stocks:</label><input type="number" id="currentStocks" required>
+                    <label for="status">Status:</label><select id="status" class="form-group-input" required>
+                        <option value="In Stock">In Stock</option>
+                        <option value="Low Stock">Low Stock</option>
+                        <option value="Out of Stock">Out of Stock</option>
                     </select>
                 </div>
-                <div class="form-group">
+
+                <div class="form-group" style="margin-top: 1.5rem;">
                     <h4>Notes:</h4>
                     <textarea class="notes-textarea" id="notes" rows="3"></textarea>
-                </div>
+                    </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary close-btn">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Submit Request</button>
+                    <button type="submit" class="btn btn-primary">Submit</button>
                 </div>
             </form>
         </div>
@@ -1046,6 +1299,90 @@ if ($result) {
     </div>
   </div>
   </div>
+
+    <!-- Stock Requests Modal -->
+    <div id="stockRequestsModal" class="modal">
+        <div class="modal-content" style="max-width: 95%; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h2 class="modal-title">Stock Requests</h2>
+                <div class="modal-header-actions">
+                    <button class="btn btn-secondary btn-sm" id="refreshStockRequestsBtn" title="Refresh">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                    <button class="close-btn"><i class="fas fa-times"></i></button>
+                </div>
+            </div>
+            <div class="table-container">
+                <table class="inventory-table">
+                    <thead>
+                        <tr>
+                            <th>Request ID</th>
+                            <th>Requested By</th>
+                            <th>Department</th>
+                            <th>Product Name</th>
+                            <th>Requested Quantity</th>
+                            <th>Reason</th>
+                            <th>Priority</th>
+                            <th>Notes</th>
+                            <th>Status</th>
+                            <th>Request Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stockRequestsTableBody">
+                        <?php if (!empty($stockRequests)): ?>
+                        <?php foreach ($stockRequests as $request): ?>
+                            <tr>
+                                <td><?php echo htmlspecialchars($request['RequestID']); ?></td>
+                                <td><?php echo htmlspecialchars($request['RequestedBy']); ?></td>
+                                <td><?php echo htmlspecialchars($request['Department']); ?></td>
+                                <td><?php echo htmlspecialchars($request['ProductName']); ?></td>
+                                <td><?php echo htmlspecialchars($request['RequestedQuantity']); ?></td>
+                                <td><?php echo htmlspecialchars($request['Reason']); ?></td>
+                                <td>
+                                    <span class="priority-badge priority-<?php echo strtolower($request['Priority']); ?>">
+                                        <?php echo htmlspecialchars($request['Priority']); ?>
+                                    </span>
+                                </td>
+                                <td><?php echo htmlspecialchars($request['Notes']); ?></td>
+                                <td>
+                                    <span class="status-badge status-<?php echo strtolower($request['Status']); ?>">
+                                        <?php echo htmlspecialchars($request['Status']); ?>
+                                    </span>
+                                </td>
+                                <td><?php echo date('M j, Y g:i A', strtotime($request['RequestDate'])); ?></td>
+                                <td>
+                                    <?php if ($request['Status'] === 'Pending'): ?>
+                                    <div class="action-group">
+                                        <button class="action-btn approve-btn" 
+                                                data-request-id="<?php echo $request['RequestID']; ?>" 
+                                                title="Approve Request">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button class="action-btn decline-btn" 
+                                                data-request-id="<?php echo $request['RequestID']; ?>" 
+                                                title="Decline Request">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                    <?php else: ?>
+                                    <span class="status-text"><?php echo $request['Status']; ?></span>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="11" style="text-align: center; padding: 2rem; color: #666;">
+                                    No stock requests found.
+                                </td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
     <div id="notification"></div>
 
@@ -1132,8 +1469,9 @@ if ($result) {
 
         const modals = document.querySelectorAll('.modal');
         const openModalBtns = {
-            'sendRequestBtn': 'newRequestModal',
-            'filterBtn': 'filterModal'
+            'viewStockRequestsBtn': 'stockRequestsModal',
+            'filterBtn': 'filterModal',
+            'newRequestBtn': 'newRequestModal'
         };
 
         const openModal = (id) => {
@@ -1290,9 +1628,19 @@ if ($result) {
             if (!productDetailsTableBody) return;
             const row = productDetailsTableBody.insertRow();
             row.innerHTML = `
-                <td><input type="text" class="product-input" required></td>
-                <td><input type="number" class="quantity-input" min="1" required></td>
-                <td><input type="text" class="reason-input"></td>
+                <td><input type="text" class="itemname-input" name="ItemName[]" required></td>
+                <td><input type="date" class="datereceived-input" name="DateReceived[]"></td>
+                <td><input type="date" class="dateexpiry-input" name="DateExpiry[]"></td>
+                <td><input type="number" class="quantity-input" name="Quantity[]" min="1" required></td>
+                <td><input type="number" class="price-input" name="Price[]" min="0" step="0.01"></td>
+                <td><input type="number" class="currentstocks-input" name="CurrentStocks[]" min="0"></td>
+                <td>
+                    <select class="status-input" name="Status[]">
+                        <option value="In Stock">In Stock</option>
+                        <option value="Low Stock">Low Stock</option>
+                        <option value="Out of Stock">Out of Stock</option>
+                    </select>
+                </td>
                 <td><button type="button" class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()"><i class="fas fa-trash-alt"></i></button></td>
             `;
         };
@@ -1305,7 +1653,7 @@ if ($result) {
             requestForm.addEventListener('submit', function(e) {
                 e.preventDefault();
                 const products = Array.from(productDetailsTableBody.rows).map(row => ({
-                    name: row.querySelector('.product-input').value,
+                    name: row.querySelector('.itemname-input').value,
                     quantity: row.querySelector('.quantity-input').value,
                     reason: row.querySelector('.reason-input').value,
                 }));
@@ -1324,7 +1672,7 @@ if ($result) {
                     }
                 });
                 
-                fetch('staff_inventory.php', { method: 'POST', body: formData })
+                fetch('inventory.php', { method: 'POST', body: formData })
                 .then(res => res.json())
                 .then(data => {
                     showNotification(data.message, data.success ? 'success' : 'error');
@@ -1394,6 +1742,73 @@ if ($result) {
               }
             });
           }
+
+        // --- STOCK REQUESTS REFRESH ---
+        const refreshStockRequestsBtn = document.getElementById('refreshStockRequestsBtn');
+        if (refreshStockRequestsBtn) {
+            refreshStockRequestsBtn.addEventListener('click', function() {
+                // Show loading state
+                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                this.disabled = true;
+                
+                // Reload the page to refresh data
+                setTimeout(() => {
+                    location.reload();
+                }, 500);
+            });
+        }
+
+        // --- APPROVE/DECLINE STOCK REQUESTS ---
+        function bindStockRequestActions() {
+            // Approve buttons
+            document.querySelectorAll('.approve-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const requestID = this.dataset.requestId;
+                    updateRequestStatus(requestID, 'Approved');
+                });
+            });
+
+            // Decline buttons
+            document.querySelectorAll('.decline-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const requestID = this.dataset.requestId;
+                    updateRequestStatus(requestID, 'Declined');
+                });
+            });
+        }
+
+        function updateRequestStatus(requestID, status) {
+            const formData = new FormData();
+            formData.append('action', 'update_request_status');
+            formData.append('requestID', requestID);
+            formData.append('status', status);
+
+            fetch('inventory.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification(data.message, 'success');
+                    // Reload the page to update the table
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    showNotification(data.message || 'Failed to update request status', 'error');
+                }
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                showNotification('An unexpected error occurred.', 'error');
+            });
+        }
+
+        // Bind stock request actions when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            bindStockRequestActions();
+        });
     </script>
 </body>
 </html>

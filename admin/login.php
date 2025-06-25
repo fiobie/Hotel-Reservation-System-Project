@@ -1,6 +1,6 @@
 <?php
 session_start();
-include 'admin/connections.php';
+include 'connections.php';
 
 $error = '';
 
@@ -95,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
             min-width: 420px;
             max-width: 520px;
             width: 45vw;
-            background: url('guest/images/samplebedroom.png') center center/cover no-repeat;
+            background: url('images/samplebedroom.png') center center/cover no-repeat;
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
@@ -421,7 +421,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
     <div class="main-wrapper">
         <div class="left-portrait">
             <div class="left-content">
-                <img src="admin/images/villavalorelogo.png" alt="Villa Valore Logo" class="logo">
+                <img src="images/villavalorelogo.png" alt="Villa Valore Logo" class="logo">
                 <div class="hotel-name">Villa Valore Hotel</div>
                 <div class="tagline">Where Every Stay Feels Like Coming Home.</div>
             </div>

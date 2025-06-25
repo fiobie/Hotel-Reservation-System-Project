@@ -252,484 +252,278 @@ if (count($where) > 0) {
             width: 100%;
             align-items: flex-start;
         }
-        .main-content { flex: 1; padding: 2rem; margin-left: 200px; overflow-x: hidden; transition: margin-left 0.3s; }
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            margin-left: 180px;
+            overflow-x: hidden;
+            transition: margin-left 0.3s;
+        }
         .reservation-section { max-width: 1200px; margin: 2rem auto; background: #fff; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); padding: 2rem; }
-        h1 { font-size: 2rem; margin-bottom: 1.5rem; color: #333; }
-        .reservation-table { width: 100%; border-collapse: collapse; }
-        .reservation-table th, .reservation-table td { padding: 1rem; border-bottom: 1px solid #f0f2f5; text-align: left; }
-        .reservation-table th { background: #f8f9fa; color: #666; font-weight: 600; }
-        .reservation-table td { color: #222; font-weight: 500; }
-        /* Action Buttons */
-        .action-group {
+        .page-header {
             display: flex;
-            gap: 0.3rem;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
+            margin-bottom: 2rem;
         }
-        .action-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: none;
-            outline: none;
-            border-radius: 50%;
-            width: 34px;
-            height: 34px;
-            font-size: 1.05rem;
-            color: #008000;
-            background: none;
-            cursor: pointer;
-            transition: background 0.2s, color 0.2s;
-            box-shadow: none;
-            padding: 0;
+        .page-title {
+            font-size: 2rem;
+            color: #333;
+            font-weight: 600;
         }
-        .action-btn.edit-btn {
-            color: var(--action-edit);
-        }
-        .action-btn.edit-btn:hover {
-            background: #e6f5ea;
-            color: var(--theme-green-dark);
-        }
-        .action-btn.view-btn {
-            color: var(--action-view);
-        }
-        .action-btn.view-btn:hover {
-            background: #e6f5ea;
-            color: #00916e;
-        }
-        .action-btn.delete-btn {
-            color: var(--action-delete);
-        }
-        .action-btn.delete-btn:hover {
-            background: #fbeaea;
-            color: #c0392b;
-        }
-        .action-btn i {
-            font-size: 1.1em;
-        }
-        /* Center the action group in the table cell */
-        .reservation-table td:nth-child(7) {
-            text-align: center;
-            vertical-align: middle;
-        }
-        /* Modal styles */
-        .modal { display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background: rgba(0,0,0,0.3); }
-        .modal-content { background: #fff; margin: 5% auto; padding: 2rem; border-radius: 10px; width: 400px; position: relative; }
-        .close { position: absolute; right: 1rem; top: 1rem; font-size: 1.5rem; color: #888; cursor: pointer; }
-        .modal-content h2 { margin-bottom: 1rem; }
-        .modal-content label { font-weight: 600; }
-        .modal-content p { margin-bottom: 0.5rem; }
-        /* Hamburger menu styles */
-        .hamburger {
-            display: none;
-            position: fixed;
-            top: 1rem;
-            left: 1rem;
-            z-index: 1100;
-            width: 36px;
-            height: 36px;
-            background: var(--theme-green);
+        .add-room-btn {
+            background: #008000;
+            color: white;
+            padding: 0.75rem 1.5rem;
             border: none;
             border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .add-room-btn:hover {
+            background: #006000;
+        }
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+        .room-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .room-table th {
+            background: #f8f9fa;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .room-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #f1f3f4;
+            vertical-align: middle;
+        }
+        .room-table tr:hover {
+            background: #f8f9fa;
+        }
+        .room-table tr:last-child td {
+            border-bottom: none;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+        .action-btn {
+            padding: 0.5rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
+            width: 32px;
+            height: 32px;
         }
-        .hamburger span {
-            display: block;
-            width: 22px;
-            height: 3px;
-            background: #fff;
-            margin: 4px 0;
-            border-radius: 2px;
-            transition: 0.3s;
+        .view-btn {
+            background: #e3f2fd;
+            color: #1976d2;
         }
-        @media (max-width: 900px) {
-            .main-content { margin-left: 0; padding: 1rem; }
-            .sidebar { left: -220px; box-shadow: none; }
-            .sidebar.active { left: 0; box-shadow: 2px 0 8px rgba(0,0,0,0.08); }
-            .hamburger { display: flex; }
+        .view-btn:hover {
+            background: #bbdefb;
         }
-        @media (max-width: 600px) {
-            .reservation-section { padding: 1rem; }
-            .reservation-table th, .reservation-table td { padding: 0.5rem; font-size: 0.9rem; }
-            h1 { font-size: 1.2rem; }
+        .edit-btn {
+            background: #e8f5e8;
+            color: #008000;
         }
-        @media (max-width: 500px) {
-            .reservation-table, .reservation-table thead, .reservation-table tbody, .reservation-table th, .reservation-table td, .reservation-table tr {
-                display: block;
-                width: 100%;
-            }
-            .reservation-table thead { display: none; }
-            .reservation-table tr { margin-bottom: 1rem; border-bottom: 2px solid #f0f2f5; }
-            .reservation-table td {
-                padding-left: 40%;
-                position: relative;
-                font-size: 1rem;
-                border: none;
-                border-bottom: 1px solid #f0f2f5;
-            }
-            .reservation-table td:before {
-                position: absolute;
-                left: 1rem;
-                top: 50%;
-                transform: translateY(-50%);
-
-                font-weight: bold;
-                color: #666;
-                content: attr(data-label);
-                font-size: 0.95rem;
-            }
+        .edit-btn:hover {
+            background: #c8e6c9;
         }
-        .search-filter-bar {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
+        .delete-btn {
+            background: #ffebee;
+            color: #d32f2f;
         }
-        .search-input {
-            padding: 0.7rem 2.5rem 0.7rem 2.5rem;
-            border-radius: 1.2rem;
-            border: none;
-            background: #ededed;
-            font-size: 1rem;
-            width: 260px;
-            outline: none;
+        .delete-btn:hover {
+            background: #ffcdd2;
         }
-        .search-icon {
-            position: absolute;
-            left: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #888;
-        }
-        .search-wrapper {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-        .filter-btn, .create-btn {
-            padding: 0.7rem 1.5rem;
-            border-radius: 1rem;
-            border: 2px solid #222;
-            background: #f5f6fa;
-            font-size: 1rem;
-            cursor: pointer;
-            margin-left: 0.5rem;
-            transition: background 0.2s, color 0.2s;
-        }
-        .filter-btn:hover, .create-btn:hover {
-            background: #222;
-            color: #fff;
-        }
-        .filter-dropdown {
+        .modal {
             display: none;
-            position: absolute;
-            top: 2.5rem;
+            position: fixed;
+            z-index: 1000;
             left: 0;
-            background: #fff;
-            border: 1px solid #ccc;
-            border-radius: 0.5rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            z-index: 10;
-            min-width: 220px;
-            padding: 1rem;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
         }
-        .filter-dropdown.active {
-            display: block;
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
         }
-        .filter-dropdown label {
+        .close {
+            position: absolute;
+            right: 1rem;
+            top: 1rem;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+        .close:hover {
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        .form-group label {
             display: block;
             margin-bottom: 0.5rem;
             font-weight: 500;
-        }
-        .filter-dropdown input, .filter-dropdown select {
-            width: 100%;
-            margin-bottom: 1rem;
-            padding: 0.4rem 0.7rem;
-            border-radius: 0.5rem;
-            border: 1px solid #ccc;
-        }
-        .filter-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 0.5rem;
-        }
-        .modal-content form input, .modal-content form select {
-            width: 100%;
-            margin-bottom: 1rem;
-            padding: 0.5rem 0.7rem;
-            border-radius: 0.5rem;
-            border: 1px solid #ccc;
-        }
-        .modal-content form button[type="submit"] {
-            width: 100%;
-            padding: 0.7rem;
-            border-radius: 0.7rem;
-            border: none;
-            background: var(--theme-green);
-            color: #fff;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .modal-content form button[type="submit"]:hover {
-            background: var(--theme-green-dark);
-        }
-        /* Delete Modal Buttons */
-        .confirm-delete {
-            background: var(--action-delete);
-            color: #fff;
-            border: none;
-            border-radius: 0.5rem;
-            padding: 0.6rem 1.3rem;
-            font-size: 1rem;
-            font-weight: 600;
-            margin-right: 0.7rem;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .confirm-delete:hover {
-            background: #c0392b;
-        }
-        .cancel-delete {
-            background: #f5f6fa;
-            color: #222;
-            border: 1px solid #ccc;
-            border-radius: 0.5rem;
-            padding: 0.6rem 1.3rem;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s, color 0.2s;
-        }
-        .cancel-delete:hover {
-            background: #ededed;
-            color: var(--theme-green);
-        }
-         /* Download icon button in table cell */
-        .download-table-btn {
-            background: none;
-            border: none;
-            color: #008000;
-            border-radius: 50%;
-            padding: 0.3rem;
-            font-size: 1.1rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.2s, color 0.2s;
-            margin: 0 auto; /* Center horizontally */
-        }
-        .download-table-btn i {
-            font-size: 1.05em;
-            color: #008000;
-            transition: color 0.2s;
-        }
-        .download-table-btn:hover, .download-table-btn:focus {
-            background: #e6f5ea;
-        }
-        .download-table-btn:hover i, .download-table-btn:focus i {
-            color: #005c00;
-        }
-        /* Center the download button in the table cell */
-        .reservation-table td:last-child {
-            text-align: center;
-            vertical-align: middle;
-        }
-        .sidebar-section-label {
-            display: block;
-            color: #fff;
-            font-size: 0.93rem;
-            font-weight: 400;
-            opacity: 0.85;
-            margin: 0.5rem 0 0.1rem 0.1rem;
-            padding-left: 0.2rem;
-            letter-spacing: 0.5px;
-            cursor: default;
-            user-select: none;
-        }
-        .sidebar .nav-section {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            padding-left: 1rem;
-            gap: 0.5rem;
-            margin-bottom: 0;
-        }
-        .top-bar {
-            position: fixed;
-            left: 180px;
-            right: 0;
-            top: 0;
-            height: 60px;
-            background: #fff;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            z-index: 1001;
-            padding: 0 2rem;
-            transition: left 0.3s;
-        }
-        .top-bar-right {
-            display: flex;
-            align-items: center;
-            gap: 1.2rem;
-        }
-        .top-bar-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #f0f2f5;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
             color: #333;
-            cursor: pointer;
-            position: relative;
         }
-        .top-bar-account {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #bbb;
-            color: #fff;
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.95rem;
+        }
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #008000;
+        }
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 1.5rem;
+        }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+        .btn-primary {
+            background: #008000;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #006000;
+        }
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        .status-available {
+            background: #e8f5e8;
+            color: #008000;
+        }
+        .status-occupied {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+        .status-cleaning {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        .status-maintenance {
+            background: #ffebee;
+            color: #d32f2f;
+        }
+        .sidebar-logout {
+            margin-top: auto;
+            padding: 1rem;
+            width: 100%;
+        }
+        .logout-btn {
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 700;
-            font-size: 1rem;
-            cursor: pointer;
+            gap: 0.5rem;
+            width: 100%;
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
-        .top-bar-toggle {
-            display: none;
-            background: none;
-            border: none;
-            font-size: 1.7rem;
-            color: #147219;
-            margin-right: 1rem;
-            cursor: pointer;
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
         }
-        @media (max-width: 900px) {
-            .main-content { margin-left: 0; padding: 1rem; }
-            .sidebar { left: -220px; box-shadow: none; }
-            .sidebar.active { left: 0; box-shadow: 2px 0 8px rgba(0,0,0,0.08); }
+        .logout-btn i {
+            font-size: 1.1rem;
         }
-        /* Responsive Styles */
-        @media (max-width: 1200px) {
-            .stats-cards {
-                grid-template-columns: 1fr 1fr;
-            }
-            .content-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-        @media (max-width: 900px) {
-            .main-content {
-                padding: 1rem;
-            }
-        }
-        @media (max-width: 700px) {
+        @media (max-width: 768px) {
             .sidebar {
-                left: -200px;
-                width: 180px;
+                left: -180px;
             }
+            
             .sidebar.active {
                 left: 0;
             }
-            .top-bar {
-                left: 0;
-                padding-left: 0.5rem;
-            }
+            
             .main-content {
                 margin-left: 0;
+                padding: 1rem;
             }
-            .top-bar-toggle {
-                display: block;
+            
+            .page-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
             }
-        }
-        @media (max-width: 600px) {
-            .main-content {
-                padding: 0.5rem;
+            
+            .room-table {
+                font-size: 0.9rem;
             }
-        }
-        .section-toggle {
-            background: none;
-            border: none;
-            color: #e6e6e6;
-            font-size: 1.08rem;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-            margin-bottom: 0.1rem;
-            cursor: pointer;
-            user-select: none;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            width: 100%;
-            padding: 0.35rem 0.6rem 0.35rem 0;
-            outline: none;
-            border-radius: 5px;
-            transition: background 0.18s, color 0.18s;
-        }
-        .section-toggle:focus, .section-toggle:hover {
-            color: #fff;
-            background: rgba(255,255,255,0.10);
-        }
-        .section-label {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 1.08rem;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-        }
-        .section-label i {
-            font-size: 1.15rem;
-            opacity: 0.95;
-        }
-        .chevron {
-            margin-left: auto;
-            font-size: 1.1rem;
-            transition: transform 0.25s cubic-bezier(.4,2,.6,1), color 0.18s;
-        }
-        .section-toggle[aria-expanded="false"] .chevron {
-            transform: rotate(-90deg);
-        }
-        .section-links {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            width: 100%;
-            transition: max-height 0.2s, opacity 0.2s;
-            overflow: hidden;
-            opacity: 1;
-            max-height: 500px;
-            margin-bottom: 0.2rem;
-        }
-        .section-links.collapsed {
-            opacity: 0;
-            max-height: 0;
-            pointer-events: none;
-        }
-        .sidebar .nav-section {
-            margin-bottom: 0.2rem;
-        }
-        .sidebar-section-label {
-            display: block;
-            color: #fff;
-            font-size: 0.93rem;
-            font-weight: 400;
-            opacity: 0.85;
-            margin: 0.5rem 0 0.1rem 0.1rem;
-            padding-left: 0.2rem;
-            letter-spacing: 0.5px;
-            cursor: default;
-            user-select: none;
+            
+            .room-table th,
+            .room-table td {
+                padding: 0.75rem 0.5rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                gap: 0.25rem;
+            }
         }
     </style>
 </head>
@@ -752,7 +546,6 @@ if (count($where) > 0) {
             <div class="nav-section">
                 <span class="sidebar-section-label">Resources</span>
                 <a class="nav-link" href="room.php"><i class="fas fa-door-open"></i><span>Room</span></a>
-                <a class="nav-link" href="menu_service.php"><i class="fas fa-utensils"></i><span>Menu</span></a>
                 <a class="nav-link" href="inventory.php"><i class="fas fa-box"></i><span>Inventory</span></a>
             </div>
             <div class="nav-section">
@@ -764,94 +557,90 @@ if (count($where) > 0) {
                 <a class="nav-link" href="payment.php"><i class="fas fa-credit-card"></i><span>Invoices</span></a>
                 <a class="nav-link" href="statistics.php"><i class="fas fa-chart-line"></i><span>Statistics</span></a>
             </div>
-        </div>
-    </div>
-    <div class="top-bar" id="topBar">
-        <button class="top-bar-toggle" id="sidebarToggle" aria-label="Toggle Sidebar"><i class="fas fa-bars"></i></button>
-        <div class="top-bar-right">
-            <div class="top-bar-icon" title="Email"><i class="fas fa-envelope"></i></div>
-            <div class="top-bar-icon" title="Notifications"><i class="fas fa-bell"></i></div>
-            <div class="top-bar-account" title="Account">PB</div>
+            <div class="nav-section sidebar-logout">
+                <span class="sidebar-section-label">Logout</span>
+                <a class="logout-btn" href="logout.php"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a>
+            </div>
         </div>
     </div>
   
   <!-- Main Content -->
   <div class="main-content">
   <div class="reservation-section">
-    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
-    <h1 style="margin-bottom: 0; border-bottom: 4px solid rgb(255, 255, 255); display: inline-block; padding-bottom: 0.2rem;">Room</h1>
-    <div class="search-filter-bar">
-      <div class="search-wrapper">
-        <i class="fas fa-search search-icon"></i>
-        <input type="text" id="searchInput" class="search-input" placeholder="Search Rooms">
-      </div>
-      <button class="create-btn" id="createBtn">Add Room</button>
+    <div class="page-header">
+        <h1 class="page-title">Room</h1>
+        <div class="search-filter-bar">
+            <div class="search-wrapper">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="searchInput" class="search-input" placeholder="Search Rooms">
+            </div>
+            <button class="add-room-btn" id="createBtn">Add Room</button>
+        </div>
     </div>
-    </div>
-    <table class="reservation-table">
-    <thead>
-      <tr>
-      <th>Room ID</th>
-      <th>Room Number</th>
-      <th>Room Name</th>
-      <th>Room Type</th>
-      <th>Room Per Hour</th>
-      <th>Room Status</th>
-      <th>Capacity</th>
-      <th>Actions</th>
-      <th>Download</th>
-      </tr>
-    </thead>
-    <tbody>
-    <?php if ($resResult && $resResult->num_rows > 0): ?>
-      <?php while($row = $resResult->fetch_assoc()): ?> 
-      <tr data-id="<?php echo $row['RoomID']; ?>">
-      <td><b><?php echo $row['RoomID']; ?></b></td>
-      <td><b><?php echo htmlspecialchars($row['RoomNumber']); ?></b></td>
-      <td><b><?php echo htmlspecialchars($row['RoomName']); ?></b></td>
-      <td><b><?php echo htmlspecialchars($row['RoomType']); ?></b></td>
-      <td><b><?php echo htmlspecialchars($row['RoomPerHour']); ?></b></td>
-      <td><?php echo $row['RoomStatus']; ?></td>
-      <td><b><?php echo $row['Capacity']; ?></b></td>
-      <td>
-        <div class="action-group">
-        <button type="button" class="action-btn edit-btn"
-          data-id="<?php echo $row['RoomID']; ?>"
-          data-roomnumber="<?php echo htmlspecialchars($row['RoomNumber']); ?>"
-          data-roomname="<?php echo htmlspecialchars($row['RoomName']); ?>"
-          data-roomtype="<?php echo htmlspecialchars($row['RoomType']); ?>"
-          data-roomperhour="<?php echo htmlspecialchars($row['RoomPerHour']); ?>"
-          data-roomstatus="<?php echo htmlspecialchars($row['RoomStatus']); ?>"
-          data-capacity="<?php echo htmlspecialchars($row['Capacity']); ?>"
-
-          ><i class="fas fa-edit"></i></button>
-          <button type="button" class="action-btn view-btn"
-            data-id="<?php echo $row['RoomID']; ?>"
-            data-roomnumber="<?php echo htmlspecialchars($row['RoomNumber']); ?>"
-            data-roomname="<?php echo htmlspecialchars($row['RoomName']); ?>"
-            data-roomtype="<?php echo htmlspecialchars($row['RoomType']); ?>"
-            data-roomperhour="<?php echo htmlspecialchars($row['RoomPerHour']); ?>"
-            data-roomstatus="<?php echo htmlspecialchars($row['RoomStatus']); ?>"
-            data-capacity="<?php echo htmlspecialchars($row['Capacity']); ?>"
-
-          ><i class="fas fa-eye"></i></button>
-          <button type="button" class="action-btn delete-btn"
-            data-id="<?php echo $row['RoomID']; ?>"
-          ><i class="fas fa-trash"></i></button>
-                  </div>
-                </td>
-                <td>
-                        <button class="download-table-btn" title="Download Table" onclick="showDownloadModal(event)">
-                          <i class="fas fa-download"></i>
-                        </button>
-                      </td>
+    <div class="table-container">
+        <table class="room-table">
+            <thead>
+                <tr>
+                    <th>Room ID</th>
+                    <th>Room Number</th>
+                    <th>Room Name</th>
+                    <th>Room Type</th>
+                    <th>Room Per Hour</th>
+                    <th>Room Status</th>
+                    <th>Capacity</th>
+                    <th>Actions</th>
+                    <th>Download</th>
                 </tr>
-      <?php endwhile; ?>
-    <?php else: ?>
-      <tr><td colspan="11">No rooms found.</td></tr>
-    <?php endif; ?>
-    </tbody>
-    </table>
+            </thead>
+            <tbody>
+            <?php if ($resResult && $resResult->num_rows > 0): ?>
+                <?php while($row = $resResult->fetch_assoc()): ?> 
+                <tr data-id="<?php echo $row['RoomID']; ?>">
+                    <td><b><?php echo $row['RoomID']; ?></b></td>
+                    <td><b><?php echo htmlspecialchars($row['RoomNumber']); ?></b></td>
+                    <td><b><?php echo htmlspecialchars($row['RoomName']); ?></b></td>
+                    <td><b><?php echo htmlspecialchars($row['RoomType']); ?></b></td>
+                    <td><b><?php echo htmlspecialchars($row['RoomPerHour']); ?></b></td>
+                    <td><?php echo $row['RoomStatus']; ?></td>
+                    <td><b><?php echo $row['Capacity']; ?></b></td>
+                    <td>
+                        <div class="action-buttons">
+                            <button type="button" class="action-btn edit-btn"
+                                data-id="<?php echo $row['RoomID']; ?>"
+                                data-roomnumber="<?php echo htmlspecialchars($row['RoomNumber']); ?>"
+                                data-roomname="<?php echo htmlspecialchars($row['RoomName']); ?>"
+                                data-roomtype="<?php echo htmlspecialchars($row['RoomType']); ?>"
+                                data-roomperhour="<?php echo htmlspecialchars($row['RoomPerHour']); ?>"
+                                data-roomstatus="<?php echo htmlspecialchars($row['RoomStatus']); ?>"
+                                data-capacity="<?php echo htmlspecialchars($row['Capacity']); ?>"
+                            ><i class="fas fa-edit"></i></button>
+                            <button type="button" class="action-btn view-btn"
+                                data-id="<?php echo $row['RoomID']; ?>"
+                                data-roomnumber="<?php echo htmlspecialchars($row['RoomNumber']); ?>"
+                                data-roomname="<?php echo htmlspecialchars($row['RoomName']); ?>"
+                                data-roomtype="<?php echo htmlspecialchars($row['RoomType']); ?>"
+                                data-roomperhour="<?php echo htmlspecialchars($row['RoomPerHour']); ?>"
+                                data-roomstatus="<?php echo htmlspecialchars($row['RoomStatus']); ?>"
+                                data-capacity="<?php echo htmlspecialchars($row['Capacity']); ?>"
+                            ><i class="fas fa-eye"></i></button>
+                            <button type="button" class="action-btn delete-btn"
+                                data-id="<?php echo $row['RoomID']; ?>"
+                            ><i class="fas fa-trash"></i></button>
+                        </div>
+                    </td>
+                    <td>
+                        <button class="download-table-btn" title="Download Table" onclick="showDownloadModal(event)">
+                            <i class="fas fa-download"></i>
+                        </button>
+                    </td>
+                </tr>
+                <?php endwhile; ?>
+            <?php else: ?>
+                <tr><td colspan="11">No rooms found.</td></tr>
+            <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
   </div>
   </div>
   <!-- Edit Modal -->
@@ -928,9 +717,9 @@ if (count($where) > 0) {
 
     // Helper: get table data as array (optionally exclude actions/download columns)
     function getTableData(excludeActions = false) {
-      const rows = Array.from(document.querySelectorAll('.reservation-table tbody tr'))
+      const rows = Array.from(document.querySelectorAll('.room-table tbody tr'))
         .filter(row => row.style.display !== 'none');
-      let headers = Array.from(document.querySelectorAll('.reservation-table thead th'));
+      let headers = Array.from(document.querySelectorAll('.room-table thead th'));
       let colCount = headers.length;
       if (excludeActions) {
         // Remove last two columns: Actions and Download
@@ -1183,7 +972,7 @@ if (count($where) > 0) {
   }
   // Search logic
   const searchInput = document.getElementById('searchInput');
-  const tableRows = document.querySelectorAll('.reservation-table tbody tr');
+  const tableRows = document.querySelectorAll('.room-table tbody tr');
   searchInput.oninput = function() {
     const val = searchInput.value.toLowerCase();
     tableRows.forEach(row => {
@@ -1216,7 +1005,7 @@ if (count($where) > 0) {
           .then(res => res.json())
           .then(json => {
             if (json.room) {
-              const tbody = document.querySelector('.reservation-table tbody');
+              const tbody = document.querySelector('.room-table tbody');
               const row = document.createElement('tr');
               row.setAttribute('data-id', json.room.RoomID);
               row.innerHTML = `
@@ -1228,7 +1017,7 @@ if (count($where) > 0) {
                 <td>${json.room.RoomStatus}</td>
                 <td><b>${json.room.Capacity}</b></td>
                 <td>
-                  <div class="action-group">
+                  <div class="action-buttons">
                     <button type="button" class="action-btn edit-btn"
                       data-id="${json.room.RoomID}"
                       data-roomnumber="${json.room.RoomNumber}"

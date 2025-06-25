@@ -376,7 +376,6 @@ for ($m = 1; $m <= 12; $m++) {
             <div class="nav-section">
                 <span class="sidebar-section-label">Resources</span>
                 <a class="nav-link" href="room.php"><i class="fas fa-door-open"></i><span>Room</span></a>
-                <a class="nav-link" href="menu_service.php"><i class="fas fa-utensils"></i><span>Menu</span></a>
                 <a class="nav-link" href="inventory.php"><i class="fas fa-box"></i><span>Inventory</span></a>
             </div>
             <div class="nav-section">

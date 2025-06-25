@@ -424,7 +424,6 @@ $recentBookings = getRecentBookings(5);
             flex: 1;
             padding: 2rem;
             margin-left: 180px;
-            margin-top: 60px;
             overflow-x: hidden;
             transition: margin-left 0.3s;
         }
@@ -643,117 +642,60 @@ $recentBookings = getRecentBookings(5);
             justify-content: center;
         }
 
-        /* Responsive Styles */
-        @media (max-width: 1200px) {
-            .stats-cards {
-                grid-template-columns: 1fr 1fr;
-            }
-            .content-grid {
-                grid-template-columns: 1fr;
-            }
+        /* Logout Button Styles */
+        .sidebar-logout {
+            margin-top: auto;
+            padding: 1rem;
+            width: 100%;
         }
-        @media (max-width: 900px) {
-            .main-content {
-                padding: 1rem;
-            }
+
+        .logout-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            width: 100%;
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
-        @media (max-width: 700px) {
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .logout-btn i {
+            font-size: 1.1rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
             .sidebar {
-                left: -200px;
-                width: 180px;
+                left: -180px;
             }
+            
             .sidebar.active {
                 left: 0;
             }
-            .top-bar {
-                left: 0;
-                padding-left: 0.5rem;
-            }
+            
             .main-content {
                 margin-left: 0;
             }
-            .top-bar-toggle {
-                display: block;
+            
+            .stats-cards {
+                grid-template-columns: repeat(2, 1fr);
             }
-        }
-        @media (max-width: 600px) {
-            .main-content {
-                padding: 0.5rem;
+            
+            .content-grid {
+                grid-template-columns: 1fr;
             }
-        }
-        .section-toggle {
-            background: none;
-            border: none;
-            color: #e6e6e6;
-            font-size: 1.08rem;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-            margin-bottom: 0.1rem;
-            cursor: pointer;
-            user-select: none;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            width: 100%;
-            padding: 0.35rem 0.6rem 0.35rem 0;
-            outline: none;
-            border-radius: 5px;
-            transition: background 0.18s, color 0.18s;
-        }
-        .section-toggle:focus, .section-toggle:hover {
-            color: #fff;
-            background: rgba(255,255,255,0.10);
-        }
-        .section-label {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 1.08rem;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-        }
-        .section-label i {
-            font-size: 1.15rem;
-            opacity: 0.95;
-        }
-        .chevron {
-            margin-left: auto;
-            font-size: 1.1rem;
-            transition: transform 0.25s cubic-bezier(.4,2,.6,1), color 0.18s;
-        }
-        .section-toggle[aria-expanded="false"] .chevron {
-            transform: rotate(-90deg);
-        }
-        .section-links {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            width: 100%;
-            transition: max-height 0.2s, opacity 0.2s;
-            overflow: hidden;
-            opacity: 1;
-            max-height: 500px;
-            margin-bottom: 0.2rem;
-        }
-        .section-links.collapsed {
-            opacity: 0;
-            max-height: 0;
-            pointer-events: none;
-        }
-        .sidebar .nav-section {
-            margin-bottom: 0.2rem;
-        }
-        .sidebar-section-label {
-            display: block;
-            color: #fff;
-            font-size: 0.93rem;
-            font-weight: 400;
-            opacity: 0.85;
-            margin: 0.5rem 0 0.1rem 0.1rem;
-            padding-left: 0.2rem;
-            letter-spacing: 0.5px;
-            cursor: default;
-            user-select: none;
         }
     </style>
 </head>
@@ -778,7 +720,6 @@ $recentBookings = getRecentBookings(5);
                 <div class="nav-section">
                     <span class="sidebar-section-label">Resources</span>
                     <a class="nav-link" href="room.php"><i class="fas fa-door-open"></i><span>Room</span></a>
-                    <a class="nav-link" href="menu_service.php"><i class="fas fa-utensils"></i><span>Menu</span></a>
                     <a class="nav-link" href="inventory.php"><i class="fas fa-box"></i><span>Inventory</span></a>
                 </div>
                 <div class="nav-section">
@@ -790,16 +731,9 @@ $recentBookings = getRecentBookings(5);
                     <a class="nav-link" href="payment.php"><i class="fas fa-credit-card"></i><span>Invoices</span></a>
                     <a class="nav-link" href="statistics.php"><i class="fas fa-chart-line"></i><span>Statistics</span></a>
                 </div>
-            </div>
-        </div>
-
-        <!-- Top Bar -->
-        <div class="top-bar" id="topBar">
-            <button class="top-bar-toggle" id="sidebarToggle" aria-label="Toggle Sidebar"><i class="fas fa-bars"></i></button>
-            <div class="top-bar-right">
-                <div class="top-bar-icon" title="Email"><i class="fas fa-envelope"></i></div>
-                <div class="top-bar-icon" title="Notifications"><i class="fas fa-bell"></i></div>
-                <div class="top-bar-account" title="Account">PB</div>
+                <div class="nav-section sidebar-logout">
+                    <a class="logout-btn" href="logout.php"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a>
+                </div>
             </div>
         </div>
 
@@ -977,7 +911,6 @@ $recentBookings = getRecentBookings(5);
             const sidebar = document.getElementById('sidebar');
             const sidebarToggle = document.getElementById('sidebarToggle');
             const mainContent = document.getElementById('mainContent');
-            const topBar = document.getElementById('topBar');
             let currentDate = new Date();
 
             // Sidebar toggle
@@ -998,10 +931,8 @@ $recentBookings = getRecentBookings(5);
             function adjustLayout() {
                 if (window.innerWidth <= 700) {
                     mainContent.style.marginLeft = '0';
-                    topBar.style.left = '0';
                 } else {
                     mainContent.style.marginLeft = '180px';
-                    topBar.style.left = '180px';
                 }
             }
             window.addEventListener('resize', adjustLayout);
@@ -1028,24 +959,6 @@ $recentBookings = getRecentBookings(5);
                 e.stopPropagation();
                 currentDate.setMonth(currentDate.getMonth() + 1);
                 updateCalendar(currentDate.getFullYear(), currentDate.getMonth() + 1);
-            });
-        });
-
-        document.querySelectorAll('.section-toggle').forEach(function(btn) {
-            btn.addEventListener('click', function() {
-                const expanded = btn.getAttribute('aria-expanded') === 'true';
-                btn.setAttribute('aria-expanded', !expanded);
-                const sectionId = btn.getAttribute('aria-controls');
-                const sectionLinks = document.getElementById(sectionId);
-                if (sectionLinks) {
-                    sectionLinks.classList.toggle('collapsed', expanded);
-                }
-            });
-            btn.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    btn.click();
-                }
             });
         });
     </script>
