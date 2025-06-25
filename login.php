@@ -444,62 +444,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                         <path d="M12 17a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm6-7V7a6 6 0 0 0-12 0v3a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2zm-8-3a4 4 0 0 1 8 0v3H6V7z"/>
                     </svg>
                 </div>
-                <div class="form-group">
-                    <input type="checkbox" id="agreePolicy" required>
-                    <label for="agreePolicy">
-                        I agree to the <a href="#" onclick="openPolicyModal();return false;">Terms, Privacy, and Hotel Policy</a>.
-                    </label>
-                </div>
                 <button type="submit" name="login" class="login-btn">SIGN IN</button>
                 <?php if (!empty($error)): ?>
                     <div class="error"><?= htmlspecialchars($error) ?></div>
                 <?php endif; ?>
             </form>
             <div class="links">
-                <a href="admin/forgot_password.php" class="forgot-link">FORGOT PASSWORD</a>
+                <a href="forgot_password.php" class="forgot-link">FORGOT PASSWORD</a>
             </div>
         </div>
     </div>
 
-    <!-- Combined Policy Modal -->
-    <div id="policyModal" class="modal">
-        <div class="modal-content">
-            <button class="close-btn" onclick="closePolicyModal()">&times;</button>
-            <h2>Terms, Privacy, and Hotel Policy</h2>
-            <h3>Terms and Conditions</h3>
-            <ul>
-                <li>No cancellation of the Reservation and Booking.</li>
-                <li>By using this site, you agree to abide by all hotel rules and policies.</li>
-            </ul>
-            <h3>Privacy Policy</h3>
-            <ul>
-                <li>Your information is kept confidential and used only for reservation and communication purposes.</li>
-                <li>We do not share your data with third parties except as required by law.</li>
-            </ul>
-            <h3>Hotel Policy</h3>
-            <ul>
-                <li>Check-in and check-out times must be followed.</li>
-                <li>Guests must present valid identification upon check-in.</li>
-                <li>Respect hotel property and staff at all times.</li>
-                <li>No cancellation of the Reservation and Booking.</li>
-            </ul>
-        </div>
-    </div>
-    <script>
-    function openPolicyModal() {
-        document.getElementById('policyModal').style.display = 'flex';
-        document.body.style.overflow = 'hidden';
-    }
-    function closePolicyModal() {
-        document.getElementById('policyModal').style.display = 'none';
-        document.body.style.overflow = '';
-    }
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') closePolicyModal();
-    });
-    document.getElementById('policyModal').addEventListener('click', function(e) {
-        if (e.target === this) closePolicyModal();
-    });
-    </script>
 </body>
 </html> 
