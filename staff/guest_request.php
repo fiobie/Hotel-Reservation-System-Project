@@ -15,9 +15,8 @@ if ($conn->connect_error) {
 // ============================================================================
 // CREATE TABLE IF NOT EXISTS
 // ============================================================================
-$createTableSQL = "
-CREATE TABLE IF NOT EXISTS guest_requests (
-    RequestID INT AUTO_INCREMENT PRIMARY KEY,
+$createTableSQL = "CREATE TABLE IF NOT EXISTS guest_requests (
+    RequestID VARCHAR(20) PRIMARY KEY,
     GuestName VARCHAR(100) NOT NULL,
     RoomNumber INT NOT NULL,
     RequestDetails TEXT NOT NULL,
@@ -34,6 +33,36 @@ if (!$conn->query($createTableSQL)) {
 }
 
 // ============================================================================
+// FUNCTION TO GENERATE REQUEST ID
+// ============================================================================
+function generateRequestID($conn) {
+    $today = date('mdY'); // Format: MMDDYYYY
+    $prefix = "GRQ-{$today}-";
+    
+    // Get the highest sequence number for today
+    $sql = "SELECT RequestID FROM guest_requests WHERE RequestID LIKE ? ORDER BY RequestID DESC LIMIT 1";
+    $stmt = $conn->prepare($sql);
+    $likePattern = $prefix . "%";
+    $stmt->bind_param("s", $likePattern);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        $lastID = $row['RequestID'];
+        // Extract the sequence number and increment it
+        $sequence = intval(substr($lastID, -4)) + 1;
+    } else {
+        $sequence = 1;
+    }
+    
+    $stmt->close();
+    
+    // Format sequence number with leading zeros (4 digits)
+    return $prefix . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+}
+
+// ============================================================================
 // INSERT SAMPLE DATA IF TABLE IS EMPTY
 // ============================================================================
 $checkDataSQL = "SELECT COUNT(*) as count FROM guest_requests";
@@ -41,18 +70,29 @@ $result = $conn->query($checkDataSQL);
 $row = $result->fetch_assoc();
 
 if ($row['count'] == 0) {
+    // Generate sample request IDs
     $sampleDataSQL = "
-    INSERT INTO guest_requests (GuestName, RoomNumber, RequestDetails, Priority, Status, RequestTime) VALUES
-    ('John Doe', 101, 'Extra towels needed', 'High', 'Pending', NOW()),
-    ('Jane Smith', 205, 'Wake-up call at 7 AM', 'Low', 'Completed', DATE_SUB(NOW(), INTERVAL 2 HOUR)),
-    ('Mike Johnson', 302, 'Room service - dinner menu', 'Low', 'In Progress', DATE_SUB(NOW(), INTERVAL 1 HOUR)),
-    ('Sarah Wilson', 150, 'Fix air conditioning', 'High', 'Pending', NOW()),
-    ('David Brown', 208, 'Extra pillows', 'Low', 'Completed', DATE_SUB(NOW(), INTERVAL 3 HOUR))
+    INSERT INTO guest_requests (RequestID, GuestName, RoomNumber, RequestDetails, Priority, Status, RequestTime) VALUES
+    (?, 'John Doe', 101, 'Extra towels needed', 'High', 'Pending', NOW()),
+    (?, 'Jane Smith', 205, 'Wake-up call at 7 AM', 'Low', 'Completed', DATE_SUB(NOW(), INTERVAL 2 HOUR)),
+    (?, 'Mike Johnson', 302, 'Room service - dinner menu', 'Low', 'In Progress', DATE_SUB(NOW(), INTERVAL 1 HOUR)),
+    (?, 'Sarah Wilson', 150, 'Fix air conditioning', 'High', 'Pending', NOW()),
+    (?, 'David Brown', 208, 'Extra pillows', 'Low', 'Completed', DATE_SUB(NOW(), INTERVAL 3 HOUR))
     ";
     
-    if (!$conn->query($sampleDataSQL)) {
+    $stmt = $conn->prepare($sampleDataSQL);
+    $requestID1 = generateRequestID($conn);
+    $requestID2 = generateRequestID($conn);
+    $requestID3 = generateRequestID($conn);
+    $requestID4 = generateRequestID($conn);
+    $requestID5 = generateRequestID($conn);
+    
+    $stmt->bind_param("sssss", $requestID1, $requestID2, $requestID3, $requestID4, $requestID5);
+    
+    if (!$stmt->execute()) {
         die("Error inserting sample data: " . $conn->error);
     }
+    $stmt->close();
 }
 
 // ============================================================================
@@ -64,9 +104,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
     // Mark request as complete
     if ($action === 'complete_request' && isset($_POST['request_id'])) {
-        $requestId = intval($_POST['request_id']);
+        $requestId = $conn->real_escape_string($_POST['request_id']);
         $stmt = $conn->prepare("UPDATE guest_requests SET Status = 'Completed' WHERE RequestID = ?");
-        $stmt->bind_param("i", $requestId);
+        $stmt->bind_param("s", $requestId);
         if ($stmt->execute()) {
             echo json_encode(['success' => true, 'message' => 'Request marked as completed.']);
         } else {
@@ -78,7 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
     // Update or Create request
     if ($action === 'save_request') {
-        $requestId = isset($_POST['request_id']) && !empty($_POST['request_id']) ? intval($_POST['request_id']) : null;
+        $requestId = isset($_POST['request_id']) && !empty($_POST['request_id']) ? $conn->real_escape_string($_POST['request_id']) : null;
         $guestName = $conn->real_escape_string($_POST['guestName']);
         $roomNumber = intval($_POST['roomNumber']);
         $requestDetails = $conn->real_escape_string($_POST['requestDetails']);
@@ -87,10 +127,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
         if ($requestId) { // Update existing request
             $stmt = $conn->prepare("UPDATE guest_requests SET GuestName = ?, RoomNumber = ?, RequestDetails = ?, Priority = ?, Status = ? WHERE RequestID = ?");
-            $stmt->bind_param("sisssi", $guestName, $roomNumber, $requestDetails, $priority, $status, $requestId);
+            $stmt->bind_param("sissss", $guestName, $roomNumber, $requestDetails, $priority, $status, $requestId);
         } else { // Create new request
-            $stmt = $conn->prepare("INSERT INTO guest_requests (GuestName, RoomNumber, RequestDetails, Priority, Status, RequestTime) VALUES (?, ?, ?, ?, ?, NOW())");
-            $stmt->bind_param("sisss", $guestName, $roomNumber, $requestDetails, $priority, $status);
+            $newRequestID = generateRequestID($conn);
+            $stmt = $conn->prepare("INSERT INTO guest_requests (RequestID, GuestName, RoomNumber, RequestDetails, Priority, Status, RequestTime) VALUES (?, ?, ?, ?, ?, ?, NOW())");
+            $stmt->bind_param("ssisss", $newRequestID, $guestName, $roomNumber, $requestDetails, $priority, $status);
         }
         
         if ($stmt->execute()) {
@@ -193,29 +234,149 @@ if ($result && $result->num_rows > 0) {
         .status-completed { background: var(--completed-bg); color: var(--completed-text); }
         .status-in-progress { background: #faf089; color: #975a16; }
 
-        /* MODAL */
-        .modal { display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); animation: fadeIn 0.3s; }
-        .modal-content { background-color: #fefefe; margin: 10% auto; padding: 2rem; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); animation: slideIn 0.3s; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-        .modal-title { font-size: 1.5rem; font-weight: 600; }
-        .close-btn { color: var(--text-secondary); font-size: 1.8rem; font-weight: bold; cursor: pointer; }
-        .close-btn:hover { color: var(--text-primary); }
-        .form-group { margin-bottom: 1rem; }
-        .form-group label { display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem; }
-        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 0.7rem; border: 1px solid var(--border-color); border-radius: 8px; font-size: 0.9rem; }
-        .form-group textarea { resize: vertical; min-height: 80px; }
-        .modal-footer { 
-            margin-top: 2rem; 
-            display: flex; 
-            justify-content: flex-end; 
-            gap: 0.75rem; 
+        /* MODAL - Modern Glassmorphism Style */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1001;
+            left: 0;
+            top: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: auto;
+            background: rgba(30, 41, 59, 0.25); /* darker overlay */
+            backdrop-filter: blur(2.5px);
+            animation: fadeIn 0.3s;
+        }
+        .modal-content {
+            display: flex;
+            flex-direction: column;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            margin: 5% auto;
+            padding: 2.5rem 2rem 2.5rem 2rem;
+            border-radius: 22px;
+            width: 95%;
+            max-width: 480px;
+            max-height: 85vh;
+            overflow: auto;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18), 0 1.5px 8px rgba(0,0,0,0.08);
+            animation: modalPopIn 0.35s cubic-bezier(.23,1.01,.32,1);
+            border: 1.5px solid rgba(200, 200, 200, 0.18);
+            position: relative;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+        .modal-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #1a202c;
+            flex: 1;
+            text-align: center;
+        }
+        .close-btn {
+            position: absolute;
+            right: 0.5rem;
+            top: 0.2rem;
+            color: #64748b;
+            font-size: 2.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            background: none;
+            border: none;
+            transition: color 0.18s, transform 0.18s;
+            z-index: 2;
+        }
+        .close-btn:hover {
+            color: #008000;
+            transform: scale(1.18) rotate(90deg);
+        }
+        #requestForm, #filterForm {
+            display: flex;
+            flex-direction: column;
+            flex: 1 1 auto;
+            min-height: 0;
+        }
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.45rem;
+            font-size: 1rem;
+            color: #334155;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1rem;
+            background: rgba(245, 245, 250, 0.85);
+            transition: border-color 0.2s, box-shadow 0.2s;
+            outline: none;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            border-color: #008000;
+            box-shadow: 0 0 0 2px rgba(0,128,0,0.10);
+            background: #fff;
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 90px;
+        }
+        .modal-footer {
+            margin-top: 2.5rem;
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.85rem;
+            flex-shrink: 0;
         }
         .modal-footer .btn {
-            padding: 0.4rem 0.9rem; /* Even more compact */
-            font-size: 0.85rem;    /* Slightly smaller font */
+            padding: 0.55rem 1.3rem;
+            font-size: 1rem;
+            border-radius: 10px;
+            font-weight: 700;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+        }
+        .modal-footer .btn-primary {
+            background: linear-gradient(90deg, #008000 60%, #38b000 100%);
+            color: #fff;
+            border: none;
+        }
+        .modal-footer .btn-primary:hover {
+            background: linear-gradient(90deg, #006600 60%, #008000 100%);
+            color: #fff;
+        }
+        .modal-footer .btn-secondary {
+            background: #f1f5f9;
+            color: #334155;
+            border: 1.5px solid #e2e8f0;
+        }
+        .modal-footer .btn-secondary:hover {
+            background: #e2e8f0;
+            color: #008000;
         }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideIn { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes modalPopIn {
+            0% { opacity: 0; transform: scale(0.92) translateY(40px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        /* Responsive Modal */
+        @media (max-width: 600px) {
+            .modal-content {
+                padding: 1.2rem 0.5rem 2.2rem 0.5rem;
+                max-width: 98vw;
+                max-height: 95vh;
+            }
+            .modal-title { font-size: 1.15rem; }
+        }
         
         /* NOTIFICATION */
         #notification { position: fixed; bottom: 20px; right: 20px; padding: 1rem 1.5rem; border-radius: 8px; color: white; font-weight: 600; z-index: 2000; opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0.3s, transform 0.3s; transform: translateY(20px); }
