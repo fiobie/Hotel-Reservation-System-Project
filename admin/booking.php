@@ -851,7 +851,6 @@ if (count($where) > 0) {
             <i class="fas fa-search search-icon"></i>
             <input type="text" id="searchInput" class="search-input" placeholder="Search Bookings">
           </div>
-          <button class="create-btn" id="createBtn">Add Booking</button>
         </div>
       </div>
       <table class="reservation-table">
