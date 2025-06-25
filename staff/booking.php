@@ -36,9 +36,7 @@ $autoUpdateSql = "UPDATE room r
     WHERE b.CheckOutDate < '$today' AND (b.BookingStatus = 'Confirmed' OR b.BookingStatus = 'Completed') AND r.RoomStatus != 'Available'";
 $conn->query($autoUpdateSql);
 
-$sql = "SELECT 
-            b.*, 
-            b.StudentID AS StudentID, 
+$sql = "SELECT b.*,b.StudentID AS StudentID, 
             s.FirstName AS FirstName, 
             s.LastName AS LastName, 
             s.Gender AS Gender, 
@@ -426,15 +424,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     exit;
 }
 
-// Helper to generate Booking ID for confirmed reservations
-function generateBookingId($checkInDate, $reservationId) {
-    $date = date('mdY', strtotime($checkInDate));
-    // Extract the last 3 digits from the reservation ID or use 001 as fallback
-    $parts = explode('-', $reservationId);
-    $suffix = isset($parts[2]) ? $parts[2] : '001';
-    return 'BK-' . $date . '-' . $suffix;
-}
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -689,6 +678,7 @@ function generateBookingId($checkInDate, $reservationId) {
                         <label for="detailsNotes">Notes</label>
                         <textarea id="detailsNotes" name="notes"></textarea>
                     </div>
+
                     <div class="modal-footer">
                         <button type="button" class="control-btn" id="detailsCancelBtn">Close</button>
                         <button type="submit" class="control-btn walk-in-btn">Save Changes</button>
@@ -769,6 +759,7 @@ function generateBookingId($checkInDate, $reservationId) {
                   <th>Check In</th>
                   <th>Check Out</th>
                   <th>Booking Date</th>
+                  <th>Booking Type</th>
                 </tr>
               </thead>
               <tbody>
@@ -776,6 +767,97 @@ function generateBookingId($checkInDate, $reservationId) {
               </tbody>
             </table>
           </div>
+        </div>
+    </div>
+
+    <!-- Walk-in Booking Modal (Step 1: Booking Details) -->
+    <div id="bookingModal" class="modal">
+        <div class="modal-content compact-modal">
+            <form id="bookingForm">
+                <div class="modal-header">
+                    <h2>Walk-in Booking Details</h2>
+                    <span class="close-btn" id="closeBookingModal">&times;</span>
+                </div>
+                <div class="booking-details-grid compact-grid">
+                    <div class="form-group compact-group">
+                        <label for="checkInDate">Check In</label>
+                        <input type="date" id="checkInDate" name="checkInDate" required autocomplete="off">
+                    </div>
+                    <div class="form-group compact-group">
+                        <label for="checkOutDate">Check Out</label>
+                        <input type="date" id="checkOutDate" name="checkOutDate" required autocomplete="off">
+                    </div>
+                    <div class="form-group compact-group">
+                        <label for="bookingDate">Booking Date</label>
+                        <input type="date" id="bookingDate" name="bookingDate" value="<?php echo date('Y-m-d'); ?>" required readonly style="background:#f3f3f3; cursor:not-allowed;" autocomplete="off">
+                    </div>
+                    <div class="form-group compact-group">
+                        <label for="bookingStatus">Booking Status</label>
+                        <select id="bookingStatus" name="bookingStatus">
+                            <option value="Pending">Pending</option>
+                            <option value="Confirmed">Confirmed</option>
+                        </select>
+                    </div>
+                    <div class="form-group compact-group">
+                        <label for="roomType">Room Type</label>
+                        <select id="roomType" name="roomType">
+                            <option value="">Select Room Type</option>
+                            <option value="Standard">Standard</option>
+                            <option value="Deluxe">Deluxe</option>
+                            <option value="Suite">Suite</option>
+                        </select>
+                    </div>
+                    <div class="form-group compact-group">
+                        <label for="roomNumber">Room Number</label>
+                        <select id="roomNumber" name="roomNumber" required>
+                            <option value="">Select Room Number</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group compact-group">
+                    <label for="specialRequest">Special Request</label>
+                    <textarea id="specialRequest" name="specialRequest"></textarea>
+                </div>
+                
+                <div class="modal-footer compact-footer">
+                    <button type="button" class="control-btn" id="cancelBookingBtn">Cancel</button>
+                    <button type="button" class="control-btn walk-in-btn" id="nextToGuestBtn">Next</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Guest Information Modal (Step 2) -->
+    <div id="guestModal" class="modal">
+        <div class="modal-content compact-modal">
+            <form id="guestForm">
+                <div class="modal-header">
+                    <h2>Guest Details</h2>
+                    <span class="close-btn" id="closeGuestModal">&times;</span>
+                </div>
+                <table class="guest-info-table compact-table">
+                    <tr><th>First Name</th><td><input type="text" name="firstName" required autocomplete="given-name"></td></tr>
+                    <tr><th>Last Name</th><td><input type="text" name="lastName" required autocomplete="family-name"></td></tr>
+                    <tr><th>Gender</th><td>
+                        <select name="gender" id="detailsGender" class="styled-select" required>
+                            <option value="">Select Gender</option>
+                            <option value="Female">Female</option>
+                            <option value="Male">Male</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </td></tr>
+                    <tr><th>Phone Number</th><td><input type="tel" name="phone" autocomplete="tel"></td></tr>
+                    <tr><th>Address</th><td><input type="text" name="address" autocomplete="street-address"></td></tr>
+                    <tr><th>Email</th><td><input type="email" name="email" autocomplete="email"></td></tr>
+                    <tr><th>Nationality</th><td><input type="text" name="nationality" autocomplete="country"></td></tr>
+                    <tr><th>Birthdate</th><td><input type="date" name="birthdate" autocomplete="bday"></td></tr>
+                    <tr><th>Student ID</th><td><input type="text" name="studentId" autocomplete="off"></td></tr>
+                </table>
+                <div class="modal-footer compact-footer">
+                    <button type="button" class="control-btn" id="backToBookingBtn">Back</button>
+                    <button type="submit" class="control-btn walk-in-btn">Create Booking</button>
+                </div>
+            </form>
         </div>
     </div>
 
