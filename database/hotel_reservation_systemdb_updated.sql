@@ -2,8 +2,8 @@
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
--- Host: localhost:3306
--- Generation Time: Jun 23, 2025 at 11:26 AM
+-- Host: 127.0.0.1
+-- Generation Time: Jun 25, 2025 at 05:05 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -54,6 +54,8 @@ INSERT INTO `account` (`accountID`, `FirstName`, `LastName`, `Email`, `Password`
 
 CREATE TABLE `booking` (
   `BookingID` int(11) NOT NULL,
+  `ReservationID` varchar(32) DEFAULT NULL,
+  `BookingCode` varchar(32) DEFAULT NULL,
   `StudentID` int(11) NOT NULL,
   `RoomNumber` int(11) NOT NULL,
   `RoomType` enum('Standard','Deluxe','Suite','') NOT NULL,
@@ -70,8 +72,9 @@ CREATE TABLE `booking` (
 -- Dumping data for table `booking`
 --
 
-INSERT INTO `booking` (`BookingID`, `StudentID`, `RoomNumber`, `RoomType`, `BookingStatus`, `RoomStatus`, `Notes`, `CheckInDate`, `CheckOutDate`, `BookingDate`, `Price`) VALUES
-(10014, 202310587, 1102, 'Deluxe', 'Confirmed', 'Available', '', '2025-06-25', '2025-06-29', '2025-06-20', 250);
+INSERT INTO `booking` (`BookingID`, `ReservationID`, `BookingCode`, `StudentID`, `RoomNumber`, `RoomType`, `BookingStatus`, `RoomStatus`, `Notes`, `CheckInDate`, `CheckOutDate`, `BookingDate`, `Price`) VALUES
+(10018, 'RS-06242025-0002', 'BK-06242025-0001', 202310596, 1102, 'Standard', 'Confirmed', 'Booked', '', '2025-06-25', '2025-06-30', '2025-06-24', 0),
+(10022, 'RS-06242025-0003', 'BK-06242025-0002', 202310467, 1101, 'Standard', 'Confirmed', 'Booked', '', '2025-08-13', '2025-08-17', '2025-06-24', 0);
 
 -- --------------------------------------------------------
 
@@ -80,33 +83,36 @@ INSERT INTO `booking` (`BookingID`, `StudentID`, `RoomNumber`, `RoomType`, `Book
 --
 
 CREATE TABLE `guest_requests` (
-  `RequestID` int(11) NOT NULL,
+  `RequestID` varchar(20) NOT NULL,
   `GuestName` varchar(100) NOT NULL,
   `RoomNumber` int(11) NOT NULL,
   `RequestDetails` text NOT NULL,
   `Priority` enum('Low','High') DEFAULT 'Low',
   `Status` enum('Pending','In Progress','Completed','Cancelled') DEFAULT 'Pending',
-  `RequestTime` timestamp NOT NULL DEFAULT current_timestamp()
+  `RequestTime` timestamp NOT NULL DEFAULT current_timestamp(),
+  `temp_seq` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `guest_requests`
 --
 
-INSERT INTO `guest_requests` (`RequestID`, `GuestName`, `RoomNumber`, `RequestDetails`, `Priority`, `Status`, `RequestTime`) VALUES
-(1, 'John Doe', 101, 'Extra towels needed', 'High', 'Pending', '2025-06-22 14:05:38'),
-(2, 'Jane Smith', 205, 'Wake-up call at 7 AM', 'Low', 'Completed', '2025-06-22 12:05:38'),
-(3, 'Mike Johnson', 302, 'Room service - dinner menu', 'Low', 'In Progress', '2025-06-22 13:05:38'),
-(4, 'Sarah Wilson', 150, 'Fix air conditioning', 'High', 'Pending', '2025-06-22 14:05:38'),
-(5, 'David Brown', 208, 'Extra pillows', 'Low', 'Completed', '2025-06-22 11:05:38'),
-(6, 'John Doe Daw hehe', 101, 'Extra towels needed', 'High', 'Pending', '2025-06-22 14:10:42'),
-(7, 'John Doe', 101, 'Extra towels needed', 'High', 'Pending', '2025-06-22 14:10:50'),
-(8, 'John Doe', 101, 'Extra towels needed', 'High', 'Pending', '2025-06-22 14:11:02'),
-(9, 'John Doe', 101, 'Extra towels needed', 'High', 'In Progress', '2025-06-22 14:44:16'),
-(10, 'John Doe', 101, 'Extra towels needed', 'Low', 'Pending', '2025-06-22 14:48:54'),
-(11, 'John Doe', 101, 'Extra towels needed', 'Low', 'In Progress', '2025-06-22 14:48:58'),
-(12, 'John Doe', 101, 'Extra towels needed', 'High', 'Pending', '2025-06-22 14:49:15'),
-(13, 'Sarah Wilson', 150, 'Fix air conditioning', 'High', 'In Progress', '2025-06-22 15:42:29');
+INSERT INTO `guest_requests` (`RequestID`, `GuestName`, `RoomNumber`, `RequestDetails`, `Priority`, `Status`, `RequestTime`, `temp_seq`) VALUES
+('GRQ-06222025-0001', 'John Doe', 101, 'Extra towels needed', 'High', 'Pending', '2025-06-22 14:05:38', 1),
+('GRQ-06222025-0002', 'Jane Smith', 205, 'Wake-up call at 7 AM', 'Low', 'Completed', '2025-06-22 12:05:38', 2),
+('GRQ-06222025-0003', 'Mike Johnson', 302, 'Room service - dinner menu', 'Low', 'In Progress', '2025-06-22 13:05:38', 3),
+('GRQ-06222025-0004', 'Sarah Wilson', 150, 'Fix air conditioning', 'High', 'Pending', '2025-06-22 14:05:38', 4),
+('GRQ-06222025-0005', 'David Brown', 208, 'Extra pillows', 'Low', 'Completed', '2025-06-22 11:05:38', 5),
+('GRQ-06222025-0006', 'John Doe Daw hehe', 101, 'Extra towels needed', 'High', 'Pending', '2025-06-22 14:10:42', 6),
+('GRQ-06222025-0007', 'John Doe', 101, 'Extra towels needed', 'High', 'Pending', '2025-06-22 14:10:50', 7),
+('GRQ-06222025-0008', 'John Doe', 101, 'Extra towels needed', 'High', 'Pending', '2025-06-22 14:11:02', 8),
+('GRQ-06222025-0009', 'John Doe', 101, 'Extra towels needed', 'High', 'In Progress', '2025-06-22 14:44:16', 9),
+('GRQ-06222025-0010', 'John Doe', 101, 'Extra towels needed', 'Low', 'Pending', '2025-06-22 14:48:54', 10),
+('GRQ-06222025-0011', 'John Doe', 101, 'Extra towels needed', 'Low', 'In Progress', '2025-06-22 14:48:58', 11),
+('GRQ-06222025-0012', 'John Doe', 101, 'Extra towels needed', 'High', 'Pending', '2025-06-22 14:49:15', 12),
+('GRQ-06222025-0013', 'Sarah Wilson', 150, 'Fix air conditioning', 'High', 'In Progress', '2025-06-22 15:42:29', 13),
+('GRQ-06252025-0001', 'Mariet', 1102, 'One towel', 'Low', 'Pending', '2025-06-25 02:22:59', 1),
+('GRQ-06252025-0002', 'Mariet', 1102, 'One soap and toothbrush', 'Low', 'Pending', '2025-06-25 02:48:13', 2);
 
 -- --------------------------------------------------------
 
@@ -211,7 +217,21 @@ CREATE TABLE `reservations` (
 --
 
 INSERT INTO `reservations` (`ReservationID`, `StudentID`, `GuestName`, `PCheckInDate`, `PCheckOutDate`, `RoomNumber`, `RoomType`, `Status`, `RoomStatus`, `ReservationFee`) VALUES
-('RS-06212025-01', 202310637, 'Thalia ', '2025-06-21', '2025-06-26', '', 'Standard', 'Pending', 'Available', 0.00);
+('RS-06242025-0002', 202310596, 'Mariet', '2025-06-25', '2025-06-30', '1102', 'Standard', 'Confirmed', 'Available', 0.00),
+('RS-06242025-0003', 202310467, 'Ann', '2025-08-13', '2025-08-17', '1101', 'Standard', 'Confirmed', 'Available', 0.00);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `reservation_cancellations`
+--
+
+CREATE TABLE `reservation_cancellations` (
+  `CancellationID` int(11) NOT NULL,
+  `ReservationID` varchar(20) NOT NULL,
+  `CancellationDate` timestamp NOT NULL DEFAULT current_timestamp(),
+  `CancellationReason` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -292,6 +312,8 @@ CREATE TABLE `student` (
 --
 
 INSERT INTO `student` (`StudentID`, `FirstName`, `LastName`, `Gender`, `PhoneNumber`, `Address`, `Email`, `Nationality`, `Birthdate`, `Password`, `ConfirmPassword`, `OTP`, `OTP_Send_Time`, `Verify_OTP`, `IP`, `Status`) VALUES
+(202310467, 'Ann', 'Bardaje', '', '', '', '', '', '0000-00-00', '', '', '', '', '', '', ''),
+(202310596, 'Mariet', 'Yater', 'Female', '2956478142', 'Sample Address', 'mariet.yater@example.com', 'Filipino', '0000-00-00', '', '', '', '', '', '', ''),
 (202310637, 'Phoebe Ann', 'Balderamos', 'Male', '', '', 'phoebeannbalderamos001@gmail.com', '', '0000-00-00', '$2y$10$mOyNgj4cWtGEz8Y3WP4OQuGAHcDskHp9P5EP24x9A.3Puk97HMAXe', 'pbpb09', '', '', '', '', ''),
 (202365433, 'Joy Joy', 'Happy', 'Male', '', '', 'phoebeanncap08@gmail.com', '', '0000-00-00', '$2y$10$aVOhd6FJb/Flc7x7mTeZiO91tiNh1QkYM752GT69TDxiwcRaY8jHi', 'joyjoy98', '', '', '', '', '');
 
@@ -309,7 +331,8 @@ ALTER TABLE `account`
 -- Indexes for table `booking`
 --
 ALTER TABLE `booking`
-  ADD PRIMARY KEY (`BookingID`);
+  ADD PRIMARY KEY (`BookingID`),
+  ADD UNIQUE KEY `BookingCode` (`BookingCode`);
 
 --
 -- Indexes for table `guest_requests`
@@ -346,6 +369,14 @@ ALTER TABLE `reservations`
   ADD PRIMARY KEY (`ReservationID`);
 
 --
+-- Indexes for table `reservation_cancellations`
+--
+ALTER TABLE `reservation_cancellations`
+  ADD PRIMARY KEY (`CancellationID`),
+  ADD KEY `idx_reservation_id` (`ReservationID`),
+  ADD KEY `idx_cancellation_date` (`CancellationDate`);
+
+--
 -- Indexes for table `room`
 --
 ALTER TABLE `room`
@@ -377,13 +408,7 @@ ALTER TABLE `account`
 -- AUTO_INCREMENT for table `booking`
 --
 ALTER TABLE `booking`
-  MODIFY `BookingID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10016;
-
---
--- AUTO_INCREMENT for table `guest_requests`
---
-ALTER TABLE `guest_requests`
-  MODIFY `RequestID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `BookingID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10023;
 
 --
 -- AUTO_INCREMENT for table `inventory`
@@ -404,6 +429,12 @@ ALTER TABLE `payment`
   MODIFY `PaymentID` int(15) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=202310638;
 
 --
+-- AUTO_INCREMENT for table `reservation_cancellations`
+--
+ALTER TABLE `reservation_cancellations`
+  MODIFY `CancellationID` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `stock_requests`
 --
 ALTER TABLE `stock_requests`
@@ -413,7 +444,7 @@ ALTER TABLE `stock_requests`
 -- AUTO_INCREMENT for table `student`
 --
 ALTER TABLE `student`
-  MODIFY `StudentID` int(9) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=202365434;
+  MODIFY `StudentID` int(9) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=202365438;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

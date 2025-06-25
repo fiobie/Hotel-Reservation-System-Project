@@ -60,7 +60,7 @@ if ($conn->connect_error) {
 // ============================================================================
 $roomType = isset($_GET['type']) ? $_GET['type'] : 'Standard';
 $roomTypes = ['Standard', 'Deluxe', 'Suite'];
-$statuses = ['Available', 'Booked', 'Reserved', 'Maintenance', 'Cleaning']; // All statuses can be set manually
+$statuses = ['Available', 'Maintenance', 'Cleaning'];
 
 // Determine previous and next room types for navigation
 $currentIndex = array_search($roomType, $roomTypes);
@@ -77,32 +77,42 @@ $roomQuery = $conn->prepare("SELECT RoomNumber, RoomType, RoomStatus FROM room O
 $roomQuery->execute();
 $roomResult = $roomQuery->get_result();
 
+$today = date('Y-m-d');
 while ($room = $roomResult->fetch_assoc()) {
     $roomNumber = $room['RoomNumber'];
     $status = $room['RoomStatus'];
-    $now = date('Y-m-d H:i:s');
-    // Find the latest booking for this room
-    $bookingSql = "SELECT * FROM booking WHERE RoomNumber = ? AND (BookingStatus = 'Confirmed' OR BookingStatus = 'Reserved') ORDER BY CheckOutDate DESC LIMIT 1";
+    $isOccupied = false;
+
+    // Check for active booking
+    $bookingSql = "SELECT 1 FROM booking WHERE RoomNumber = ? AND BookingStatus = 'Confirmed' AND ? >= CheckInDate AND ? < CheckOutDate";
     $bookingStmt = $conn->prepare($bookingSql);
-    $bookingStmt->bind_param('i', $roomNumber);
+    $bookingStmt->bind_param('iss', $roomNumber, $today, $today);
     $bookingStmt->execute();
     $bookingResult = $bookingStmt->get_result();
-    $dynamicStatus = $status;
-    if ($booking = $bookingResult->fetch_assoc()) {
-        $checkIn = $booking['CheckInDate'];
-        $checkOut = $booking['CheckOutDate'];
-        $bookingStatus = $booking['BookingStatus'];
-        if ($bookingStatus === 'Confirmed' && $now >= $checkIn && $now <= $checkOut) {
-            $dynamicStatus = 'Booked';
-        } elseif ($bookingStatus === 'Reserved' && $now < $checkIn) {
-            $dynamicStatus = 'Reserved';
-        } elseif ($now > $checkOut && $status !== 'Available' && $status !== 'Maintenance') {
-            $dynamicStatus = 'Cleaning';
-        } else {
-            // Keep the manual status (Available or Maintenance)
-        }
-    } elseif ($status !== 'Available' && $status !== 'Maintenance') {
-        // If no booking and not available/maintenance, set to available
+    if ($bookingResult->num_rows > 0) {
+        $isOccupied = true;
+    }
+    $bookingStmt->close();
+
+    // Check for active reservation
+    $reservationSql = "SELECT 1 FROM reservations WHERE RoomNumber = ? AND Status = 'Confirmed' AND ? >= PCheckInDate AND ? < PCheckOutDate";
+    $reservationStmt = $conn->prepare($reservationSql);
+    $reservationStmt->bind_param('iss', $roomNumber, $today, $today);
+    $reservationStmt->execute();
+    $reservationResult = $reservationStmt->get_result();
+    if ($reservationResult->num_rows > 0) {
+        $isOccupied = true;
+    }
+    $reservationStmt->close();
+
+    if ($status === 'Maintenance') {
+        $dynamicStatus = 'Maintenance';
+    } elseif ($status === 'Cleaning') {
+        $dynamicStatus = 'Cleaning';
+    } elseif ($isOccupied) {
+        // Do not add this room as available or with any status
+        continue;
+    } else {
         $dynamicStatus = 'Available';
     }
     $rooms[] = [
@@ -110,6 +120,33 @@ while ($room = $roomResult->fetch_assoc()) {
         'RoomType' => $room['RoomType'],
         'Status' => $dynamicStatus
     ];
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['roomType'])) {
+    header('Content-Type: application/json');
+    $roomType = $conn->real_escape_string($_GET['roomType']);
+    $rooms = [];
+    $sql = "SELECT RoomNumber FROM room WHERE RoomType = '$roomType' AND RoomStatus IN ('Available', 'Maintenance', 'Cleaning') ORDER BY RoomNumber";
+    $result = $conn->query($sql);
+
+    // Debug output
+    if (!$result) {
+        echo json_encode(['error' => 'SQL error', 'sql' => $sql, 'db_error' => $conn->error]);
+        exit;
+    }
+
+    while ($row = $result->fetch_assoc()) {
+        $rooms[] = $row;
+    }
+
+    // Debug: If no rooms found, output the SQL and roomType
+    if (empty($rooms)) {
+        echo json_encode(['error' => 'No rooms found', 'roomType' => $roomType, 'sql' => $sql]);
+        exit;
+    }
+
+    echo json_encode($rooms);
+    exit;
 }
 ?>
 <!DOCTYPE html>
@@ -259,7 +296,7 @@ while ($room = $roomResult->fetch_assoc()) {
     </button>
     <div class="sidebar">
         <img src="images/villavalorelogo.png" alt="Villa Valore Logo" class="sidebar-logo">
-        <h4 class="sidebar-title">Villa Valore</h4>
+        <h4 class="sidebar-title">Villa Valore Hotel</h4>
         <div class="nav-section">
             <a class="nav-link" href="staff_dashboard.php"><i class="fas fa-th-large"></i>Dashboard</a>
             <a class="nav-link" href="reservation.php"><i class="fas fa-calendar-check"></i>Reservation</a>
@@ -305,8 +342,6 @@ while ($room = $roomResult->fetch_assoc()) {
         </div>
         <div class="legend">
             <div class="legend-item"><span class="legend-badge legend-available"></span>Available</div>
-            <div class="legend-item"><span class="legend-badge legend-booked"></span>Booked</div>
-            <div class="legend-item"><span class="legend-badge legend-reserved"></span>Reserved</div>
             <div class="legend-item"><span class="legend-badge legend-maintenance"></span>Maintenance</div>
             <div class="legend-item"><span class="legend-badge legend-cleaning"></span>Cleaning</div>
         </div>
@@ -483,6 +518,20 @@ while ($room = $roomResult->fetch_assoc()) {
             if (event.target == modal) {
                 closeEditModal();
             }
+        }
+
+        if(roomTypeSelect && roomNumberSelect) {
+            roomTypeSelect.addEventListener('change', async function() {
+                const roomType = this.value;
+                roomNumberSelect.innerHTML = '<option value="">Loading...</option>';
+                const response = await fetch(`booking.php?roomType=${encodeURIComponent(roomType)}`);
+                const rooms = await response.json(); 
+                let options = '<option value="">Select Room</option>';
+                rooms.forEach(room => {
+                    options += `<option value="${room.RoomNumber}">${room.RoomNumber}</option>`;
+                });
+                roomNumberSelect.innerHTML = options;
+            });
         }
     </script>
 </body>
