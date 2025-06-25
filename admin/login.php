@@ -21,10 +21,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
             $_SESSION['first_name'] = $row['FirstName'] ?? '';
             $_SESSION['last_name'] = $row['LastName'] ?? '';
             $_SESSION['account_type'] = $accountType;
-            if ($accountType === 'admin') {
+            if ($accountType === 'Admin') {
                 header("Location: admin/index.php");
                 exit();
-            } elseif ($accountType === 'staff') {
+            } elseif ($accountType === 'Staff') {
                 header("Location: staff/staff_dashboard.php");
                 exit();
             } else {

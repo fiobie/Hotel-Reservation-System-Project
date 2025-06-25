@@ -7,9 +7,8 @@ $params = [];
 
 // If filter form is submitted (GET)
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && (
-    isset($_GET['ReservationID']) || isset($_GET['StudentID']) || isset($_GET['GuestName']) || isset($_GET['PCheckInDate']) ||
-    isset($_GET['PCheckOutDate']) || isset($_GET['RoomNumber']) || isset($_GET['RoomType']) ||
-    isset($_GET['Status'])
+    isset($_GET['ReservationID']) || isset($_GET['StudentID']) || isset($_GET['RoomNumber']) || isset($_GET['PCheckInDate']) ||
+    isset($_GET['PCheckOutDate']) || isset($_GET['RoomType']) || isset($_GET['Status']) || isset($_GET['RoomStatus']) || isset($_GET['ReservationFee']) || isset($_GET['ReservationDate']) || isset($_GET['Notes'])
 )) {
     if (!empty($_GET['ReservationID'])) {
         $where[] = "ReservationID = ?";
@@ -19,9 +18,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && (
         $where[] = "StudentID = ?";
         $params[] = $_GET['StudentID'];
     }
-    if (!empty($_GET['GuestName'])) {
-        $where[] = "GuestName LIKE ?";
-        $params[] = '%' . $_GET['GuestName'] . '%';
+    if (!empty($_GET['RoomNumber'])) {
+        $where[] = "RoomNumber LIKE ?";
+        $params[] = '%' . $_GET['RoomNumber'] . '%';
     }
     if (!empty($_GET['PCheckInDate'])) {
         $where[] = "PCheckInDate = ?";

@@ -1,14 +1,15 @@
 <?php
 include 'connections.php';
 session_start(); // Enable sessions
-// Add PHPMailer use statements at the top
-require_once __DIR__ . '/../phpmailer/src/PHPMailer.php';
-require_once __DIR__ . '/../phpmailer/src/SMTP.php';
-require_once __DIR__ . '/../phpmailer/src/Exception.php';
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\Exception;
 
-$confirmation = "";
+// Add PHPMailer use statements at the top
+// require_once __DIR__ . '/../phpmailer/src/PHPMailer.php';
+// require_once __DIR__ . '/../phpmailer/src/SMTP.php';
+// require_once __DIR__ . '/../phpmailer/src/Exception.php';
+// use PHPMailer\PHPMailer\PHPMailer;
+// use PHPMailer\PHPMailer\Exception;
+
+// $confirmation = "";
 $generated_booking_id = "";
 $estimated_price = "";
 $booking_date = date("Y-m-d");
@@ -159,38 +160,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $conn->query($sql_insert);
     }
     // TODO: Insert reservation record if not already done in reservenow.php
-
-    // --- EMAIL GUEST ---
-    $mail = new PHPMailer(true);
-    try {
-      $mail->isSMTP();
-      $mail->Host = 'smtp.gmail.com';
-      $mail->SMTPAuth = true;
-      $mail->Username = 'phoebeannbalderamos001@gmail.com';
-      $mail->Password = 'wrrxrfipnsmfhyyu';
-      $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-      $mail->Port = 587;
-      $mail->setFrom('phoebeannbalderamos001@gmail.com', 'Villa Valore Hotel');
-      $mail->addAddress($email, $first_name . ' ' . $last_name);
-      $mail->isHTML(true);
-      $mail->Subject = 'Reservation Received - Villa Valore Hotel';
-      $mail->Body = '<h2>Reservation Details</h2>' .
-        '<p>Dear ' . htmlspecialchars($first_name) . ',</p>' .
-        '<p>Thank you for submitting your reservation request. Here are your details:</p>' .
-        '<ul>' .
-        '<li><b>Reservation ID:</b> ' . htmlspecialchars($reservation_id) . '</li>' .
-        '<li><b>Check-in:</b> ' . htmlspecialchars($checkin_date) . '</li>' .
-        '<li><b>Check-out:</b> ' . htmlspecialchars($checkout_date) . '</li>' .
-        '<li><b>Reservation Fee:</b> ₱' . number_format($reservation_fee) . '</li>' .
-        '</ul>' .
-        '<p><b>Please pay the reservation fee to confirm your reservation.</b> Once payment is received, our staff will issue an invoice and send you a receipt. You will then receive a confirmation email that your room is reserved for your final booking check-in date.</p>' .
-        '<p>Thank you for choosing Villa Valore Hotel!</p>';
-      $mail->AltBody = 'Dear ' . $first_name . ',\nThank you for submitting your reservation request. Reservation ID: ' . $reservation_id . '. Please pay the reservation fee to confirm your reservation.';
-      $mail->send();
-      $confirmation = "<p style='color: green;'>Guest details submitted! An email has been sent with your reservation info. Please pay the reservation fee to confirm your reservation.</p>";
-    } catch (Exception $e) {
-      $confirmation = "<p style='color: red;'>Guest details submitted, but email could not be sent. Mailer Error: {$mail->ErrorInfo}</p>";
-    }
     // TODO: Staff-side: When payment is confirmed, issue invoice, send receipt, and update guest account/bookings.
   }
 }
@@ -439,7 +408,6 @@ $debug_payments = $conn->query("SELECT * FROM payment ORDER BY PaymentDate DESC,
 
       </form>
 
-      <?php echo $confirmation; ?>
     </div>
     <div class="booking-summary-section">
       <div class="booking-summary">

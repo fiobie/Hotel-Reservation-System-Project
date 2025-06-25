@@ -859,15 +859,12 @@ if (count($where) > 0) {
           <tr>
             <th>Booking ID</th>
             <th>Student ID</th>
-            <th>Room Number</th>
             <th>Room Type</th>
             <th>Booking Status</th>
             <th>Room Status</th>
-            <th>Notes</th>
             <th>Check In Date</th>
             <th>Check Out Date</th>
             <th>Booking Date</th>
-            <th>Price</th>
             <th>Actions</th>
             <th>Download</th>
           </tr>
@@ -878,15 +875,12 @@ if (count($where) > 0) {
           <tr data-id="<?php echo $row['BookingID']; ?>">
             <td><b><?php echo $row['BookingID']; ?></b></td>
             <td><b><?php echo htmlspecialchars($row['StudentID']); ?></b></td>
-            <td><b><?php echo htmlspecialchars($row['RoomNumber']); ?></b></td>
             <td><b><?php echo htmlspecialchars($row['RoomType']); ?></b></td>
             <td><b><?php echo htmlspecialchars($row['BookingStatus']); ?></b></td>
             <td><b><?php echo htmlspecialchars($row['RoomStatus']); ?></b></td>
-            <td><b><?php echo htmlspecialchars($row['Notes']); ?></b></td>
             <td><b><?php echo htmlspecialchars($row['CheckInDate']); ?></b></td>
             <td><b><?php echo htmlspecialchars($row['CheckOutDate']); ?></b></td>
             <td><b><?php echo htmlspecialchars($row['BookingDate']); ?></b></td>
-            <td><b><?php echo htmlspecialchars($row['Price']); ?></b></td>
             <td>
               <div class="action-group">
                 <button type="button" class="action-btn edit-btn"

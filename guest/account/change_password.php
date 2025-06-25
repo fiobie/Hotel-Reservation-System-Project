@@ -3,10 +3,10 @@ session_start();
 include '../connections.php';
 
 // Require login
-if (!isset($_SESSION['student_id'])) {
-    header('Location: ../login.php');
-    exit();
-}
+//if (!isset($_SESSION['student_id'])) {
+    //header('Location: ../login.php');
+    //exit();
+//}
 
 $student_id = $_SESSION['student_id'];
 $msg = '';
